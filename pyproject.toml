@@ -1,0 +1,66 @@
+# Draft pyproject.toml for the public nwt-substrate repo.
+# Copy to nwt-substrate/pyproject.toml during the extraction step.
+
+[build-system]
+requires = ["setuptools>=64", "setuptools-scm>=8"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nwt-substrate"
+dynamic = ["version"]
+description = "Substrate-algebraic computation library for Null Worldtube Theory."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { file = "LICENSE" }
+authors = [
+    { name = "Jim Galasyn", email = "jim.galasyn@hotmail.com" },
+]
+keywords = [
+    "physics", "particle-physics", "topological-quantum-field-theory",
+    "knot-theory", "octonions", "null-worldtube", "substrate-monism",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Physics",
+]
+
+dependencies = [
+    "numpy>=1.24",
+    "scipy>=1.10",
+    "matplotlib>=3.7",
+    "sympy>=1.12",
+]
+
+[project.optional-dependencies]
+heron = [
+    "qiskit>=1.0",
+    "qiskit-ibm-runtime>=0.20",
+]
+test = [
+    "pytest>=7.0",
+]
+all = ["nwt-substrate[heron,test]"]
+
+[project.urls]
+Homepage = "https://github.com/JimGalasyn/nwt-substrate"
+Repository = "https://github.com/JimGalasyn/nwt-substrate"
+"Bug Tracker" = "https://github.com/JimGalasyn/nwt-substrate/issues"
+"Paper series" = "https://zenodo.org/communities/nwt"
+
+[tool.setuptools]
+packages = { find = { include = ["nwt_substrate*"] } }
+
+[tool.setuptools_scm]
+# Version comes from git tags (v0.1.0, v0.2.0, ...) -- enables
+# auto-versioning at build time.
+
+[tool.pytest.ini_options]
+testpaths = ["nwt_substrate/tests"]
+addopts = "-q"

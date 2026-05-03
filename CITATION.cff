@@ -1,0 +1,19 @@
+cff-version: 1.2.0
+message: "If you use nwt-substrate in a publication, please cite both this software and the relevant NWT paper(s)."
+title: "nwt-substrate: a substrate-algebraic computation library for Null Worldtube Theory"
+type: software
+authors:
+  - family-names: Galasyn
+    given-names: Jim
+    email: jim.galasyn@hotmail.com
+url: "https://github.com/JimGalasyn/nwt-substrate"
+repository-code: "https://github.com/JimGalasyn/nwt-substrate"
+license: MIT
+version: 0.1.0
+date-released: 2026-XX-XX
+keywords:
+  - particle physics
+  - knot theory
+  - octonions
+  - null worldtube
+  - substrate monism

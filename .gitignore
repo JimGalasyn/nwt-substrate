@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.coverage
+.hypothesis/
+
+# Build / packaging
+build/
+dist/
+*.egg
+
+# Editor / OS
+.DS_Store
+.vscode/
+.idea/
+
+# Local outputs from analysis/diagram scripts
+*.png
+*.pdf
+*.npy
+*.npz
+analysis/output/
+diagrams/output/
+
+# Tooling
+.tox/
+.mypy_cache/
+.ruff_cache/
+
+# Sphinx (if added later)
+docs/_build/

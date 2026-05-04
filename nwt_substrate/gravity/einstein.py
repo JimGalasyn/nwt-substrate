@@ -69,19 +69,20 @@ def UV_IR_bridge_breakdown() -> str:
     """
     alpha = ALPHA_QED
     alpha_inv_21 = 1.0 / alpha ** 21
-    bracket = (8.0 / 7.0) * (1.0 + alpha / 7.0 + 3.0 * alpha ** 2)
+    bracket_nnlo = 1.0 + alpha / 7.0 + (21.0 / 8.0) * alpha ** 2
     lines = ["UV / IR hierarchy bridge: M_Pl² / m_e² ≈ 10⁴⁵"]
     lines.append("")
     lines.append("Substrate decomposition:")
     lines.append("")
-    lines.append(f"    M_Pl²/m_e²  =  α⁻²¹  ×  (8/7)⁻²  ×  (1 + α/7 + 3α²)⁻²")
+    lines.append(f"    M_Pl²/m_e²  =  α⁻²¹  ×  (8/7)⁻²  ×  (1 + α/7 + (21/8)α²)⁻²")
     lines.append("")
-    lines.append(f"    α⁻²¹                = {alpha_inv_21:.4e}")
-    lines.append(f"                          (= 137²¹, K_7 Wilson amplitude squared)")
-    lines.append(f"    (8/7)⁻²             = {(7/8)**2:.6f}")
-    lines.append(f"                          (Spin(7) vector/spinor ratio squared)")
-    lines.append(f"    (1 + α/7 + 3α²)⁻²   = {1/(1 + alpha/7 + 3*alpha**2)**2:.6f}")
-    lines.append(f"                          (NLO + NNLO substrate corrections)")
+    lines.append(f"    α⁻²¹                   = {alpha_inv_21:.4e}")
+    lines.append(f"                             (= 137²¹, K_7 Wilson amplitude squared)")
+    lines.append(f"    (8/7)⁻²                = {(7/8)**2:.6f}")
+    lines.append(f"                             (Spin(7) vector/spinor ratio squared)")
+    lines.append(f"    (1 + α/7 + (21/8)α²)⁻² = {1/bracket_nnlo**2:.6f}")
+    lines.append(f"                             (NLO + NNLO substrate corrections;")
+    lines.append(f"                              bracket coeff = dim(Adj)/dim(S) = 21/8)")
     lines.append("")
     lines.append(f"    M_Pl²/m_e² (substrate) = {M_Pl_over_m_e_squared_substrate():.4e}")
     lines.append(f"    M_Pl²/m_e² (CODATA)    = {M_Pl_over_m_e_squared_observed():.4e}")

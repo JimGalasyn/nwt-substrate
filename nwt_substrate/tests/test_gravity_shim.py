@@ -44,7 +44,7 @@ def test_m_e_over_M_Pl_NLO_within_0_05_percent():
 
 
 def test_m_e_over_M_Pl_NNLO_within_50_ppm():
-    """Paper 17 NNLO: × (1 + α/7 + 3α²)  →  ~14 ppm from CODATA."""
+    """Paper 17 NNLO: × (1 + α/7 + (21/8)α²)  →  -5.6 ppm from CODATA."""
     pred = grav.m_e_over_M_Pl_NNLO()
     obs = grav.m_e_over_M_Pl_observed()
     assert abs(pred / obs - 1.0) < 5e-5
@@ -70,7 +70,8 @@ def test_G_substrate_LO_within_0_3_percent_of_codata():
 
 
 def test_G_substrate_NNLO_within_50_ppm_of_codata():
-    """Paper 17 G_NNLO matches CODATA to ~30 ppm."""
+    """Paper 17 G_NNLO matches CODATA to -11 ppm (inside the +-22 ppm
+    experimental band on G)."""
     G_pred = grav.G_substrate_SI()
     assert abs(G_pred / grav.G_NEWTON_SI - 1.0) < 5e-5
 
@@ -141,7 +142,7 @@ def test_black_hole_summary_proton():
 
 def test_black_hole_summary_with_substrate_G():
     """Using substrate G should give very nearly the same result as CODATA G
-    (since substrate G matches CODATA to ~30 ppm)."""
+    (since substrate G matches CODATA to -11 ppm)."""
     bh_codata = grav.black_hole_summary("proton", use_substrate_G=False)
     bh_substrate = grav.black_hole_summary("proton", use_substrate_G=True)
     rel_diff = abs(bh_substrate["r_s_m"] / bh_codata["r_s_m"] - 1.0)
@@ -174,8 +175,8 @@ def test_K7_cycles_match_string_K7_torus():
 # ---------------------------------------------------------------------------
 
 def test_M_Pl_over_m_e_squared_substrate_matches_codata():
-    """The 10⁴⁵ Planck-electron hierarchy matches CODATA to ~30 ppm via
-    α⁻²¹ × (8/7)⁻² × (1 + α/7 + 3α²)⁻²."""
+    """The 10⁴⁵ Planck-electron hierarchy matches CODATA to +11 ppm via
+    α⁻²¹ × (8/7)⁻² × (1 + α/7 + (21/8)α²)⁻²."""
     pred = grav.M_Pl_over_m_e_squared_substrate()
     obs = grav.M_Pl_over_m_e_squared_observed()
     assert abs(pred / obs - 1.0) < 5e-5

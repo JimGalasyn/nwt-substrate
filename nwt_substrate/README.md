@@ -85,8 +85,8 @@ ew.sigma_total(91.2, "mu", m_f=ew.FERMION_MASS_GEV["mu"])
 print(ew.coupling("u"))       # T_3=+0.5, Q=+2/3, g_V=+0.192, g_A=+0.5
 
 # Gravity: Newton's G structurally derived (8/7)² α²¹ × NNLO
-grav.G_substrate_SI()         # 6.6745 × 10⁻¹¹  (CODATA 6.6743, 29 ppm)
-grav.m_e_over_M_Pl_NNLO()     # 4.186e-23 (14 ppm from CODATA)
+grav.G_substrate_SI()         # 6.6742 × 10⁻¹¹  (CODATA 6.6743, -11 ppm; inside the +-22 ppm experimental band)
+grav.m_e_over_M_Pl_NNLO()     # 4.185e-23 (-5.6 ppm from CODATA)
 grav.verify_schwarzschild_vacuum_symbolic()  # all 16 R_μν = 0 (sympy proof)
 print(grav.UV_IR_bridge_breakdown())  # M_Pl²/m_e² ≈ 10⁴⁵ from K_7 alone
 ```
@@ -115,7 +115,7 @@ Each shim re-presents the substrate primitives in a community-standard idiom. **
 | `nwt.string` | compactification / SL(2,Z) | Q.4 | `K7_torus`, `poincare_sphere`, `T2_torus` targets; `PQString` for (p,q)-string view; `kk_tower()` for α^(n/2)·M_Pl with 4 SM-scale clean hits; ADE catalog (`2I↔E_8`); Spin(7)/G_2 holonomy classifications |
 | `nwt.heron` | qiskit / quantum hardware | Q.1, Q.2, Q.14 | `k7_graph_state`, `stabilizer_measurement`, `entanglement_tomography_x_basis`, `muon_decay_circuit`; 10-experiment registry (6 run on `ibm_marrakesh`); `export_experiment_script(n, path)` writes self-contained Python files for IBM Quantum |
 | `nwt.electroweak` | EW / Z resonance | Q.11 | `M_Z`, `Γ_Z`, `sin²θ_W`; `g_V`/`g_A` couplings for SM fermions; full γ + Z + interference σ_total at Z pole = 1985 pb (PDG match 99.2%); `total_width_Z` = 2.42 GeV (PDG 2.495, 97.1%) |
-| `nwt.gravity` | GR / cosmology | Q.12 | `G_substrate_SI()` to ~29 ppm (Paper 17 NNLO, INSIDE CODATA error bar); `m_e_over_M_Pl_NNLO` (14 ppm); Schwarzschild + Hawking for SM particles; `UV_IR_bridge_breakdown` showing M_Pl²/m_e² ≈ 10⁴⁵ from K_7 alone; `verify_schwarzschild_vacuum_symbolic` (sympy proof, R_μν = 0) |
+| `nwt.gravity` | GR / cosmology | Q.12 | `G_substrate_SI()` to -11 ppm (Paper 17 NNLO, inside the ±22 ppm CODATA experimental band); `m_e_over_M_Pl_NNLO` (-5.6 ppm); Schwarzschild + Hawking for SM particles; `UV_IR_bridge_breakdown` showing M_Pl²/m_e² ≈ 10⁴⁵ from K_7 alone; `verify_schwarzschild_vacuum_symbolic` (sympy proof, R_μν = 0) |
 
 ## Verified results
 
@@ -133,9 +133,9 @@ Each shim re-presents the substrate primitives in a community-standard idiom. **
 | Hadron charge predictions | 38/38 hadrons match | extended Gell-Mann-Nishijima | `Q_pred` |
 | **σ_peak(e⁺e⁻ → μ⁺μ⁻) at Z pole** | substrate γ + Z + interference | **1985 pb vs PDG ~2000 pb (99.2%)** | `electroweak.sigma_total` |
 | **Total Γ_Z** | LO via G_F-derived couplings | **2.422 vs PDG 2.495 GeV (97.1%)** | `electroweak.total_width_Z` |
-| **Newton's `G` (NNLO)** | `(8/7)² α²¹ × NNLO factors × ℏc/m_e²` | **+29 ppm — INSIDE CODATA error bar (±22 ppm)** | Paper 17 / `gravity.G_substrate_SI` |
-| **m_e/M_Pl (NNLO)** | `(8/7) α^(21/2) (1 + α/7 + 3α²)` | **+14 ppm** from CODATA | `gravity.m_e_over_M_Pl_NNLO` |
-| **M_Pl² / m_e² hierarchy** | `α⁻²¹ × (8/7)⁻² × …` | **-29 ppm** for the 10⁴⁵ ratio | `gravity.M_Pl_over_m_e_squared_substrate` |
+| **Newton's `G` (NNLO)** | `(8/7)² α²¹ × NNLO factors × ℏc/m_e²` | **-11 ppm — inside CODATA experimental band (±22 ppm)** | Paper 17 / `gravity.G_substrate_SI` |
+| **m_e/M_Pl (NNLO)** | `(8/7) α^(21/2) (1 + α/7 + (21/8)α²)` | **-5.6 ppm** from CODATA | `gravity.m_e_over_M_Pl_NNLO` |
+| **M_Pl² / m_e² hierarchy** | `α⁻²¹ × (8/7)⁻² × …` | **+11 ppm** for the 10⁴⁵ ratio | `gravity.M_Pl_over_m_e_squared_substrate` |
 | **Schwarzschild as vacuum solution** | All 16 R_μν vanish | exact (sympy proof) | `gravity.verify_schwarzschild_vacuum_symbolic` |
 | **Muon decay on `ibm_marrakesh`** | `P(μ at θ) = cos²(θ)` | **96.3% contrast, 1.6% RMS** vs theory | Heron Exp 10, run 2026-05-01, job `d7qgmo4f3ras73b5orqg` |
 
@@ -180,8 +180,8 @@ Each row would be one calculation in any conventional library. Here, each row is
 ## Install
 
 ```bash
-git clone https://github.com/JimGalasyn/nwt-substrate.git
-cd nwt-substrate
+git clone https://github.com/galasyn/null-worldtube-private.git
+cd null-worldtube-private
 pip install -e .
 ```
 

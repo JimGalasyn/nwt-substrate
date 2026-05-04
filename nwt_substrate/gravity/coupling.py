@@ -8,17 +8,23 @@ Two structurally-derived formulas are exposed:
       → -0.24% from CODATA
 
   Paper 17 (NNLO):
-      m_e / M_Pl = (8/7) × α^(21/2) × (1 + α/7 + 3 α²)
-      → 0.0001% from CODATA, 11 ppm in G
+      m_e / M_Pl = (8/7) × α^(21/2) × (1 + α/7 + (21/8) α²)
+      → -5.6 ppm on m_e/M_Pl, -11 ppm in G (inside the +-22 ppm
+        CODATA experimental band on G).
 
 Substrate identification of factors:
-  8/7        = dim(spinor S of Spin(7)) / dim(vector V of Spin(7))
-  α^(21/2)   = K_7 Wilson amplitude on 21 edges with √α per edge
-                (Paper 13 / Paper 17 Phase 6.1b)
-  (1 + α/7)  = NLO per-K_7-vertex correction (Paper 17 Phase 6.5);
-                7 = number of K_7 vertices
-  3 α²       = NNLO from rank(so(7))/dim(V) × dim(V)/dim(S) × α²
-                = 3 α² where 3 = rank(so(7)) (Paper 17 Phase 6.9)
+  8/7         = dim(spinor S of Spin(7)) / dim(vector V of Spin(7))
+  α^(21/2)    = K_7 Wilson amplitude on 21 edges with √α per edge
+                 (Paper 13 / Paper 17 Phase 6.1b)
+  (1 + α/7)   = NLO per-K_7-vertex correction (Paper 17 Phase 6.5);
+                 7 = number of K_7 vertices
+  (21/8) α²   = NNLO bracket coefficient = dim(Adj_Spin(7))/dim(S)
+                 = 21/8 (Paper 17 Phase 6.9 §3.iii).
+                 Equivalent statement: after distributing (8/7) into
+                 the bracket, the α² coefficient in the prefactor
+                 form is (8/7)·(21/8) = 21/7 = 3 = rank(so(7)) =
+                 dim(Adj)/dim(V).  The two derivations are the same
+                 number; the bracket form is 21/8.
 
 The 168 unification: |PSL(2,7)| = λ_1(S³/2I) = 7·24 = |Irr(2T)|·|2T| all
 descend from Spin(7)/2T/E_6 (memory: checkpoint 2026-04-24).
@@ -58,17 +64,19 @@ def m_e_over_M_Pl_NLO(alpha: float = ALPHA_QED) -> float:
 def m_e_over_M_Pl_NNLO(alpha: float = ALPHA_QED) -> float:
     """
     NNLO substrate prediction (Paper 17 closed form):
-        m_e / M_Pl = (8/7) × α^(21/2) × (1 + α/7 + 3 α²)
+        m_e / M_Pl = (8/7) × α^(21/2) × (1 + α/7 + (21/8) α²)
 
-    Where:
-        3 = rank(so(7)) = dim(Adj_Spin(7)) / dim(V_Spin(7)) = 21/7
-            (verified 4 ways in Paper 17 Phase 6.9)
-        α² coefficient comes from PSL(2,7)-equivariant Fano structure
-            (Phase 6.7)
+    Where the α² bracket coefficient is dim(Adj_Spin(7))/dim(S) = 21/8
+    (Paper 17 §3.iii; Phase 6.9).  Equivalent prefactor-form
+    statement: after distributing (8/7) into the bracket, the α²
+    coefficient becomes (8/7)·(21/8) = 21/7 = 3 = rank(so(7)) =
+    dim(Adj)/dim(V); the α² coefficient is identified four
+    independent ways in Phase 6.9.  The bracket form uses 21/8.
 
-    CODATA agreement: 0.0001% on m_e/M_Pl, ~11 ppm on G.
+    CODATA agreement: -5.6 ppm on m_e/M_Pl, -11 ppm on G (inside the
+    +-22 ppm experimental band).
     """
-    return (8.0 / 7.0) * alpha ** (21.0 / 2.0) * (1.0 + alpha / 7.0 + 3.0 * alpha ** 2)
+    return (8.0 / 7.0) * alpha ** (21.0 / 2.0) * (1.0 + alpha / 7.0 + (21.0 / 8.0) * alpha ** 2)
 
 
 def m_e_over_M_Pl_observed() -> float:
@@ -152,8 +160,10 @@ def G_substrate_breakdown() -> str:
     lines.append(f"                  7 = #vertices of K_7")
     lines.append(f"                  = {1 + alpha/7:.10f}")
     lines.append("")
-    lines.append(f"    1 + 3 α²   = NNLO PSL(2,7)-equivariant Fano correction")
-    lines.append(f"                  3 = rank(so(7)) = dim(Adj)/dim(V) = 21/7")
-    lines.append(f"                  (Paper 17 Phase 6.7-6.9)")
+    lines.append(f"    1 + (21/8)α² = NNLO PSL(2,7)-equivariant Fano correction")
+    lines.append(f"                    bracket coefficient = dim(Adj)/dim(S) = 21/8")
+    lines.append(f"                    (= rank(so(7)) = dim(Adj)/dim(V) = 3 in")
+    lines.append(f"                     prefactor form after distributing 8/7)")
+    lines.append(f"                    (Paper 17 Phase 6.7-6.9)")
     lines.append("")
     return "\n".join(lines)

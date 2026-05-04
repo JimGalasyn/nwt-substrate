@@ -42,8 +42,8 @@ Gravitational coupling from substrate alone:
 
 ```python
 >>> from nwt_substrate.gravity import G_substrate_SI
->>> G_substrate_SI()                  # 6.674494e-11 m^3 kg^-1 s^-2
-                                       # +29 ppm of CODATA, inside ±22 ppm
+>>> G_substrate_SI()                  # 6.674228e-11 m^3 kg^-1 s^-2
+                                       # -11 ppm of CODATA, inside ±22 ppm
                                        # experimental error bar
 ```
 
@@ -113,7 +113,7 @@ The library implements the computations described in:
 - **Paper 14** -- α^(21/2) heptafoil amplitude.
 - **Paper 15** -- Wilson amplitude on K_7 graph state.
 - **Paper 16** -- NWT three-field Lagrangian (BPS critical coupling).
-- **Paper 17** -- m_e / m_Pl closed form: G to +29 ppm CODATA.
+- **Paper 17** -- m_e / m_Pl closed form: G to -11 ppm CODATA (inside the ±22 ppm experimental band).
 - **Paper 18** -- Sakharov-induced Einstein gravity from substrate
   matter sector.  *Includes the canonical "Heegaard torus, two
   sectors" figure rendered by `nwt.diagrams.figure_paper18_unified()`.*

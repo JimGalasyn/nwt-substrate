@@ -76,7 +76,7 @@ def black_hole_summary(particle: str, use_substrate_G: bool = False) -> dict:
     Schwarzschild black hole.
 
     Set use_substrate_G=True to use the Paper 17 NNLO substrate prediction
-    (~29 ppm from CODATA).
+    (-11 ppm from CODATA, inside the +-22 ppm experimental band).
     """
     if particle not in PARTICLE_MASSES_KG:
         raise KeyError(f"Particle '{particle}' not in PARTICLE_MASSES_KG. "

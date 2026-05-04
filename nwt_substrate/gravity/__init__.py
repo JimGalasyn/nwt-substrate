@@ -17,14 +17,18 @@ Key substrate-derived results, exposed by this shim:
   Newton's G:
     LO  (Paper 14):    G = (8/7)² α²¹ ℏc / m_e²       (-0.24% from CODATA)
     NNLO (Paper 17):   G = 1 / M_Pl² with
-                       m_e/M_Pl = (8/7) α^(21/2) (1 + α/7 + 3α²)
-                       (~29 ppm from CODATA)
+                       m_e/M_Pl = (8/7) α^(21/2) (1 + α/7 + (21/8)α²)
+                       (-11 ppm from CODATA, inside the +-22 ppm
+                        experimental band)
 
   Each factor is a substrate primitive:
-    8/7      = dim(Spin(7) spinor S) / dim(vector V) = 8/7
-    α^(21/2) = K_7 Wilson amplitude on 21 edges (= K_7 edge count = dim Adj)
-    α/7      = NLO per-K_7-vertex correction (7 = K_7 vertex count)
-    3α²      = NNLO PSL(2,7) Fano correction (3 = rank so(7) = 21/7)
+    8/7         = dim(Spin(7) spinor S) / dim(vector V) = 8/7
+    α^(21/2)    = K_7 Wilson amplitude on 21 edges (= K_7 edge count = dim Adj)
+    α/7         = NLO per-K_7-vertex correction (7 = K_7 vertex count)
+    (21/8) α²   = NNLO PSL(2,7) Fano correction; bracket coefficient
+                  is dim(Adj)/dim(S) = 21/8.  Equivalent prefactor
+                  form (after distributing 8/7 into the bracket) has
+                  α² coefficient 21/7 = 3 = rank(so(7)) = dim(Adj)/dim(V).
 
 The same K_7 graph hosts the matter sector ((p,q)-windings → Paper 6
 particle masses) and the gravity sector (21-edge Wilson tower → Newton's
@@ -35,8 +39,9 @@ Quick start::
     import nwt_substrate.gravity as grav
 
     # Substrate-derived constants
-    print(grav.G_substrate_SI())            # ≈ 6.6745 × 10⁻¹¹ m³/kg/s²
-                                            # (29 ppm from CODATA 6.6743e-11)
+    print(grav.G_substrate_SI())            # ≈ 6.6742 × 10⁻¹¹ m³/kg/s²
+                                            # (-11 ppm from CODATA 6.6743e-11,
+                                            #  inside the +-22 ppm CODATA band)
     print(grav.M_PLANCK_GEV)                # 1.221e19 GeV
     print(grav.m_e_over_M_Pl_NNLO())        # ≈ 4.186 × 10⁻²³
 

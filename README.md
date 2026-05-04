@@ -3,7 +3,7 @@
 A substrate-algebraic computation library for Null Worldtube Theory (NWT).
 
 `nwt-substrate` is the reference implementation of the substrate algebra
-described in the NWT paper series:\ a Cl(0,7) octonion Clifford algebra
+described in the NWT paper series: a Cl(0,7) octonion Clifford algebra
 with K_7 graph state on the Heegaard torus of the Brieskorn-Poincaré
 sphere S^3 / 2I, supporting Particle / scattering / decay /
 gravitational-coupling computations from a single internally consistent

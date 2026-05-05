@@ -111,19 +111,70 @@ class _ComptonProcess:
         )
 
     def __init__(self):
+        # Color palette for the algebra<->picture mapping.  The two
+        # external electrons share a color (same particle on both ends);
+        # the two external photons share a color (matches the renderer's
+        # default photon blue, so the diagram still reads as "Feynman");
+        # the internal virtual electron gets a distinct red so the
+        # propagator visually pops.
+        ELECTRON = "#0d6e6e"     # teal (external electrons)
+        PHOTON = "#1f3f9e"       # darker blue (external photons)
+        INTERNAL = "#c0392b"     # red (internal/virtual propagator)
+        VERTEX = "#1a1a1a"       # black (algebraic prefactor + brackets)
+
+        compton_colors = {
+            "in_e": ELECTRON,
+            "in_g": PHOTON,
+            "internal_e": INTERNAL,
+            "out_e": ELECTRON,
+            "out_g": PHOTON,
+        }
+        # s-channel term decomposition (left-to-right reading order):
+        #   iM = -ie^2 \bar u(p')  gamma^nu eps'^*_nu  S_F(p+k)
+        #         gamma^mu eps_mu  u(p)
+        s_terms = [
+            _diag_mod.Term(r"i\mathcal{M}_s = -ie^2", VERTEX),
+            _diag_mod.Term(r"\bar u(p')", ELECTRON, "out_e"),
+            _diag_mod.Term(r"\gamma^{\nu}\,\epsilon'^{*}_{\nu}",
+                           PHOTON, "out_g"),
+            _diag_mod.Term(r"S_F(p+k)", INTERNAL, "internal_e"),
+            _diag_mod.Term(r"\gamma^{\mu}\,\epsilon_{\mu}",
+                           PHOTON, "in_g"),
+            _diag_mod.Term(r"u(p)", ELECTRON, "in_e"),
+        ]
+        # u-channel: photons swapped, propagator becomes S_F(p-k')
+        u_terms = [
+            _diag_mod.Term(r"i\mathcal{M}_u = -ie^2", VERTEX),
+            _diag_mod.Term(r"\bar u(p')", ELECTRON, "out_e"),
+            _diag_mod.Term(r"\gamma^{\mu}\,\epsilon_{\mu}",
+                           PHOTON, "in_g"),
+            _diag_mod.Term(r"S_F(p-k')", INTERNAL, "internal_e"),
+            _diag_mod.Term(r"\gamma^{\nu}\,\epsilon'^{*}_{\nu}",
+                           PHOTON, "out_g"),
+            _diag_mod.Term(r"u(p)", ELECTRON, "in_e"),
+        ]
+
         self.diagrams = SimpleNamespace(
             s_channel=_diag_mod.Diagram(
                 process_name="compton", channel="s_channel",
                 expression=_draw.EXPRESSIONS["compton"],
                 feynman_rules={"propagator": "fermion", "vertex": "QED"},
-                _render_fn=lambda ax: _draw.render_compton(ax, "s"),
+                expression_terms=s_terms,
+                element_colors=compton_colors,
+                _render_fn=lambda ax, color_map=None: _draw.render_compton(
+                    ax, "s", color_map=color_map
+                ),
                 _tikz_template=_diag_mod.TIKZ_COMPTON_S,
             ),
             u_channel=_diag_mod.Diagram(
                 process_name="compton", channel="u_channel",
                 expression=_draw.EXPRESSIONS["compton"],
                 feynman_rules={"propagator": "fermion", "vertex": "QED"},
-                _render_fn=lambda ax: _draw.render_compton(ax, "u"),
+                expression_terms=u_terms,
+                element_colors=compton_colors,
+                _render_fn=lambda ax, color_map=None: _draw.render_compton(
+                    ax, "u", color_map=color_map
+                ),
                 _tikz_template=_diag_mod.TIKZ_COMPTON_U,
             ),
         )

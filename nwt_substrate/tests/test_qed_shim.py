@@ -132,6 +132,63 @@ def test_diagram_to_tikz():
     assert "tikz-feynman" in code   # in the comment header
 
 
+def test_compton_diagrams_have_color_mapping():
+    """Compton s/u channels expose Term lists + element_colors that
+    map each algebraic chunk of iM to a diagram element."""
+    for diag in (qed.compton.diagrams.s_channel,
+                 qed.compton.diagrams.u_channel):
+        assert diag.expression_terms, (
+            f"{diag.process_name}/{diag.channel} has no expression_terms"
+        )
+        # Each element_id appearing in a Term must have a color
+        # registered in element_colors (excluding the empty-id
+        # prefactor/bracket terms).
+        for term in diag.expression_terms:
+            if term.element_id:
+                assert term.element_id in diag.element_colors, (
+                    f"term {term.element_id!r} has no color in"
+                    f" {diag.process_name}/{diag.channel}"
+                )
+        # The five Compton element_ids must all be present and
+        # external-electron / external-photon colors must agree across
+        # the in/out pair (same particle line, same color).
+        ec = diag.element_colors
+        for key in ("in_e", "in_g", "internal_e", "out_e", "out_g"):
+            assert key in ec, f"missing color for {key!r}"
+        assert ec["in_e"] == ec["out_e"], (
+            "incoming and outgoing electron should share the same color"
+        )
+        assert ec["in_g"] == ec["out_g"], (
+            "incoming and outgoing photon should share the same color"
+        )
+
+
+def test_compton_render_color_mapped_returns_figure():
+    """Diagram.render_color_mapped returns a Figure with two axes."""
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    fig = qed.compton.diagrams.s_channel.render_color_mapped()
+    assert fig is not None
+    # Two stacked axes: diagram on top, expression on bottom
+    assert len(fig.axes) == 2
+    plt.close(fig)
+
+
+def test_render_color_mapped_raises_when_no_terms():
+    """A Diagram without expression_terms must raise on color-mapped
+    render rather than silently producing an unlabeled figure."""
+    import pytest
+    from nwt_substrate.qed.diagram import Diagram
+    bare = Diagram(
+        process_name="bare", channel="test",
+        expression="$x$",
+        _render_fn=lambda ax, color_map=None: None,
+    )
+    with pytest.raises(ValueError, match="expression_terms"):
+        bare.render_color_mapped()
+
+
 def test_diagram_to_tikz_with_file(tmp_path):
     out = tmp_path / "compton_s.tex"
     qed.compton.diagrams.s_channel.to_tikz(file=out)

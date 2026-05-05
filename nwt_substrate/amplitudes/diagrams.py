@@ -143,18 +143,34 @@ def draw_vertex(ax, xy, color="black", size=12):
 # Specific process diagrams (s-channel + u-channel where applicable)
 # =============================================================================
 
-def render_compton(ax=None, channel="both"):
+def render_compton(ax=None, channel="both", color_map=None):
     """
     Compton scattering e- + gamma -> e- + gamma.
 
     channel = "s" : s-channel only
     channel = "u" : u-channel only
     channel = "both" : both side-by-side
+
+    color_map : dict[str, str] | None
+        Optional element_id -> color overrides.  Recognized keys:
+        "in_e", "in_g", "internal_e", "out_e", "out_g".  Unspecified
+        elements use the standard black/darkblue Feynman convention.
+        Used by `Diagram.render_color_mapped` to color each diagram
+        part to match its term in the amplitude expression.
     """
+    cm = color_map or {}
+    fermion_default = "black"
+    photon_default = "darkblue"
+    c_in_e = cm.get("in_e", fermion_default)
+    c_in_g = cm.get("in_g", photon_default)
+    c_internal_e = cm.get("internal_e", fermion_default)
+    c_out_e = cm.get("out_e", fermion_default)
+    c_out_g = cm.get("out_g", photon_default)
+
     if channel == "both":
         fig, axes = plt.subplots(1, 2, figsize=(10, 4))
-        render_compton(axes[0], "s")
-        render_compton(axes[1], "u")
+        render_compton(axes[0], "s", color_map=color_map)
+        render_compton(axes[1], "u", color_map=color_map)
         for a, t in zip(axes, ["s-channel", "u-channel"]):
             a.set_title(t, fontsize=11)
         fig.suptitle(r"$e^{-}\gamma \to e^{-}\gamma$  (Compton)", fontsize=12)
@@ -175,11 +191,12 @@ def render_compton(ax=None, channel="both"):
         in_g = (0.05, 0.8)
         out_e = (0.95, 0.2)
         out_g = (0.95, 0.8)
-        draw_fermion(ax, in_e, v1, label=r"$e^{-}(p)$")
-        draw_photon(ax, in_g, v1, label=r"$\gamma(k)$")
-        draw_fermion(ax, v1, v2, label=r"$e^{*}(p+k)$")
-        draw_fermion(ax, v2, out_e, label=r"$e^{-}(p')$")
-        draw_photon(ax, v2, out_g, label=r"$\gamma(k')$")
+        draw_fermion(ax, in_e, v1, label=r"$e^{-}(p)$", color=c_in_e)
+        draw_photon(ax, in_g, v1, label=r"$\gamma(k)$", color=c_in_g)
+        draw_fermion(ax, v1, v2, label=r"$e^{*}(p+k)$",
+                     color=c_internal_e)
+        draw_fermion(ax, v2, out_e, label=r"$e^{-}(p')$", color=c_out_e)
+        draw_photon(ax, v2, out_g, label=r"$\gamma(k')$", color=c_out_g)
         draw_vertex(ax, v1)
         draw_vertex(ax, v2)
     elif channel == "u":
@@ -191,11 +208,12 @@ def render_compton(ax=None, channel="both"):
         out_g = (0.95, 0.8)
         # Incoming photon -> top vertex; outgoing photon connects from same top vertex
         # but with inputs/outputs swapped
-        draw_fermion(ax, in_e, v1, label=r"$e^{-}(p)$")
-        draw_photon(ax, in_g, v2, label=r"$\gamma(k)$")
-        draw_fermion(ax, v1, v2, label=r"$e^{*}(p-k')$")
-        draw_fermion(ax, v2, out_e, label=r"$e^{-}(p')$")
-        draw_photon(ax, v1, out_g, label=r"$\gamma(k')$")
+        draw_fermion(ax, in_e, v1, label=r"$e^{-}(p)$", color=c_in_e)
+        draw_photon(ax, in_g, v2, label=r"$\gamma(k)$", color=c_in_g)
+        draw_fermion(ax, v1, v2, label=r"$e^{*}(p-k')$",
+                     color=c_internal_e)
+        draw_fermion(ax, v2, out_e, label=r"$e^{-}(p')$", color=c_out_e)
+        draw_photon(ax, v1, out_g, label=r"$\gamma(k')$", color=c_out_g)
         draw_vertex(ax, v1)
         draw_vertex(ax, v2)
     else:

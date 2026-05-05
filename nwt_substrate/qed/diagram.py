@@ -13,6 +13,27 @@ import matplotlib.pyplot as plt
 
 
 @dataclass
+class Term:
+    """
+    A single chunk of a Feynman amplitude expression, paired with the
+    diagram element it represents.
+
+    `latex` is the LaTeX fragment of the chunk (no surrounding $...$);
+    `color` is a matplotlib color string (hex or named); `element_id`
+    is a stable identifier matching one of the keys understood by the
+    matplotlib renderer's `color_map` argument
+    (e.g., `"in_e"`, `"internal_e"`, `"out_g"`).  Terms whose
+    `element_id` is empty (the default, e.g. for prefactors and
+    brackets) carry color but are not tied to any diagram part; they
+    are used to give the expression a consistent visual rhythm.
+    """
+
+    latex: str
+    color: str = "#1a1a1a"
+    element_id: str = ""
+
+
+@dataclass
 class Diagram:
     """
     A Feynman diagram in the QED shim.
@@ -28,11 +49,22 @@ class Diagram:
     channel : str
         Channel label ("s_channel", "t_channel", "tree", etc.).
     expression : str
-        LaTeX string of the substrate-algebra amplitude i M.
+        LaTeX string of the substrate-algebra amplitude i M (single
+        unbroken chunk; used for plain `save()` rendering).
     feynman_rules : dict
         Metadata: which propagators / vertices appear in this diagram.
+    expression_terms : list[Term]
+        Optional term-by-term decomposition of the amplitude, with
+        each term tagged by its diagram element (for the
+        `render_color_mapped()` view that maps algebra to picture).
+    element_colors : dict[str, str]
+        Optional mapping from element_id to matplotlib color, used by
+        the renderer to color each diagram part to match its
+        corresponding term in `expression_terms`.
     _render_fn : callable
         Internal: matplotlib renderer that draws the diagram on an Axes.
+        Renderers that support color mapping accept a `color_map=...`
+        keyword argument; legacy renderers ignore it.
     _tikz_template : str
         Internal: TikZ-Feynman LaTeX template (idiomatic, lets tikz-feynman
         do auto-layout).
@@ -42,6 +74,8 @@ class Diagram:
     channel: str
     expression: str
     feynman_rules: dict = field(default_factory=dict)
+    expression_terms: list = field(default_factory=list)
+    element_colors: dict = field(default_factory=dict)
     _render_fn: Callable = field(default=None, repr=False)
     _tikz_template: str = field(default="", repr=False)
 
@@ -76,6 +110,109 @@ class Diagram:
             fig.subplots_adjust(bottom=0.18)
         path = Path(path)
         fig.savefig(path, dpi=dpi, bbox_inches="tight", **kwargs)
+        plt.close(fig)
+        return path
+
+    # ---------- Color-mapped rendering: algebra <-> picture ----------
+
+    def render_color_mapped(
+        self,
+        ax_diagram=None,
+        ax_expression=None,
+        figsize: tuple[float, float] = (6.0, 5.6),
+        height_ratios: tuple[float, float] = (8.0, 1.0),
+        expression_fontsize: int = 12,
+    ) -> "plt.Figure":
+        """
+        Render the diagram with each part colored by its `element_id`,
+        and below it render the amplitude as a horizontal chain of
+        colored chunks (one per `Term` in `expression_terms`), so the
+        algebra-to-picture correspondence is visually explicit.
+
+        If `ax_diagram` and `ax_expression` are both `None`, creates a
+        new Figure with two stacked axes and returns it.  Otherwise
+        the caller supplies axes (e.g., from a custom GridSpec) and
+        the existing Figure is returned.
+
+        Requires that `expression_terms` and `element_colors` are
+        populated (raises `ValueError` if not), and that the
+        `_render_fn` accepts a `color_map` keyword argument.
+        """
+        from matplotlib.offsetbox import (
+            TextArea, HPacker, AnchoredOffsetbox,
+        )
+
+        if not self.expression_terms:
+            raise ValueError(
+                f"Diagram {self.process_name}/{self.channel} has no "
+                f"expression_terms; populate them in the process "
+                f"definition before calling render_color_mapped()."
+            )
+
+        if ax_diagram is None and ax_expression is None:
+            fig = plt.figure(figsize=figsize)
+            gs = fig.add_gridspec(
+                2, 1, height_ratios=list(height_ratios),
+                hspace=0.02, left=0.02, right=0.98,
+                top=0.99, bottom=0.02,
+            )
+            ax_diagram = fig.add_subplot(gs[0])
+            ax_expression = fig.add_subplot(gs[1])
+        elif ax_diagram is None or ax_expression is None:
+            raise ValueError(
+                "Provide both ax_diagram and ax_expression, or neither."
+            )
+        else:
+            fig = ax_diagram.get_figure()
+
+        # Render the diagram with the per-element color map.  The
+        # renderer must accept a `color_map=...` keyword.
+        try:
+            self._render_fn(ax_diagram, color_map=self.element_colors)
+        except TypeError:
+            # Legacy renderer: fall back to default colors.
+            self._render_fn(ax_diagram)
+        ax_diagram.set_aspect("equal")
+        ax_diagram.axis("off")
+
+        # Render the expression as a chain of colored chunks.  We use
+        # an AnchoredOffsetbox with an HPacker so each Term can have
+        # its own color (matplotlib MathText does not support inline
+        # \color, but separate Text artists can be packed horizontally).
+        children = [
+            TextArea(
+                t.latex if t.latex.startswith("$") else f"${t.latex}$",
+                textprops=dict(color=t.color, fontsize=expression_fontsize),
+            )
+            for t in self.expression_terms
+        ]
+        hpacker = HPacker(children=children, align="baseline",
+                          pad=0, sep=2)
+        anchored = AnchoredOffsetbox(
+            loc="center", child=hpacker, pad=0, frameon=False,
+            bbox_to_anchor=(0.5, 0.5),
+            bbox_transform=ax_expression.transAxes,
+        )
+        ax_expression.add_artist(anchored)
+        ax_expression.axis("off")
+
+        return fig
+
+    def save_color_mapped(
+        self, path: str | Path, dpi: int = 150, **kwargs,
+    ) -> Path:
+        """Render via `render_color_mapped()` and save to disk."""
+        fig = self.render_color_mapped(**{
+            k: v for k, v in kwargs.items()
+            if k in ("figsize", "height_ratios", "expression_fontsize")
+        })
+        savefig_kwargs = {
+            k: v for k, v in kwargs.items()
+            if k not in ("figsize", "height_ratios",
+                         "expression_fontsize")
+        }
+        path = Path(path)
+        fig.savefig(path, dpi=dpi, bbox_inches="tight", **savefig_kwargs)
         plt.close(fig)
         return path
 

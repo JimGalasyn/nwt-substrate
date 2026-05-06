@@ -60,6 +60,27 @@ from .exporters import (
     export_all_experiments,
 )
 
+from .sidereal_geometry import (
+    Observatory,
+    YORKTOWN,
+    EHNINGEN,
+    lab_to_icrs_matrix,
+    lab_to_icrs,
+    default_k7_lab_positions,
+    predicted_sigma_pattern,
+    directional_match_score,
+    lst_hours,
+    next_lst_match_unix,
+    schedule_triplet_at_lst,
+)
+
+from .exp11_controls import (
+    readout_control_circuit,
+    t1_idle_control_circuit,
+    parse_zbasis_expectations,
+    control_drift_corrected,
+)
+
 
 __all__ = [
     # circuits
@@ -81,4 +102,21 @@ __all__ = [
     # exporters
     "export_experiment_script",
     "export_all_experiments",
+    # sidereal geometry (Exp 11 directional layer)
+    "Observatory",
+    "YORKTOWN",
+    "EHNINGEN",
+    "lab_to_icrs_matrix",
+    "lab_to_icrs",
+    "default_k7_lab_positions",
+    "predicted_sigma_pattern",
+    "directional_match_score",
+    "lst_hours",
+    "next_lst_match_unix",
+    "schedule_triplet_at_lst",
+    # Exp 11 control channels (drift attribution)
+    "readout_control_circuit",
+    "t1_idle_control_circuit",
+    "parse_zbasis_expectations",
+    "control_drift_corrected",
 ]

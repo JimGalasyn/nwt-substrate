@@ -38,6 +38,8 @@ Quick start::
 from .circuits import (
     k7_graph_state,
     stabilizer_measurement,
+    k7_stabilizer_circuit,
+    parse_k7_stabilizer_counts,
     full_k7_state_prep_with_measurement,
     entanglement_tomography_x_basis,
     y_basis_3body_correlator,
@@ -86,6 +88,8 @@ __all__ = [
     # circuits
     "k7_graph_state",
     "stabilizer_measurement",
+    "k7_stabilizer_circuit",
+    "parse_k7_stabilizer_counts",
     "full_k7_state_prep_with_measurement",
     "entanglement_tomography_x_basis",
     "y_basis_3body_correlator",

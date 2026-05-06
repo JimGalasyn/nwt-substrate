@@ -92,6 +92,69 @@ def stabilizer_measurement(vertex: int) -> "QuantumCircuit":
     return qc
 
 
+def k7_stabilizer_circuit(vertex: int) -> "QuantumCircuit":
+    """
+    Measure the K_7 stabilizer S_v = X_v * prod_{u != v} Z_u on |K_7> by
+    rotating qubit v from X->Z basis (H_v), then measuring all 7 qubits
+    in Z.  In the rotated basis S_v = prod_i Z_i = parity of all 7 bits.
+
+    This is the CORRECT architecture for measuring a single stabilizer
+    on real hardware: prep |K_7> fresh, single basis-change gate, single
+    measurement.  Avoids the mid-circuit-reset-on-Heron pitfall in
+    full_k7_state_prep_with_measurement.
+
+    To measure all 7 stabilizers, build 7 such circuits (one per
+    vertex) and submit them as a list to Sampler.run([...]).  Each
+    circuit's <S_v> is the mean of (-1)**parity over its shots.
+
+    Returns
+    -------
+    QuantumCircuit on 7 qubits with 7-bit classical register.  Each
+    measured bitstring's all-bits-parity gives one (+1 or -1)
+    sample of S_v.
+    """
+    if not HAS_QISKIT:
+        raise RuntimeError("qiskit not installed; pip install qiskit")
+    if not (0 <= vertex < 7):
+        raise ValueError(f"vertex must be in 0..6 (got {vertex!r})")
+
+    qc = QuantumCircuit(7, 7)
+    # Prep |K_7>
+    for q in range(7):
+        qc.h(q)
+    for i in range(7):
+        for j in range(i + 1, 7):
+            qc.cz(i, j)
+    # Rotate vertex v's X-basis into Z-basis.
+    qc.h(vertex)
+    # Measure all 7 in Z.
+    for q in range(7):
+        qc.measure(q, q)
+    return qc
+
+
+def parse_k7_stabilizer_counts(counts: dict) -> tuple[float, float]:
+    """From a 7-bit counts dict, compute <S_v> = mean of (-1)**parity
+    across shots, and the shot-noise stderr.
+
+    The bitstring's all-bits parity (sum mod 2) gives the eigenvalue
+    of the rotated stabilizer; +1 if even, -1 if odd.
+    """
+    total = 0.0
+    n_shots = 0
+    for bitstr, count in counts.items():
+        bs = bitstr.replace(" ", "")
+        parity = sum(int(b) for b in bs) % 2
+        ev = 1 if parity == 0 else -1
+        total += ev * count
+        n_shots += count
+    if n_shots == 0:
+        return 0.0, 0.0
+    mean = total / n_shots
+    var = max(0.0, 1.0 - mean ** 2)
+    return float(mean), float((var / n_shots) ** 0.5)
+
+
 def full_k7_state_prep_with_measurement() -> "QuantumCircuit":
     """
     Combined: prepare |K_7> on qubits 0..6, then measure all 7 stabilizers.

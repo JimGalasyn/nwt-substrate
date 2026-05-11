@@ -84,6 +84,21 @@ class Particle:
     I_pdg: Optional[float] = None
     notes: str = ""
 
+    def __post_init__(self):
+        """Substrate-identity validation: n_q must fit in the K_7 carrier table.
+
+        N_CARRIER_TYPES = 7 = N_VERTICES_K7 carrier-knot types are
+        available. Any particle with n_q > MAX_CROSSING_NUMBER = 6
+        cannot be embedded in the K_7 substrate.
+        """
+        from ..isa.constants import MAX_CROSSING_NUMBER
+        if not (0 <= self.n_q <= MAX_CROSSING_NUMBER):
+            raise ValueError(
+                f"Particle {self.name!r}: n_q={self.n_q} outside "
+                f"substrate range [0, {MAX_CROSSING_NUMBER}] "
+                f"(= MAX_CROSSING_NUMBER = N_VERTICES_K7 - 1)"
+            )
+
     # ---------- Derived properties ----------
 
     @property

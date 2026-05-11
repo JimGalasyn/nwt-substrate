@@ -32,6 +32,16 @@ descend from Spin(7)/2T/E_6 (memory: checkpoint 2026-04-24).
 
 from __future__ import annotations
 
+from ..isa import (
+    k7_wilson_amplitude,
+    k7_wilson_breakdown,
+    SPINOR_VECTOR_RATIO,
+    WILSON_EXPONENT_K7,
+    NLO_VERTEX_COEFFICIENT,
+    NNLO_BRACKET_COEFFICIENT,
+    N_EDGES_K7,
+    N_VERTICES_K7,
+)
 from .constants import (
     M_PLANCK_GEV, M_E_GEV, ALPHA_QED, G_NEWTON_SI,
     HBAR_J_S, C_LIGHT_M_S, M_ELECTRON_KG,
@@ -40,25 +50,40 @@ from .constants import (
 
 # ===========================================================================
 # Substrate-derived m_e / M_Pl
+#
+# Implemented as the K_7 Wilson amplitude (Paper 17 §6) via the
+# substrate ISA layer.  All magic numbers (8/7, 21/2, 1/7, 21/8) are
+# sourced from `nwt_substrate.isa.constants` — DO NOT redefine them
+# here.  This makes the cross-shim structural identity
+#
+#       21 = |E(K_7)| = dim(Adj_Spin(7))
+#
+# enforced at import time, and ensures that chemistry's K_7-hub
+# threshold (also derived from |E(K_7)|) stays in sync with gravity's
+# Wilson exponent (also derived from |E(K_7)|).
 # ===========================================================================
 
 def m_e_over_M_Pl_LO(alpha: float = ALPHA_QED) -> float:
     """
     Leading-order substrate prediction:
         m_e / M_Pl = (8/7) × α^(21/2)
+                   = SPINOR_VECTOR_RATIO × α^(N_EDGES_K7 / 2)
+
+    Computed via `isa.k7_wilson_amplitude(alpha, order="LO")`.
     """
-    return (8.0 / 7.0) * alpha ** (21.0 / 2.0)
+    return k7_wilson_amplitude(alpha, order="LO")
 
 
 def m_e_over_M_Pl_NLO(alpha: float = ALPHA_QED) -> float:
     """
     NLO substrate prediction (Paper 17):
-        m_e / M_Pl = (8/7) × α^(21/2) × (1 + α/7)
+        m_e / M_Pl = (8/7) × α^(21/2) × (1 + α/N_VERTICES_K7)
 
     The (1 + α/7) is the per-K_7-vertex correction structurally derived
-    in Paper 17 Phase 6.5; 7 is the number of K_7 vertices.
+    in Paper 17 Phase 6.5; 7 is the number of K_7 vertices (sourced
+    from isa.N_VERTICES_K7).
     """
-    return (8.0 / 7.0) * alpha ** (21.0 / 2.0) * (1.0 + alpha / 7.0)
+    return k7_wilson_amplitude(alpha, order="NLO")
 
 
 def m_e_over_M_Pl_NNLO(alpha: float = ALPHA_QED) -> float:
@@ -66,17 +91,19 @@ def m_e_over_M_Pl_NNLO(alpha: float = ALPHA_QED) -> float:
     NNLO substrate prediction (Paper 17 closed form):
         m_e / M_Pl = (8/7) × α^(21/2) × (1 + α/7 + (21/8) α²)
 
-    Where the α² bracket coefficient is dim(Adj_Spin(7))/dim(S) = 21/8
-    (Paper 17 §3.iii; Phase 6.9).  Equivalent prefactor-form
-    statement: after distributing (8/7) into the bracket, the α²
-    coefficient becomes (8/7)·(21/8) = 21/7 = 3 = rank(so(7)) =
-    dim(Adj)/dim(V); the α² coefficient is identified four
-    independent ways in Phase 6.9.  The bracket form uses 21/8.
+    Where each factor is sourced from `nwt_substrate.isa.constants`:
+        8/7   = SPINOR_VECTOR_RATIO       = DIM_S_SPIN7 / DIM_V_SPIN7
+        21/2  = WILSON_EXPONENT_K7        = N_EDGES_K7 / 2
+        1/7   = NLO_VERTEX_COEFFICIENT    = 1 / N_VERTICES_K7
+        21/8  = NNLO_BRACKET_COEFFICIENT  = DIM_ADJ_SPIN7 / DIM_S_SPIN7
+
+    The α² bracket coefficient is identified four independent ways in
+    Paper 17 Phase 6.9; the bracket form uses 21/8.
 
     CODATA agreement: -5.6 ppm on m_e/M_Pl, -11 ppm on G (inside the
     +-22 ppm experimental band).
     """
-    return (8.0 / 7.0) * alpha ** (21.0 / 2.0) * (1.0 + alpha / 7.0 + (21.0 / 8.0) * alpha ** 2)
+    return k7_wilson_amplitude(alpha, order="NNLO")
 
 
 def m_e_over_M_Pl_observed() -> float:

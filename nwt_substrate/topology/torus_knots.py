@@ -83,18 +83,16 @@ def carrier_for_n_q(n_q: int) -> str:
     """
     Map n_q to its canonical carrier knot.
 
-    n_q = crossing number of carrier; this is the inverse map.
+    n_q = crossing number of carrier ∈ [0, MAX_CROSSING_NUMBER] = [0, 6];
+    this is the inverse map. Names sourced from `isa.CARRIER_NAMES`.
+
+    Substrate identity: there are N_CARRIER_TYPES = 7 distinct carrier
+    types = N_VERTICES_K7, one per vertex of the K_7 substrate graph.
     """
-    table = {
-        0: "unknot",
-        1: "unknot",
-        2: "Hopf",
-        3: "trefoil",
-        4: "figure-eight",
-        5: "cinquefoil",
-        6: "6_1 knot",
-    }
-    return table.get(n_q, f"({n_q}-crossing carrier)")
+    from ..isa.constants import CARRIER_NAMES, MAX_CROSSING_NUMBER
+    if 0 <= n_q <= MAX_CROSSING_NUMBER:
+        return CARRIER_NAMES[n_q]
+    return f"({n_q}-crossing carrier)"
 
 
 def beta_phase(p: int, m_int: int) -> float | None:

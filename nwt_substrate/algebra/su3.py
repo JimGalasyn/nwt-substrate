@@ -34,7 +34,29 @@ def gell_mann_matrices() -> list[np.ndarray]:
     Return the 8 hermitian Gell-Mann matrices lambda^a, a = 1..8.
 
     Index 0 corresponds to lambda^1 (we use 0-indexed Python).
+
+    Substrate identity (asserted at runtime via len + shape check):
+      len(matrices) == N_GLUONS == DIM_OCTONION == 8
+      each matrix has shape (N_C_SU3, N_C_SU3) == (3, 3)
     """
+    from ..isa.constants import N_GLUONS, N_C_SU3
+    matrices = _gell_mann_matrices_raw()
+    if len(matrices) != N_GLUONS:
+        raise AssertionError(
+            f"Substrate identity violated: number of Gell-Mann matrices "
+            f"{len(matrices)} != N_GLUONS={N_GLUONS}"
+        )
+    for k, m in enumerate(matrices):
+        if m.shape != (N_C_SU3, N_C_SU3):
+            raise AssertionError(
+                f"Substrate identity violated: λ^{k+1} has shape {m.shape}, "
+                f"expected ({N_C_SU3}, {N_C_SU3})"
+            )
+    return matrices
+
+
+def _gell_mann_matrices_raw() -> list[np.ndarray]:
+    """The raw 8 Gell-Mann matrices without substrate validation."""
     L1 = np.array([[0, 1, 0],
                    [1, 0, 0],
                    [0, 0, 0]], dtype=complex)

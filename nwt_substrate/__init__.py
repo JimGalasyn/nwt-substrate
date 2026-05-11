@@ -33,6 +33,7 @@ from .compositions import (
     LAMBDA_QCD_MEV,
 )
 from . import diagrams
+from . import isa
 
 __version__ = "0.1.0"
 
@@ -45,4 +46,5 @@ __all__ = [
     "decompose",
     "LAMBDA_QCD_MEV",
     "diagrams",
+    "isa",
 ]

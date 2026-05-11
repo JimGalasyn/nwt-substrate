@@ -50,6 +50,77 @@ from .constants import (
     r_e,
 )
 
+# ---- Substrate-ISA identities ----
+from ..isa import (
+    DIM_OCTONION,
+    DIM_S_SPIN7,
+    DIM_V_SPIN7,
+    N_CL07_IMAGINARY,
+    N_LORENTZ_FROM_CL07,
+    DIM_INTERNAL_SU2,
+    N_VERTICES_K7,
+    N_EDGES_K7,
+)
+
+
+def substrate_breakdown() -> str:
+    """Pretty-print the substrate Cl(0,7)→Cl(1,3) construction.
+
+    Spells out the structural identities that QED inherits from the
+    substrate algebra. Every magic number below is sourced from
+    `nwt_substrate.isa.constants` — a refactor that violates them
+    breaks tests across all shims.
+    """
+    lines = ["QED from substrate Cl(0,7) octonion algebra:"]
+    lines.append("")
+    lines.append(f"    Cl(0,7) has {N_CL07_IMAGINARY} imaginary generators "
+                 f"(= N_CL07_IMAGINARY = DIM_V_SPIN7 = |V(K_7)|).")
+    lines.append(f"    The octonion algebra is {DIM_OCTONION}-dim "
+                 f"(= DIM_OCTONION = DIM_S_SPIN7 = Spin(7) spinor rep).")
+    lines.append("")
+    lines.append(f"    Lorentz Cl(1,3) embedding:")
+    lines.append(f"      pick {N_LORENTZ_FROM_CL07} of {N_CL07_IMAGINARY} imaginary directions "
+                 f"({N_LORENTZ_FROM_CL07} = N_LORENTZ_FROM_CL07)")
+    lines.append(f"      Wick-rotate one → time direction")
+    lines.append(f"      → 4 Dirac γ^μ as {DIM_OCTONION}×{DIM_OCTONION} matrices")
+    lines.append("")
+    lines.append(f"    Remaining {DIM_INTERNAL_SU2} directions "
+                 f"({N_CL07_IMAGINARY} - {N_LORENTZ_FROM_CL07} = {DIM_INTERNAL_SU2}) "
+                 f"generate internal SU(2)")
+    lines.append(f"    that commutes with all γ^μ. "
+                 f"(= DIM_INTERNAL_SU2 = RANK_SO7 = 3)")
+    lines.append("")
+    lines.append(f"    Sanity: 4 (Lorentz) + 3 (internal) = 7 (Cl(0,7) imaginary)")
+    lines.append(f"                                       = |V(K_7)| = DIM_V_SPIN7")
+    lines.append("")
+    lines.append(f"    Cross-shim ID: the {N_EDGES_K7} edges of K_7 (= so(7) generators)")
+    lines.append(f"      drive: gravity's α^({N_EDGES_K7}/2) = α^10.5 Wilson exponent")
+    lines.append(f"             chemistry's K_7-hub Tr(M²) ≤ -24 indicator")
+    lines.append(f"             QED's 8×8 γ^μ embedded in the same Spin(7) "
+                 f"adjoint")
+    return "\n".join(lines)
+
+
+# Expose substrate identities as a namespace too (for `qed.substrate.X` access)
+class _SubstrateNamespace:
+    """Cross-shim K_7 substrate identities visible from the QED shim.
+
+    All values are sourced from `nwt_substrate.isa.constants`. If one
+    of these doesn't match `isa.X`, the cross-shim tests fail.
+    """
+    DIM_OCTONION = DIM_OCTONION
+    DIM_S_SPIN7 = DIM_S_SPIN7
+    DIM_V_SPIN7 = DIM_V_SPIN7
+    N_CL07_IMAGINARY = N_CL07_IMAGINARY
+    N_LORENTZ_FROM_CL07 = N_LORENTZ_FROM_CL07
+    DIM_INTERNAL_SU2 = DIM_INTERNAL_SU2
+    N_EDGES_K7 = N_EDGES_K7
+    N_VERTICES_K7 = N_VERTICES_K7
+    breakdown = staticmethod(substrate_breakdown)
+
+
+substrate = _SubstrateNamespace()
+
 # ---- Running coupling ----
 from ..amplitudes.running_couplings import alpha_qed as _alpha_qed_running
 
@@ -125,4 +196,6 @@ __all__ = [
     "Event", "Diagram",
     # gallery
     "gallery_all",
+    # substrate identities
+    "substrate", "substrate_breakdown",
 ]

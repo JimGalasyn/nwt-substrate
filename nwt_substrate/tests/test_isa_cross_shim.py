@@ -600,6 +600,10 @@ class TestFiveWayCrossShim:
         assert isa.DIM_OCTONION == 8
 
 
+@pytest.mark.skipif(
+    not heron.HAS_QISKIT,
+    reason="qiskit not installed; install nwt-substrate[heron] or [test]"
+)
 class TestHeronSubstrateIdentities:
     """The heron shim compiles substrate ISA to qiskit quantum circuits.
 
@@ -731,6 +735,10 @@ class TestSixWayCrossShim:
         assert total == 21
 
 
+@pytest.mark.skipif(
+    not heron.HAS_QISKIT,
+    reason="qiskit not installed; install nwt-substrate[heron] or [test]"
+)
 class TestSevenWayCrossShim:
     """All seven shims (chem, gravity, qed, qcd, particles, ew, heron)
     consume the same K_7 substrate. The loop is closed: substrate algebra

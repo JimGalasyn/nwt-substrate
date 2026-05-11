@@ -36,6 +36,7 @@ dependencies = [
     "scipy>=1.10",
     "matplotlib>=3.7",
     "sympy>=1.12",
+    "networkx>=2.8",
 ]
 
 [project.optional-dependencies]
@@ -43,10 +44,14 @@ heron = [
     "qiskit>=1.0",
     "qiskit-ibm-runtime>=0.20",
 ]
+torch = [
+    "torch>=2.0",
+]
 test = [
     "pytest>=7.0",
+    "qiskit>=1.0",
 ]
-all = ["nwt-substrate[heron,test]"]
+all = ["nwt-substrate[heron,torch,test]"]
 
 [project.urls]
 Homepage = "https://github.com/JimGalasyn/nwt-substrate"

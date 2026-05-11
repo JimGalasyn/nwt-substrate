@@ -277,6 +277,154 @@ def predicted_sigma_pattern(
 
 
 # =====================================================================
+# Asymmetric-jet refinement: secondary prediction with dipolar coupling
+# =====================================================================
+#
+# The primary `predicted_sigma_pattern` above uses C_v = ((R p_v) . s_hat)^2,
+# which is SYMMETRIC in the sign of cos(theta_v) -- it treats K_7 vertex
+# pointing toward +AoE the same as -AoE.
+#
+# The vortex-vision session (2026-05-11 evening, memory entry
+# `vortex-vision-hpa-structural-bh-system.md`) inferred from CMB
+# anisotropy patterns that the parent BH likely had a ONE-SIDED polar
+# jet along +AoE plus a tilted axisymmetric disk at ~45 deg.  The
+# one-sided-jet signature in CMB is a polar variance deficit at the
+# +AoE cap (1st-percentile DEFICIT in vortex-vision Test 2).
+#
+# If the substrate flux carries this asymmetry into the local quantum
+# substrate that Heron's K_7 lives in, the coupling acquires a dipolar
+# term:
+#
+#     C_v_asym(t) = (1 + epsilon * cos(theta_v(t))) * cos^2(theta_v(t))
+#
+# where epsilon in [-1, +1] is a SIGNED asymmetry parameter:
+#   epsilon = 0         recovers the symmetric primary prediction
+#   epsilon > 0         stronger coupling when vertex points toward +AoE
+#   epsilon < 0         stronger coupling when vertex points toward -AoE
+#
+# The vortex-vision CMB result (deficit at +AoE pole, excess at -AoE
+# side) favors epsilon < 0 IF "more substrate flux at us = more local
+# K_7 stability" is the right interpretation.  But the sign should be
+# a FITTED parameter, not pre-committed -- the substrate-coupling
+# direction is what the Heron data is meant to tell us.
+#
+# Usage discipline: Exp 11 is pre-registered with the symmetric model
+# (EXP11_PREREG.md).  This function is a SECONDARY prediction for
+# post-hoc model comparison after the 25-slot run completes.  Compare
+# symmetric (epsilon=0) vs asymmetric-jet (epsilon free) via AIC/BIC.
+
+
+def predicted_sigma_pattern_asymmetric(
+    t_A_unix: float,
+    t_B_unix: float,
+    t_C_unix: float,
+    observatory: Observatory,
+    qubit_lab_positions: Optional[np.ndarray] = None,
+    predicted_axis: SkyAxis = AXIS_OF_EVIL_CONSENSUS,
+    amplitude: float = 1.0,
+    epsilon: float = 0.0,
+) -> dict:
+    """Forward-model the predicted sigma_v vector with an
+    ASYMMETRIC-JET coupling (vortex-vision 2026-05-11 structural model).
+
+    Coupling model:
+        C_v(t) = (1 + epsilon * cos(theta_v)) * cos^2(theta_v)
+        where cos(theta_v) = (R(t) p_v) . s_hat   in ICRS coordinates.
+
+    Parameters
+    ----------
+    t_A_unix, t_B_unix, t_C_unix : float
+        UTC unix timestamps for the A / B / C drift-correction slots.
+    observatory : Observatory
+        Heron host site (e.g. YORKTOWN, EHNINGEN).
+    qubit_lab_positions : ndarray of shape (7, 3), optional
+        K_7 vertex positions in lab-frame Cartesian.  Default = the
+        canonical 7-pointer rosette from `default_k7_lab_positions`.
+    predicted_axis : SkyAxis, default AXIS_OF_EVIL_CONSENSUS
+        Substrate axis direction in galactic coordinates.
+    amplitude : float, default 1.0
+        Overall coupling amplitude (degenerate with the symmetric A
+        in post-hoc fits).
+    epsilon : float in [-1, +1], default 0.0
+        Signed asymmetry parameter.
+        - epsilon = 0.0 reproduces `predicted_sigma_pattern` exactly.
+        - epsilon > 0 favors +AoE-pointing vertices.
+        - epsilon < 0 favors -AoE-pointing vertices (vortex-vision
+          CMB-fossil sign IF "more CMB variance -> more substrate flux
+          here" interpretation holds; treat as fittable, not committed).
+
+    Returns
+    -------
+    dict with the same keys as `predicted_sigma_pattern` plus
+    `epsilon` (echoed for downstream model-comparison bookkeeping).
+
+    Notes
+    -----
+    See memory entries `vortex-vision-hpa-structural-bh-system.md`
+    (2026-05-11 evening) and `cosmogenesis-bh-bh-merger-reframe.md`
+    (RETRACTED 2026-05-10) for context.  This function operationalizes
+    the NON-retracted vortex-vision result that infers a one-sided
+    polar jet from the AoE-aligned polar variance deficit
+    (~2.5-3σ combined, lmax-robust).
+
+    Reduces to `predicted_sigma_pattern` at epsilon = 0.
+    """
+    if not -1.0 <= epsilon <= 1.0:
+        raise ValueError(
+            f"epsilon must lie in [-1, +1] for C_v to stay non-negative "
+            f"on all (R p_v) . s_hat; got {epsilon}"
+        )
+
+    if qubit_lab_positions is None:
+        qubit_lab_positions = default_k7_lab_positions()
+    qubit_lab_positions = np.asarray(qubit_lab_positions, dtype=float)
+    if qubit_lab_positions.shape != (7, 3):
+        raise ValueError(
+            f"qubit_lab_positions must be shape (7, 3); got "
+            f"{qubit_lab_positions.shape}"
+        )
+
+    ra_deg, dec_deg = predicted_axis.to_icrs()
+    ra = math.radians(ra_deg)
+    dec = math.radians(dec_deg)
+    s_hat_icrs = np.array([
+        math.cos(dec) * math.cos(ra),
+        math.cos(dec) * math.sin(ra),
+        math.sin(dec),
+    ])
+
+    R_A = lab_to_icrs_matrix(t_A_unix, observatory)
+    R_B = lab_to_icrs_matrix(t_B_unix, observatory)
+    R_C = lab_to_icrs_matrix(t_C_unix, observatory)
+
+    qubit_lab_unit = qubit_lab_positions / np.linalg.norm(
+        qubit_lab_positions, axis=1, keepdims=True
+    )
+    cosA = np.array([s_hat_icrs @ (R_A @ p) for p in qubit_lab_unit])
+    cosB = np.array([s_hat_icrs @ (R_B @ p) for p in qubit_lab_unit])
+    cosC = np.array([s_hat_icrs @ (R_C @ p) for p in qubit_lab_unit])
+
+    # Asymmetric coupling: (1 + epsilon*cos) * cos^2
+    C_A = (1.0 + epsilon * cosA) * cosA ** 2
+    C_B = (1.0 + epsilon * cosB) * cosB ** 2
+    C_C = (1.0 + epsilon * cosC) * cosC ** 2
+
+    sigma_pred = amplitude * ((C_B - C_A) - (C_C - C_A) / 2.0)
+
+    return {
+        "sigma_v_pred": sigma_pred,
+        "C_A": C_A,
+        "C_B": C_B,
+        "C_C": C_C,
+        "predicted_axis_lb": (predicted_axis.l_deg, predicted_axis.b_deg),
+        "predicted_axis_radec": (ra_deg, dec_deg),
+        "predicted_axis_name": predicted_axis.name,
+        "epsilon": float(epsilon),
+        "coupling_model": "asymmetric_jet",
+    }
+
+
+# =====================================================================
 # Directional match score: observed sigma_v vs predicted pattern
 # =====================================================================
 
@@ -350,6 +498,7 @@ __all__ = [
     "lab_to_icrs",
     "default_k7_lab_positions",
     "predicted_sigma_pattern",
+    "predicted_sigma_pattern_asymmetric",
     "directional_match_score",
     "lst_hours",
     "next_lst_match_unix",

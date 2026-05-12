@@ -52,6 +52,12 @@ from ..cosmology.anisotropy_axes import (
     galactic_to_cartesian,
 )
 
+try:
+    import astropy  # noqa: F401
+    HAS_ASTROPY = True
+except ImportError:
+    HAS_ASTROPY = False
+
 
 # =====================================================================
 # Observatory locations

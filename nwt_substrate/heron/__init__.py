@@ -63,6 +63,7 @@ from .exporters import (
 )
 
 from .sidereal_geometry import (
+    HAS_ASTROPY,
     Observatory,
     YORKTOWN,
     EHNINGEN,
@@ -191,6 +192,7 @@ __all__ = [
     "muon_decay_circuit",
     "circuit_summary",
     "HAS_QISKIT",
+    "HAS_ASTROPY",
     # experiments registry
     "HeronExperiment",
     "EXPERIMENTS",

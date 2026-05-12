@@ -16,6 +16,10 @@ T_B = T_A + 86164.0905 / 2.0   # half sidereal day later
 T_C = T_A + 86164.0905         # one sidereal day later
 
 
+@pytest.mark.skipif(
+    not heron.HAS_ASTROPY,
+    reason="sidereal-geometry tests require astropy (`pip install astropy`)",
+)
 class TestAsymmetricJetPrediction:
     """The vortex-vision 2026-05-11 structural model adds a signed
     dipolar correction to the symmetric primary prediction. ε=0 must

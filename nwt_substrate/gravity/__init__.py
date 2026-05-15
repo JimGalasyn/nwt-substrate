@@ -118,6 +118,50 @@ from .flrw_test import (
     SIGMA_8_PLANCK,
 )
 
+from .kerr_efficiency import (
+    penrose_extraction_fraction,
+    m_irreducible_over_m_extremal,
+    bardeen_prograde_efficiency,
+    bardeen_retrograde_efficiency,
+    schwarzschild_isco_efficiency,
+    em_superradiance_max,
+    kerr_efficiency_table,
+)
+
+from .cosmogenesis import (
+    KAPPA_DAUGHTER,
+    f_J_cosmogenic,
+    f_J_cosmogenic_leading,
+    kappa_parent_over_daughter,
+    kappa_parent_required,
+    thorne_a_star_equilibrium,
+    mode_overlap,
+    cosmogenesis_summary,
+)
+
+from .disk_ergosurface import (
+    kappa_disk_over_parent,
+    kappa_disk_over_daughter,
+    coxeter_decomposition,
+    substrate_energy_budget,
+)
+
+from .qpo_eigenmodes import (
+    torus_eigenmode_freq,
+    predict_r_disk_from_qpo,
+    twin_peak_ratio,
+    r_disk_over_r_g,
+    qpo_mode_table,
+)
+
+from .healing_length import (
+    XI_SUBSTRATE_M,
+    xi_substrate_m,
+    k_chern_simons,
+    xi_cosmo_m,
+    scale_regime_table,
+)
+
 
 __all__ = [
     # constants
@@ -150,4 +194,38 @@ __all__ = [
     "OBSERVED_O_BAND_KMSMPC2", "in_observed_O_band",
     "comparison_summary", "amplitude_check",
     "SIGMA_M_DEFAULT", "SIGMA_8_PLANCK",
+    # Kerr efficiency (vortex-vision 2026-05-15)
+    "penrose_extraction_fraction",
+    "m_irreducible_over_m_extremal",
+    "bardeen_prograde_efficiency",
+    "bardeen_retrograde_efficiency",
+    "schwarzschild_isco_efficiency",
+    "em_superradiance_max",
+    "kerr_efficiency_table",
+    # Cosmogenesis (f_J, Thorne-equilibrium spin)
+    "KAPPA_DAUGHTER",
+    "f_J_cosmogenic",
+    "f_J_cosmogenic_leading",
+    "kappa_parent_over_daughter",
+    "kappa_parent_required",
+    "thorne_a_star_equilibrium",
+    "mode_overlap",
+    "cosmogenesis_summary",
+    # Disk-ergosurface matching
+    "kappa_disk_over_parent",
+    "kappa_disk_over_daughter",
+    "coxeter_decomposition",
+    "substrate_energy_budget",
+    # QPO torus eigenmodes
+    "torus_eigenmode_freq",
+    "predict_r_disk_from_qpo",
+    "twin_peak_ratio",
+    "r_disk_over_r_g",
+    "qpo_mode_table",
+    # Healing length / domain markers
+    "XI_SUBSTRATE_M",
+    "xi_substrate_m",
+    "k_chern_simons",
+    "xi_cosmo_m",
+    "scale_regime_table",
 ]

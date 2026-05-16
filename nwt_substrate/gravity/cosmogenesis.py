@@ -126,18 +126,33 @@ def kappa_parent_required(alpha: float = ALPHA_NWT,
 # ---------------------------------------------------------------------------
 # Section 3 — Thorne thin-disk equilibrium spin from cosmogenic viability
 #
-# For a near-extremal Kerr BH, the simplest near-extremal toroidal-
-# ergosurface aspect ratio scales as κ_parent ≈ 2 / √(1 - a*²). Inverting
-# the cosmogenic viability condition gives a unique a*:
+# Geometric derivation of κ_parent (substrate-vortex circulation matching):
+#     R_major = 2M  (equatorial bulge of outer ergosurface)
+#     r_minor = (r_+ - r_-) / 2 = √(M² - a²) = M·√(1 - a*²)
+#               (horizon half-gap; radial extent of inter-horizon region)
+#     κ_parent = R / r = 2 / √(1 - a*²)        — EXACT Kerr identity
 #
-#     a*_eq = √(1 - 4 / κ_parent_required²)
+# Physical principle: a substrate vortex sits in the inter-horizon region,
+# centered at the bifurcation 2-sphere. Its minor radius equals the
+# horizon half-gap, and its circulation Γ = π(r_+ - r_-) = 4π·M·r_+·κ_surf
+# is set by the causal bound v_inner = Γ/(2π r_min) = c at the vortex's
+# inner edge. The circulation is proportional to surface gravity.
 #
-# Plugging κ_parent_required = 3(1+√α) × κ_daughter ≈ 32.06:
+# Cosmogenic-viability condition:
+#     κ_parent / κ_daughter = 3(1 + √α)       (K_7 algebra)
+# gives κ_parent_required ≈ 32.054.
 #
-#     a*_eq ≈ 0.998 — matches Thorne 1974 thin-disk equilibrium spin.
+# Inverting κ_parent = 2/√(1-a*²) under this condition:
+#     a*_eq = √(1 - 4 / κ_parent_required²) ≈ 0.998052
 #
-# This identifies Thorne's astrophysical accretion-driven equilibrium
-# spin as the cosmogenic-viability threshold spin.
+# This is the unique spin where the parent's horizon half-gap geometrically
+# realizes the K_7 viability ratio against the daughter's universal κ_Macken.
+# Thorne 1974's thin-disk equilibrium hits this spin via disk-as-substrate-
+# vortex (see framework_disk_as_substrate_vortex.md), making the K_7-Thorne
+# convergence a single geometric identity rather than a coincidence.
+#
+# Reference: analysis/beltracchi_ergosurface_kappa.py Section 6 contains
+# the numerical verification and full derivation.
 # ---------------------------------------------------------------------------
 
 def thorne_a_star_equilibrium(alpha: float = ALPHA_NWT,

@@ -86,6 +86,14 @@ from .mckay import (
     mckay_orbit_size,
     McKayCheck,
 )
+from .bond_orders import (
+    PI_BOND_ORDER_BENZENE_CLASS,
+    HuckelBondOrderResult,
+    huckel_bond_orders,
+    cyclic_pi_bond_order,
+    smiles_pi_bond_orders,
+    cc_bond_length_from_pi_order,
+)
 from . import benchmark
 
 __all__ = [

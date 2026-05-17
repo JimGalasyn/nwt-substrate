@@ -132,6 +132,60 @@ Equal to N_VERTICES_K7 - 1 = 6."""
 
 
 # ---------------------------------------------------------------------------
+# K_8 combinatorial constants (Paper 20 neutrino sector)
+#
+# K_8 extends K_7 with a single fixed vertex (the eighth) corresponding
+# to the Spin(7) ⊂ Spin(8) stabilized unit vector in V_8, identified
+# with the real unit on the octonion side (Baez 2002 §3.2).
+# ---------------------------------------------------------------------------
+
+N_VERTICES_K8: int = 8
+"""Number of vertices of the complete graph K_8.
+Equal to N_VERTICES_K7 + 1 = 8 (Paper 20 §5: the eighth vertex is
+the Spin(7) ⊂ Spin(8) stabilized vector / octonion real unit)."""
+
+N_EDGES_K8: int = 28
+"""Number of edges of the complete graph K_8.
+Equal to (N_VERTICES_K8 choose 2) = 8·7/2 = 28.
+Equal to N_EDGES_K7 + DEGREE_K8 = 21 + 7 = 28."""
+
+DEGREE_K8: int = 7
+"""Degree of every vertex in K_8.
+Equal to N_VERTICES_K8 - 1 = 7 = N_VERTICES_K7."""
+
+K8_PARTITION: tuple = (6, 3, 12, 1, 6)
+"""K_8 edge decomposition under Z_3 ⊂ G_2 = Aut(O) (Paper 20 §5):
+  Lorentz (6) + internal SU(2) (3) + SM-flavor (12) + Higgs vacuum (1)
+  + Yukawa (6) = 28 = N_EDGES_K8.
+The first three terms (6+3+12 = 21) match the K_7 substrate-boson
+partition of Paper 19. The +1 is the Z_3-fixed self-loop of the
+eighth vertex. The final +6 is the Z_3-fixed edges between the
+eighth vertex and the K_7 vertices."""
+
+K8_PARTITION_K7_INHERITED: int = 21
+"""The first three K8_PARTITION terms (6+3+12) sum to 21 = N_EDGES_K7.
+This is the K_7 substrate-boson partition inherited from Paper 19,
+preserved under the K_8 extension."""
+
+K8_ACTIVE_EDGE_COUNT: int = 28
+"""Edge count for the active-neutrino phase soliton on K_8 (Paper 19
+W3.3-J via Paper 20 §3): m_ν_active = (8/8) α^(N_e/2) prefactors
+with N_e = K8_ACTIVE_EDGE_COUNT = 28."""
+
+K8_STERILE_EDGE_COUNT: int = 19
+"""Edge count for the sterile-neutrino phase soliton on K_8 (Paper 20
+§6): K_8 minus the 9 cross-orbit edges of the Z_3 ⊂ G_2 decomposition.
+N_e_sterile = K8_ACTIVE_EDGE_COUNT - 9 = 28 - 9 = 19. Gives the
+α^(9/2) seesaw ratio m_active/m_sterile ≈ 2.4×10⁻¹⁰."""
+
+K8_SEESAW_EDGE_DIFFERENCE: int = 9
+"""Edge-count difference between active and sterile K_8 phase solitons.
+Equal to K8_ACTIVE_EDGE_COUNT - K8_STERILE_EDGE_COUNT = 28 - 19 = 9.
+The 9 = 12 (SM-flavor edges) - 3 (internal SU(2) edges) forced by
+G_2 → SU(3) representation theory (Paper 20 §4)."""
+
+
+# ---------------------------------------------------------------------------
 # Derived ratios used by shims
 # ---------------------------------------------------------------------------
 
@@ -451,4 +505,52 @@ _ALPHA_QED_CODATA = 1.0 / 137.035999084
 assert abs(ALPHA_NWT - _ALPHA_QED_CODATA) / _ALPHA_QED_CODATA < 1e-5, (
     f"α_NWT closed form deviates > 10 ppm from CODATA α: "
     f"α_NWT={ALPHA_NWT}, α_CODATA={_ALPHA_QED_CODATA}"
+)
+
+
+# K_8 structural identities (Paper 20)
+
+assert N_VERTICES_K8 == N_VERTICES_K7 + 1, (
+    f"K_8 = K_7 + 1 vertex violated: "
+    f"N_VERTICES_K8({N_VERTICES_K8}) != N_VERTICES_K7({N_VERTICES_K7}) + 1"
+)
+
+assert N_EDGES_K8 == N_VERTICES_K8 * (N_VERTICES_K8 - 1) // 2, (
+    f"K_8 edge-count formula violated: "
+    f"N_EDGES_K8({N_EDGES_K8}) != N_VERTICES_K8·(N_VERTICES_K8-1)/2"
+    f"({N_VERTICES_K8 * (N_VERTICES_K8 - 1) // 2})"
+)
+
+assert DEGREE_K8 == N_VERTICES_K8 - 1, (
+    f"K_8 degree formula violated: "
+    f"DEGREE_K8({DEGREE_K8}) != N_VERTICES_K8 - 1({N_VERTICES_K8 - 1})"
+)
+
+assert sum(K8_PARTITION) == N_EDGES_K8, (
+    f"K_8 partition does not sum to N_EDGES_K8: "
+    f"sum(K8_PARTITION)={sum(K8_PARTITION)} != N_EDGES_K8({N_EDGES_K8})"
+)
+
+assert sum(K8_PARTITION[:3]) == K8_PARTITION_K7_INHERITED == N_EDGES_K7, (
+    f"K_8 partition K_7-inheritance violated: "
+    f"sum(K8_PARTITION[:3])={sum(K8_PARTITION[:3])}, "
+    f"K8_PARTITION_K7_INHERITED={K8_PARTITION_K7_INHERITED}, "
+    f"N_EDGES_K7={N_EDGES_K7}"
+)
+
+assert K8_ACTIVE_EDGE_COUNT == N_EDGES_K8, (
+    f"K_8 active-neutrino edge count must equal N_EDGES_K8: "
+    f"K8_ACTIVE_EDGE_COUNT({K8_ACTIVE_EDGE_COUNT}) != N_EDGES_K8({N_EDGES_K8})"
+)
+
+assert K8_SEESAW_EDGE_DIFFERENCE == K8_ACTIVE_EDGE_COUNT - K8_STERILE_EDGE_COUNT, (
+    f"K_8 seesaw edge-difference formula violated: "
+    f"K8_SEESAW_EDGE_DIFFERENCE({K8_SEESAW_EDGE_DIFFERENCE}) != "
+    f"K8_ACTIVE_EDGE_COUNT({K8_ACTIVE_EDGE_COUNT}) - "
+    f"K8_STERILE_EDGE_COUNT({K8_STERILE_EDGE_COUNT})"
+)
+
+assert K8_SEESAW_EDGE_DIFFERENCE == 12 - 3, (
+    f"K_8 seesaw 9 = SM-flavor (12) - internal-SU(2) (3) violated: "
+    f"K8_SEESAW_EDGE_DIFFERENCE({K8_SEESAW_EDGE_DIFFERENCE}) != 12 - 3 = 9"
 )

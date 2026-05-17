@@ -53,9 +53,14 @@ All derived from the substrate algebra at zero free parameters
 - **Heron quantum-hardware structural verification**: 7 H gates + 21 CZ
   gates fired on IBM Heron, runtime-verified against `isa.N_VERTICES_K7`
   and `isa.N_EDGES_K7`. Call: `heron.k7_graph_state()`.
-- **541 cross-shim tests pass in ~6 seconds**, including 92
-  substrate-identity enforcement tests across seven shims — the
-  substrate algebra is enforced by the codebase, not merely described.
+- **Neutrino sector** (Paper 20, K_8 extension): three active masses
+  ≈ (14.8, 17.2, 53) meV, three sterile masses ≈ (61.3, 70.8, 218.8)
+  MeV, mixing |U_α4|² ≈ 2.4×10⁻¹⁰, PMNS angles + δ_CP = −2π/3 from
+  π_1(PSU(3)) winding. Call: `nwt.neutrino.substrate_breakdown()`.
+- **606 substrate tests pass in ~7 seconds**, including 92
+  substrate-identity enforcement tests across seven K_7 shims plus
+  31 K_8 neutrino-sector tests — the substrate algebra is enforced
+  by the codebase, not merely described.
 
 ## Install
 
@@ -202,6 +207,15 @@ Heron K_7 quantum circuit, structurally verified:
   registry for IBM Heron processors. Supports Experiments 4 / 5 / 9
   / 10 / 11 from the paper series. K_7-circuit gate counts are
   runtime-verified against `isa.N_VERTICES_K7` / `isa.N_EDGES_K7`.
+- **Neutrino sector** (v0.3 new, K_8 extension for Paper 20) — closed-form
+  active masses (Wilson amplitude on K_8 with `N_v=8, N_e=28`), sterile
+  masses (Wilson amplitude with `N_v=8, N_e=19` from the Z_3 ⊂ G_2
+  triality seesaw, edge difference 9 = 12 − 3), `|U_α4|² = α^(9/2)`,
+  PMNS angles at leading order from Spin(8) triality, and `δ_CP = −2π/3`
+  from π_1(PSU(3)) winding. K_8 structural constants
+  (`N_VERTICES_K8 = 8`, `N_EDGES_K8 = 28`, `K8_PARTITION = (6,3,12,1,6)`,
+  `K8_SEESAW_EDGE_DIFFERENCE = 9`) live in `isa.constants` alongside
+  the K_7 family.
 - **Diagrams** — programmatic figure factories for the canonical
   substrate visualisations (torus knots, K_7 traversals,
   Heegaard-torus unification).
@@ -256,7 +270,7 @@ enforced by it.
 
 ```bash
 pytest nwt_substrate/tests/ -q
-# 541 passed in ~6s
+# 606 passed in ~7s
 ```
 
 This includes:

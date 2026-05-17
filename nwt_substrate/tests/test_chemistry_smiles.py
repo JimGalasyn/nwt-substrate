@@ -277,3 +277,130 @@ def test_dicoronylene_resonance_energy():
     dicor = f"{CORONENE_SMILES}-{CORONENE_SMILES}"
     re = chem.smiles_resonance_energy(dicor, calibration_kcal=12.0)
     assert re == 400.0   # 288 base + 112 K_7
+
+
+# ---------------------------------------------------------------------------
+# Heteroaromatic RE — substrate skeleton (Hopf-pair) + condensate
+# calibration (per-heteroatom corrections)
+# ---------------------------------------------------------------------------
+# The substrate algebra forces the aromatic classification and Hopf-pair
+# count for any heteroatom-substituted ring. The per-element RE
+# corrections are condensate-specific (calibrated to literature) and
+# live in `HETEROATOM_RE_CORRECTION_KCAL`. Two of four corrections land
+# on exact NWT-canonical structural integers:
+#   pyridine_N  = −4  = −|V(K_4)|
+#   thiophene_S = −7  = −|V(K_7)|
+# The other two (pyrrole_N = −14, furan_O = −20) are empirical.
+
+
+def test_pyridine_re_pyridine_n_correction():
+    """Pyridine: 36 + (-4) = 32 kcal/mol (exp ~32)."""
+    re = chem.smiles_resonance_energy("c1ccncc1")
+    assert re == 32.0
+
+
+def test_pyrrole_re_pyrrole_n_correction():
+    """Pyrrole: 36 + (-14) = 22 kcal/mol (exp ~22)."""
+    re = chem.smiles_resonance_energy("c1cc[nH]c1")
+    assert re == 22.0
+
+
+def test_furan_re_furan_o_correction():
+    """Furan: 36 + (-20) = 16 kcal/mol (exp ~16)."""
+    re = chem.smiles_resonance_energy("c1ccoc1")
+    assert re == 16.0
+
+
+def test_thiophene_re_thiophene_s_correction():
+    """Thiophene: 36 + (-7) = 29 kcal/mol (exp ~29)."""
+    re = chem.smiles_resonance_energy("c1ccsc1")
+    assert re == 29.0
+
+
+def test_heteroaromatic_ordering_recovered():
+    """The well-known experimental ordering is recovered exactly:
+    benzene ≈ pyridine > thiophene > pyrrole > furan."""
+    res = {
+        name: chem.smiles_resonance_energy(sm)
+        for name, sm in [
+            ("benzene",   "c1ccccc1"),
+            ("pyridine",  "c1ccncc1"),
+            ("thiophene", "c1ccsc1"),
+            ("pyrrole",   "c1cc[nH]c1"),
+            ("furan",     "c1ccoc1"),
+        ]
+    }
+    assert res["benzene"] > res["pyridine"]
+    assert res["pyridine"] > res["thiophene"]
+    assert res["thiophene"] > res["pyrrole"]
+    assert res["pyrrole"] > res["furan"]
+
+
+def test_apply_heteroatom_corrections_false_recovers_skeleton():
+    """With `apply_heteroatom_corrections=False`, the all-carbon
+    skeleton prediction is returned. This is the test that confirms
+    the substrate-skeleton vs condensate-fill separation in the
+    library — without the condensate layer, every monocyclic 6-π
+    ring returns the same base RE.
+    """
+    for sm in ["c1ccccc1", "c1ccncc1", "c1cc[nH]c1", "c1ccoc1", "c1ccsc1"]:
+        re = chem.smiles_resonance_energy(sm, apply_heteroatom_corrections=False)
+        assert re == 36.0
+
+
+def test_pyrimidine_two_pyridine_n():
+    """Pyrimidine has 2 pyridine-like N: 36 + 2·(-4) = 28 kcal/mol."""
+    re = chem.smiles_resonance_energy("c1cncnc1")
+    assert re == 28.0
+
+
+def test_imidazole_pyridine_n_plus_pyrrole_n():
+    """Imidazole has 1 pyridine-N and 1 pyrrole-N: 36 - 4 - 14 = 18 kcal/mol.
+    The empirical RE ~22 kcal/mol shows ~4 kcal/mol non-additivity
+    (tautomerism-stabilized), which the per-atom additive model does
+    not capture. Documented as a Tier-B limitation."""
+    re = chem.smiles_resonance_energy("c1cnc[nH]1")
+    assert re == 18.0
+
+
+def test_naphthalene_unchanged_under_heteroatom_corrections():
+    """All-carbon systems return the same RE regardless of whether
+    `apply_heteroatom_corrections` is set — sum of corrections is 0."""
+    re_on = chem.smiles_resonance_energy("c1ccc2ccccc2c1")
+    re_off = chem.smiles_resonance_energy(
+        "c1ccc2ccccc2c1", apply_heteroatom_corrections=False
+    )
+    assert re_on == re_off == 60.0
+
+
+def test_heteroatom_corrections_table_substrate_resonances():
+    """Two of four heteroatom correction values land exactly on
+    NWT-canonical structural integers:
+      pyridine_N  = -K_4_vertices  = -4
+      thiophene_S = -N_VERTICES_K7 = -7
+    The other two (pyrrole_N = -14, furan_O = -20) are empirical fits
+    and do not land on small NWT-canonical integers; documented as
+    partial substrate identification (Form D pattern).
+    """
+    from nwt_substrate.chemistry.smiles import HETEROATOM_RE_CORRECTION_KCAL
+    from nwt_substrate.isa.constants import N_VERTICES_K7
+
+    # Substrate-canonical identifications
+    K_4_VERTICES = 4  # also in isa.constants implicitly; matches K_4_vertices in K_8 partition
+    assert HETEROATOM_RE_CORRECTION_KCAL["pyridine_N"] == -K_4_VERTICES   # -|V(K_4)|
+    assert HETEROATOM_RE_CORRECTION_KCAL["thiophene_S"] == -N_VERTICES_K7  # -|V(K_7)|
+    # Empirical (no NWT-canonical small-integer match)
+    assert HETEROATOM_RE_CORRECTION_KCAL["pyrrole_N"] == -14.0
+    assert HETEROATOM_RE_CORRECTION_KCAL["furan_O"] == -20.0
+
+
+def test_custom_heteroatom_corrections_override():
+    """Caller can override the correction table for sensitivity
+    analyses (e.g., to test Dewar vs Pauling-Wheland conventions)."""
+    re = chem.smiles_resonance_energy(
+        "c1ccncc1",
+        heteroatom_corrections={
+            "pyridine_N": 0.0,  # disable the pyridine-N correction
+        },
+    )
+    assert re == 36.0

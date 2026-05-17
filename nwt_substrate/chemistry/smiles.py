@@ -656,28 +656,141 @@ def smiles_to_aromaticity(smiles: str,
 K7_CORRECTION_KCAL_PER_RING_SET = 56.0
 
 
+# Per-heteroatom RE correction relative to all-carbon ring (kcal/mol).
+# Substrate framing: NWT delivers the aromatic *classification* via
+# Hopf-pair parity for any heteroatom-substituted ring (this is forced
+# by the substrate algebra and Hopf-pair count). The per-element RE
+# magnitudes, however, are *condensate-specific* — they depend on
+# atomic electronegativity, lone-pair geometry, and orbital overlap,
+# all of which the substrate skeleton does not derive. These
+# corrections are calibrated to the standard reference RE values
+# (Pauling-Wheland / Dewar-style), placing the heteroatom layer at
+# Tier B (substrate skeleton + per-element calibration) in the
+# library's two-tier framework.
+#
+# Values fit to keep benzene = 36 kcal/mol (anchor) and match the
+# experimental ordering benzene > pyridine > thiophene > pyrrole
+# > furan within ~10% of literature.
+HETEROATOM_RE_CORRECTION_KCAL = {
+    "pyridine_N":   -4.0,    # sp² N, lone pair in plane (no H)
+    "pyrrole_N":   -14.0,    # sp³ N, lone pair in ring (has H)
+    "furan_O":     -20.0,    # sp² O, lone pair in ring
+    "thiophene_S":  -7.0,    # sp² S, lone pair in ring (large, polarizable)
+    "phosphorus":    0.0,    # placeholder (rare)
+    "boron":         0.0,    # placeholder (rare)
+}
+
+
+def _classify_heteroatom_role(atom: "Atom", mol: "Molecule") -> Optional[str]:
+    """Return the heteroatom role key for HETEROATOM_RE_CORRECTION_KCAL,
+    or None if this atom contributes no correction (carbon or non-aromatic).
+
+    Distinguishes pyridine-like vs pyrrole-like nitrogen by H count
+    (matches the convention used in `_pi_electron_count`).
+    """
+    if not atom.aromatic:
+        return None
+
+    el = atom.element.upper()
+    if el == "C":
+        return None
+    if el == "N":
+        return "pyrrole_N" if atom.h_count > 0 else "pyridine_N"
+    if el == "O":
+        return "furan_O"
+    if el == "S":
+        return "thiophene_S"
+    if el == "P":
+        return "phosphorus"
+    if el == "B":
+        return "boron"
+    return None
+
+
+def _heteroatom_re_correction(ring_system: "AromaticRingSystem",
+                              mol: "Molecule",
+                              corrections: dict[str, float] | None = None
+                              ) -> float:
+    """Sum the per-heteroatom RE corrections across one aromatic ring system.
+
+    Each heteroatom in the system contributes its role-specific RE
+    correction independently. All-carbon ring systems return 0.
+    """
+    table = HETEROATOM_RE_CORRECTION_KCAL if corrections is None else corrections
+    total = 0.0
+    for atom_idx in ring_system.atoms:
+        atom = mol.atoms[atom_idx]
+        role = _classify_heteroatom_role(atom, mol)
+        if role is not None:
+            total += table.get(role, 0.0)
+    return total
+
+
 def smiles_resonance_energy(smiles: str,
                              calibration_kcal: float = 12.0,
                              mobius_twists: int = 0,
-                             k7_correction_kcal: float = K7_CORRECTION_KCAL_PER_RING_SET
+                             k7_correction_kcal: float = K7_CORRECTION_KCAL_PER_RING_SET,
+                             heteroatom_corrections: Optional[dict[str, float]] = None,
+                             apply_heteroatom_corrections: bool = True,
                              ) -> float:
     """Substrate-algebraic resonance energy from arbitrary SMILES.
 
-    O(N) per molecule: parse + cycle basis + Hopf-pair + K_7 detection.
+    O(N) per molecule: parse + cycle basis + Hopf-pair + K_7 detection
+    + heteroatom-correction sum.
 
-    Two-component prediction (Tier B + Tier B'):
-      Base RE = n_pi_pairs × calibration_kcal           (Hopf-pair rule)
-      K_7 correction = n_K7_ring_sets × 56 kcal/mol      (PAH toroidal)
-      Total = Base + Correction
+    Three-component prediction (Tier B + Tier B' + Tier B''):
+      Base RE        = n_pi_pairs × calibration_kcal     (Hopf-pair rule)
+      K_7 correction = n_K7_ring_sets × 56 kcal/mol      (PAH toroidal hub)
+      Hetero correction = sum over heteroatoms of role-specific shift
+                                                          (Tier B'',
+                                                           condensate-fit)
+      Total = Base + K_7 + Heteroatom
 
-    Validated:
+    Validated all-carbon RE (heteroatom correction = 0):
       benzene (calibration → 36 kcal/mol)
       naphthalene → 60 kcal/mol (exp 61, -1.6%)
       anthracene → 84 kcal/mol (exp 84, 0%)
       coronene   → 12 × 12 + 1 × 56 = 200 kcal/mol (exp ~200, match)
 
+    Validated heteroaromatics (with HETEROATOM_RE_CORRECTION_KCAL):
+      pyridine   → 36 + (-4)         = 32 kcal/mol  (exp ~32)
+      pyrrole    → 36 + (-14)        = 22 kcal/mol  (exp ~22)
+      furan      → 36 + (-20)        = 16 kcal/mol  (exp ~16)
+      thiophene  → 36 + (-7)         = 29 kcal/mol  (exp ~29)
+      pyrimidine → 36 + 2×(-4)       = 28 kcal/mol  (exp ~26)
+      imidazole  → 36 + (-4) + (-14) = 18 kcal/mol  (exp ~22)
+
+    Parameters
+    ----------
+    smiles : str
+        SMILES string of the molecule.
+    calibration_kcal : float
+        Hopf-pair multiplier; default 12.0 anchors benzene to 36 kcal/mol.
+    mobius_twists : int
+        Number of Möbius twists in the ring system; default 0.
+    k7_correction_kcal : float
+        Per-K_7-ring-set toroidal stabilization in kcal/mol.
+    heteroatom_corrections : dict or None
+        Override the HETEROATOM_RE_CORRECTION_KCAL table. Useful for
+        sensitivity analyses or alternate reference RE sets (e.g.,
+        Dewar vs Pauling-Wheland conventions).
+    apply_heteroatom_corrections : bool
+        If False, return the all-carbon prediction even for heteroaromatic
+        SMILES. Used by tests verifying the structural skeleton without
+        condensate calibration.
+
+    Substrate framing
+    -----------------
+    Tier B' (K_7 toroidal) and Tier B'' (heteroatom) are both *condensate*
+    layers — the substrate algebra forces the aromatic classification and
+    the Hopf-pair count, but the magnitudes of the K_7 stabilization and
+    per-element heteroatom corrections are fit to experiment (each at a
+    single calibration constant). See HETEROATOM_RE_CORRECTION_KCAL
+    docstring for the substrate-skeleton-vs-condensate-fill discussion.
+
     Returns RE in kcal/mol; 0 for non-aromatic.
     """
+    mol = parse_smiles(smiles)
     result = smiles_to_aromaticity(smiles, mobius_twists=mobius_twists)
     if result.classification not in ("aromatic", "mobius_aromatic"):
         return 0.0
@@ -685,7 +798,15 @@ def smiles_resonance_energy(smiles: str,
     base_re = result.total_pi_pairs * calibration_kcal
     n_k7 = sum(s.k7_ring_sets for s in result.aromatic_ring_systems)
     k7_correction = n_k7 * k7_correction_kcal
-    return base_re + k7_correction
+
+    hetero_correction = 0.0
+    if apply_heteroatom_corrections:
+        for system in result.aromatic_ring_systems:
+            hetero_correction += _heteroatom_re_correction(
+                system, mol, heteroatom_corrections
+            )
+
+    return base_re + k7_correction + hetero_correction
 
 
 # ---------------------------------------------------------------------------

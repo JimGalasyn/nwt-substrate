@@ -35,7 +35,14 @@ from .compositions import (
 from . import diagrams
 from . import isa
 
-__version__ = "0.1.0"
+from importlib.metadata import PackageNotFoundError, version as _pkg_version
+
+try:
+    __version__ = _pkg_version("nwt-substrate")
+except PackageNotFoundError:
+    # Running from a source tree that hasn't been installed (e.g. tests
+    # invoked directly from a git checkout without `pip install -e .`).
+    __version__ = "0.0.0+unknown"
 
 __all__ = [
     "Particle",

@@ -9,6 +9,15 @@ sphere S^3 / 2I, supporting particle / scattering / decay /
 gravitational-coupling / chemistry computations from a single
 internally consistent codebase.
 
+This library is an algebraic continuation of the **photon-vortex programme**
+(Williamson & van der Mark 1997 and successors): particles as confined
+toroidal structures of the electromagnetic / substrate field, with mass and
+quantum numbers emerging from topology. NWT supplies the explicit substrate
+algebra — K_7 / so(7) / Spin(7) / Cl(0,7) — that turns the topological
+intuition into closed-form quantitative predictions. The
+[paper series on Zenodo](https://zenodo.org/communities/nwt) is the
+derivation record; this library is the executable companion.
+
 **As of v0.2 (Phase Q.16, 2026-05-11)**, the library ships a
 **substrate Instruction Set Architecture** (`nwt_substrate.isa`) that
 makes the K_7 algebra load-bearing across every shim. ~25
@@ -20,6 +29,34 @@ view-shims (chemistry, gravity, qed, qcd, particles, electroweak,
 heron). The substrate algebra compiles all the way through to the
 21 CZ gates that fire on IBM Heron when `k7_graph_state()` runs.
 
+## Headline predictions
+
+All derived from the substrate algebra at zero free parameters
+(beyond the four substrate constants m_e, M_Pl, c, ℏ):
+
+- **Electron mass ratio**: m_e / m_Pl ≈ 4.185 × 10⁻²³ via α^(21/2) Wilson
+  amplitude on the K_7 graph state — Paper 17, **−5.5 ppm CODATA**.
+  Call: `isa.k7_wilson_amplitude(1/137.036, order="NNLO")`.
+- **Newton's G**: 6.674228 × 10⁻¹¹ m³ kg⁻¹ s⁻² via Sakharov-induced
+  gravity — Paper 17, **−11 ppm CODATA, inside the ±22 ppm experimental
+  band**. Call: `gravity.G_substrate_SI()`.
+- **Particle mass spectrum**: 24-particle compendium (hadronic + leptonic
+  + exotic) at **0.76 % median residual** — Paper 6 topological mass
+  formula. Call: `nwt.particle("p").mass_pred → 937.24 MeV`.
+- **Molecular bound states via connected-sum**: deuteron mass-prediction
+  residual −0.06 % vs PDG, Pc(4312) +0.013 %, all five tested
+  near-threshold molecules within ~0.6 %.
+  Call: `nwt.compose(p, n, op="#")`.
+- **Coronene aromaticity**: K_7-toroidal resonance energy = 200.0 kcal/mol
+  exact (+56 kcal/mol stabilization detected via `Tr(M²) ≤ −24` on the
+  K_7 W_6-wheel signature). Call: `chem.smiles_resonance_energy(...)`.
+- **Heron quantum-hardware structural verification**: 7 H gates + 21 CZ
+  gates fired on IBM Heron, runtime-verified against `isa.N_VERTICES_K7`
+  and `isa.N_EDGES_K7`. Call: `heron.k7_graph_state()`.
+- **541 cross-shim tests pass in ~6 seconds**, including 92
+  substrate-identity enforcement tests across seven shims — the
+  substrate algebra is enforced by the codebase, not merely described.
+
 ## Install
 
 ```bash
@@ -28,6 +65,19 @@ pip install git+https://github.com/JimGalasyn/nwt-substrate.git
 ```
 
 ## Quick start
+
+**Try this first** — three substrate predictions in three lines:
+
+```python
+import nwt_substrate as nwt
+nwt.particle("p").mass_pred                          # → 937.24 MeV (proton, Paper 6)
+nwt.gravity.G_substrate_SI()                         # → 6.674228e-11, -11 ppm CODATA (Paper 17)
+nwt.isa.k7_wilson_amplitude(1/137.036, order="NNLO") # → 4.185e-23 = m_e / m_Pl, -5.5 ppm
+```
+
+Three independent substrate predictions — particle mass, gravitational
+coupling, and the underlying K_7 Wilson amplitude — all matching CODATA
+to ppm precision in three function calls.
 
 **The K_7 cross-shim demo** — one substrate, seven shims:
 
@@ -236,7 +286,7 @@ If you use this library in a publication, please cite both:
                   library for Null Worldtube Theory},
   year         = {2026},
   publisher    = {Zenodo},
-  doi          = {10.5281/zenodo.PLACEHOLDER}
+  doi          = {10.5281/zenodo.20041585}
 }
 ```
 

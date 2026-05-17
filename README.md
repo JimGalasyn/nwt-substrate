@@ -322,6 +322,13 @@ The library implements the computations described in:
   matter sector. *Includes the canonical "Heegaard torus, two
   sectors" figure rendered by `nwt.diagrams.figure_paper18_unified()`.*
 - **Paper 19** — substrate monism via library demonstration.
+- **Paper 20** — neutrino sector from Spin(8) triality on K_7 / K_8.
+  Three sterile masses {61.3, 70.8, 218.8} MeV in the νMSM window,
+  |U_α4|² ≈ α^(9/2) ≈ 2.4×10⁻¹⁰ active-sterile mixing, PMNS angles
+  from triality, δ_CP = −2π/3 from π_1(PSU(3)) Z_3 winding. Library
+  implementation in `nwt_substrate.neutrino`; K_8 structural
+  constants in `isa.constants`. DOI:
+  [10.5281/zenodo.20259632](https://doi.org/10.5281/zenodo.20259632).
 
 The Zenodo community for the full series is at
 https://zenodo.org/communities/nwt (collected DOIs).

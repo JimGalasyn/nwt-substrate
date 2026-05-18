@@ -112,6 +112,15 @@ from .polyhedral import (
     closo_borane_substrate_canonical,
     CLOSO_POLYHEDRA,
 )
+from .molecular_knots import (
+    AccessibilityTier,
+    HostGuestData,
+    MolecularKnotEntry,
+    KNOT_REFERENCE,
+    carrier_class_of,
+    substrate_predicted_tier,
+    accessibility_for_knot,
+)
 from . import benchmark
 
 __all__ = [
@@ -169,6 +178,14 @@ __all__ = [
     "ClosoCanonicalResult",
     "closo_borane_substrate_canonical",
     "CLOSO_POLYHEDRA",
+    # Molecular knots (carrier-knot accessibility, Tier B.6)
+    "AccessibilityTier",
+    "HostGuestData",
+    "MolecularKnotEntry",
+    "KNOT_REFERENCE",
+    "carrier_class_of",
+    "substrate_predicted_tier",
+    "accessibility_for_knot",
     # Benchmarks
     "benchmark",
 ]

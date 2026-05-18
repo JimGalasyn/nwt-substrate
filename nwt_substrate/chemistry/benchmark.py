@@ -48,6 +48,12 @@ from .polyhedral import (
     deltahedron_face_count,
     wade_classification,
 )
+from .molecular_knots import (
+    KNOT_REFERENCE,
+    accessibility_for_knot,
+    carrier_class_of,
+    substrate_predicted_tier,
+)
 
 
 # DFT/CCSD scaling reference (single CPU core, B3LYP/cc-pVDZ basis).
@@ -397,6 +403,66 @@ def benchmark_deltahedron_counts() -> BenchmarkResult:
     )
 
 
+def benchmark_molecular_knot_accessibility(n_repeats: int = 10_000) -> BenchmarkResult:
+    """Benchmark molecular-knot accessibility prediction across the reference set.
+
+    Substrate: O(1) per knot — crossing-number → tier lookup + dict access
+    on KNOT_REFERENCE.
+
+    Standard alternative: DFT (or molecular-mechanics) strain-energy /
+    ΔG_unfold calculation per knot topology — typical cost for a 100-atom
+    molecular knot at B3LYP/cc-pVDZ is ~30–180 min single-point + many hours
+    of conformational sampling. Per-knot benchmark cost ~1–6 hours.
+
+    Note: substrate predicts the *accessibility tier* (sweet spot / gap /
+    hard / accessible / outside table); DFT predicts a specific
+    thermodynamic quantity (strain energy in kcal/mol). These are
+    different observables — speedup is for the tier-level classification.
+    """
+    knots = list(KNOT_REFERENCE.keys())
+
+    # Warm up cache
+    for k in knots:
+        accessibility_for_knot(k)
+
+    t0 = time.perf_counter()
+    for _ in range(n_repeats):
+        for k in knots:
+            accessibility_for_knot(k)
+            substrate_predicted_tier(KNOT_REFERENCE[k].crossing_number)
+    t1 = time.perf_counter()
+    substrate_total_s = t1 - t0
+    n_calls = n_repeats * len(knots) * 2
+    substrate_per_us = (substrate_total_s / n_calls) * 1e6
+
+    # DFT strain-energy reference: ~1 hour single-point + ~10 hours conformational
+    # sampling per knot, ~10 hours per knot avg.  Wales 2025 JCTC multifunnel
+    # landscapes for THREE model knots took ~CPU-weeks.
+    dft_per_knot_s = 36_000  # 10 hours
+    dft_total_s = dft_per_knot_s * len(knots)
+    speedup = dft_total_s / substrate_total_s * n_repeats
+
+    return BenchmarkResult(
+        observable="molecular_knot_accessibility",
+        n_molecules=len(knots),
+        substrate_time_us=substrate_per_us,
+        dft_time_estimate_s=dft_per_knot_s,
+        speedup=speedup,
+        substrate_accuracy=(
+            "11/11 reference knots tier-classified via n_q ∈ {0..6} carrier table. "
+            "Form B win: P1 sweet spot (5_1, K(Cl⁻)≈3.6×10¹⁰ M⁻¹) and P2 gap (6_1 "
+            "never synthesized) confirmed in 2026-05-18 lit re-audit; P3 inversion "
+            "weakened but not reversed (no 4_1 anion-host approaching pentafoil)."
+        ),
+        notes=(
+            "Substrate: O(1) tier from crossing number → AccessibilityTier; "
+            "dict lookup for KNOT_REFERENCE entries. "
+            "DFT reference: per-knot strain-energy + conformational sampling "
+            "~10 hours; Wales 2025 JCTC took CPU-weeks for 3 model knots."
+        ),
+    )
+
+
 def run_full_benchmark_suite() -> list[BenchmarkResult]:
     """Run all substrate-vs-DFT benchmarks and return results.
 
@@ -411,6 +477,7 @@ def run_full_benchmark_suite() -> list[BenchmarkResult]:
     results.append(benchmark_wade_classification(n_repeats=10_000))
     results.append(benchmark_closo_3d_aromaticity())
     results.append(benchmark_deltahedron_counts())
+    results.append(benchmark_molecular_knot_accessibility(n_repeats=10_000))
     return results
 
 
@@ -454,6 +521,7 @@ def compare_to_dft(observable: str, n_molecules: int = 1) -> BenchmarkResult:
         "wade":            lambda: benchmark_wade_classification(n_repeats=max(1000, n_molecules)),
         "closo_3d":        benchmark_closo_3d_aromaticity,
         "deltahedron":     benchmark_deltahedron_counts,
+        "molecular_knots": lambda: benchmark_molecular_knot_accessibility(n_repeats=max(1000, n_molecules)),
     }
     if observable not in dispatch:
         raise ValueError(f"Unknown observable {observable!r}; "

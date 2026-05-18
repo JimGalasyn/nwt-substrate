@@ -51,6 +51,18 @@ from .paley import (
     k7_paley_bifold,
 )
 
+from .g2_bridge import (
+    PALEY_TO_BAEZ_LABELING,
+    AGL_Z3_SIGN_LIFT,
+    baez_permutation_of_agl_z3,
+    signed_permutation_matrix,
+    agl_z3_g2_matrix,
+    complex_structure_J,
+    holomorphic_basis_C3,
+    BridgeVerification,
+    verify_bridge,
+)
+
 __all__ = [
     "make_octonion_table",
     "octo_mul",
@@ -85,4 +97,13 @@ __all__ = [
     "AGLBreakingAnalysis",
     "agl_breaking_analysis",
     "k7_paley_bifold",
+    "PALEY_TO_BAEZ_LABELING",
+    "AGL_Z3_SIGN_LIFT",
+    "baez_permutation_of_agl_z3",
+    "signed_permutation_matrix",
+    "agl_z3_g2_matrix",
+    "complex_structure_J",
+    "holomorphic_basis_C3",
+    "BridgeVerification",
+    "verify_bridge",
 ]

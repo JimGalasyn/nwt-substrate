@@ -131,6 +131,14 @@ from .transition_metal import (
     is_substrate_predicted_stable,
     transition_metal_entry,
 )
+from .nmr import (
+    NICSSign,
+    StructurallyDistinctiveHit,
+    NICSReference,
+    NICS_REFERENCE,
+    nics_sign_from_hopf_parity,
+    nics_reference,
+)
 from . import benchmark
 
 __all__ = [
@@ -205,6 +213,13 @@ __all__ = [
     "substrate_canonical_form",
     "is_substrate_predicted_stable",
     "transition_metal_entry",
+    # NMR via Hopf-pair parity (Tier C.8)
+    "NICSSign",
+    "StructurallyDistinctiveHit",
+    "NICSReference",
+    "NICS_REFERENCE",
+    "nics_sign_from_hopf_parity",
+    "nics_reference",
     # Benchmarks
     "benchmark",
 ]

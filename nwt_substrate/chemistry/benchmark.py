@@ -61,6 +61,11 @@ from .transition_metal import (
     substrate_canonical_form,
     transition_metal_entry,
 )
+from .nmr import (
+    NICS_REFERENCE,
+    nics_reference,
+    nics_sign_from_hopf_parity,
+)
 
 
 # DFT/CCSD scaling reference (single CPU core, B3LYP/cc-pVDZ basis).
@@ -531,6 +536,63 @@ def benchmark_transition_metal_electron_count(n_repeats: int = 10_000) -> Benchm
     )
 
 
+def benchmark_nics_sign_rule(n_repeats: int = 10_000) -> BenchmarkResult:
+    """Benchmark substrate NICS sign prediction via Hopf-pair parity.
+
+    Substrate: O(1) per molecule — Hopf-pair parity arithmetic + dict lookup.
+
+    Standard alternative: DFT GIAO NICS calculation at B3LYP/IGLO-III for
+    each ring center. Per-molecule cost ~5-30 min for small aromatics
+    (benzene ~5 min, naphthalene ~10 min, coronene ~30+ min).
+
+    Note: substrate predicts the *sign* trivially via Hopf-pair parity
+    (Form A; 14/14 exact across the canonical NICS reference set).  DFT
+    predicts the actual magnitude.  Substrate magnitude prediction is
+    NOT a load-bearing claim (Form B fails rational-density audit
+    p_random ≈ 0.78).  This benchmark covers the sign-rule speedup only.
+    """
+    molecules = list(NICS_REFERENCE.keys())
+
+    # Warm up
+    for m in molecules:
+        nics_reference(m)
+
+    t0 = time.perf_counter()
+    for _ in range(n_repeats):
+        for m in molecules:
+            entry = nics_reference(m)
+            nics_sign_from_hopf_parity(entry.n_pi_electrons)
+    t1 = time.perf_counter()
+    substrate_total_s = t1 - t0
+    n_calls = n_repeats * len(molecules) * 2
+    substrate_per_us = (substrate_total_s / n_calls) * 1e6
+
+    # DFT GIAO NICS reference: ~10 min average per molecule
+    dft_per_molecule_s = 600
+    dft_total_s = dft_per_molecule_s * len(molecules)
+    speedup = dft_total_s / substrate_total_s * n_repeats
+
+    return BenchmarkResult(
+        observable="nics_sign_rule",
+        n_molecules=len(molecules),
+        substrate_time_us=substrate_per_us,
+        dft_time_estimate_s=dft_per_molecule_s,
+        speedup=speedup,
+        substrate_accuracy=(
+            "14/14 sign predictions correct via Hopf-pair parity (Form A "
+            "exact; trivial extension of A.1/A.2/B.4 aromaticity classification). "
+            "Two structurally distinctive magnitude hits (coronene K_7 outer, "
+            "benzene DIM_OCTONION); broad magnitude prediction not load-bearing."
+        ),
+        notes=(
+            "Substrate: O(1) Hopf-pair parity lookup. "
+            "DFT reference: ~10 min/molecule GIAO NICS at B3LYP/IGLO-III. "
+            "Honest scope: substrate sign rule is trivial extension; "
+            "magnitudes are full DFT except at narrow K_7-hub distinctive points."
+        ),
+    )
+
+
 def run_full_benchmark_suite() -> list[BenchmarkResult]:
     """Run all substrate-vs-DFT benchmarks and return results.
 
@@ -547,6 +609,7 @@ def run_full_benchmark_suite() -> list[BenchmarkResult]:
     results.append(benchmark_deltahedron_counts())
     results.append(benchmark_molecular_knot_accessibility(n_repeats=10_000))
     results.append(benchmark_transition_metal_electron_count(n_repeats=10_000))
+    results.append(benchmark_nics_sign_rule(n_repeats=10_000))
     return results
 
 
@@ -592,6 +655,7 @@ def compare_to_dft(observable: str, n_molecules: int = 1) -> BenchmarkResult:
         "deltahedron":     benchmark_deltahedron_counts,
         "molecular_knots": lambda: benchmark_molecular_knot_accessibility(n_repeats=max(1000, n_molecules)),
         "transition_metal": lambda: benchmark_transition_metal_electron_count(n_repeats=max(1000, n_molecules)),
+        "nics":            lambda: benchmark_nics_sign_rule(n_repeats=max(1000, n_molecules)),
     }
     if observable not in dispatch:
         raise ValueError(f"Unknown observable {observable!r}; "

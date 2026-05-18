@@ -159,6 +159,10 @@ def test_benchmark_c60_modes_runs():
 
 def test_full_benchmark_suite_runs():
     results = chem.benchmark.run_full_benchmark_suite()
-    assert len(results) == 5
+    assert len(results) == 8
     for r in results:
         assert r.speedup > 0
+    observables = {r.observable for r in results}
+    assert "wade_classification" in observables
+    assert "closo_3d_aromaticity" in observables
+    assert "deltahedron_combinatorics" in observables

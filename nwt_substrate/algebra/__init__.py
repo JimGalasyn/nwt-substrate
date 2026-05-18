@@ -39,6 +39,18 @@ from .su3 import (
     N_C,
 )
 
+from .paley import (
+    is_prime,
+    quadratic_residues,
+    non_residues,
+    is_paley_admissible,
+    PaleyDesign,
+    paley_design,
+    AGLBreakingAnalysis,
+    agl_breaking_analysis,
+    k7_paley_bifold,
+)
+
 __all__ = [
     "make_octonion_table",
     "octo_mul",
@@ -55,4 +67,22 @@ __all__ = [
     "sl2_f5_elements",
     "conjugacy_classes",
     "irrep_dimensions_2I",
+    "gell_mann_matrices",
+    "su3_generators",
+    "structure_constants",
+    "d_constants",
+    "fundamental_casimir",
+    "adjoint_casimir",
+    "C_F",
+    "C_A",
+    "N_C",
+    "is_prime",
+    "quadratic_residues",
+    "non_residues",
+    "is_paley_admissible",
+    "PaleyDesign",
+    "paley_design",
+    "AGLBreakingAnalysis",
+    "agl_breaking_analysis",
+    "k7_paley_bifold",
 ]

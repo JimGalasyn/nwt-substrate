@@ -101,6 +101,17 @@ from .pericyclic import (
     reaction_selection_rule,
     electrocyclic_rotation_mode,
 )
+from .polyhedral import (
+    WadeClass,
+    wade_classification,
+    closo_borane_sep_count,
+    deltahedron_edge_count,
+    deltahedron_face_count,
+    deltahedron_euler_chi,
+    ClosoCanonicalResult,
+    closo_borane_substrate_canonical,
+    CLOSO_POLYHEDRA,
+)
 from . import benchmark
 
 __all__ = [
@@ -148,6 +159,16 @@ __all__ = [
     "PERICYCLIC_TS_ELECTRON_COUNT",
     "reaction_selection_rule",
     "electrocyclic_rotation_mode",
+    # Polyhedral clusters (Wade-Mingos PSEPT)
+    "WadeClass",
+    "wade_classification",
+    "closo_borane_sep_count",
+    "deltahedron_edge_count",
+    "deltahedron_face_count",
+    "deltahedron_euler_chi",
+    "ClosoCanonicalResult",
+    "closo_borane_substrate_canonical",
+    "CLOSO_POLYHEDRA",
     # Benchmarks
     "benchmark",
 ]

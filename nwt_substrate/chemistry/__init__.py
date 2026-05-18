@@ -94,6 +94,13 @@ from .bond_orders import (
     smiles_pi_bond_orders,
     cc_bond_length_from_pi_order,
 )
+from .pericyclic import (
+    PericyclicSelectionRule,
+    selection_rule,
+    PERICYCLIC_TS_ELECTRON_COUNT,
+    reaction_selection_rule,
+    electrocyclic_rotation_mode,
+)
 from . import benchmark
 
 __all__ = [
@@ -128,6 +135,19 @@ __all__ = [
     "is_admissible_coordination",
     "mckay_orbit_size",
     "McKayCheck",
+    # Bond orders (π Hückel)
+    "PI_BOND_ORDER_BENZENE_CLASS",
+    "HuckelBondOrderResult",
+    "huckel_bond_orders",
+    "cyclic_pi_bond_order",
+    "smiles_pi_bond_orders",
+    "cc_bond_length_from_pi_order",
+    # Pericyclic Woodward-Hoffmann
+    "PericyclicSelectionRule",
+    "selection_rule",
+    "PERICYCLIC_TS_ELECTRON_COUNT",
+    "reaction_selection_rule",
+    "electrocyclic_rotation_mode",
     # Benchmarks
     "benchmark",
 ]

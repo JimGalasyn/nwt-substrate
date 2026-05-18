@@ -143,12 +143,38 @@ def huckel_bond_orders(
     # eigenvalues < 0, antibonding > 0).
     eigvals, eigvecs = np.linalg.eigh(-A)
 
-    # Build occupancy vector: 2 per MO, filled from lowest up
+    # Group MOs by degenerate energy (np.linalg.eigh returns an arbitrary
+    # basis within degenerate subspaces — the basis is library/version-
+    # dependent). To get a basis-invariant bond order we fill each
+    # degenerate group with equal fractional occupancy: the sum
+    # Σ_{k in group} c_k(i)·c_k(j) is then the (i,j) element of the
+    # projector onto that subspace, which IS basis-invariant.
+    DEGEN_TOL = 1e-9
+    groups: list[list[int]] = []
+    for i in range(n):
+        if groups and abs(eigvals[i] - eigvals[groups[-1][0]]) < DEGEN_TOL:
+            groups[-1].append(i)
+        else:
+            groups.append([i])
+
     occ = np.zeros(n)
-    full_pairs, leftover = divmod(n_electrons, 2)
-    occ[:full_pairs] = 2.0
-    if leftover:
-        occ[full_pairs] = 1.0
+    remaining = n_electrons
+    for group in groups:
+        capacity = 2 * len(group)
+        if remaining >= capacity:
+            for k in group:
+                occ[k] = 2.0
+            remaining -= capacity
+        elif remaining > 0:
+            # Partial fill of a degenerate group: distribute remaining
+            # electrons evenly across the degenerate MOs (symmetric filling).
+            per_mo = remaining / len(group)
+            for k in group:
+                occ[k] = per_mo
+            remaining = 0
+            break
+        else:
+            break
 
     # Coulson bond order: P_ij = Σ_k occ[k] · c_k(i) · c_k(j)
     P = np.zeros((n, n))
@@ -183,17 +209,22 @@ def cyclic_pi_bond_order(n_atoms: int,
     for a neutral aromatic ring.
 
     Specific values:
-      n=3, m=2: cyclopropenyl cation     → 2/3
-      n=4, m=4: cyclobutadiene (planar)  → 1/2
-      n=5, m=6: cyclopentadienyl anion   → ≈0.647 (irrational; closest 11/17)
+      n=3, m=2: cyclopropenyl cation     → 2/3 ✓ substrate-canonical
+      n=4, m=4: cyclobutadiene (planar)  → 1/2 (Jahn-Teller; degenerate HOMO,
+                                                symmetric fill)
+      n=5, m=6: cyclopentadienyl anion   → ≈0.647 (irrational)
       n=6, m=6: benzene                  → 2/3 ✓ substrate-canonical
       n=7, m=6: tropylium cation         → ≈0.642
-      n=8, m=8: COT (planar)             → ≈0.604
+      n=8, m=8: COT (planar)             → ≈0.604 (Jahn-Teller)
       n=10,m=10: [10]annulene            → ≈0.647
-      n=12,m=12: [12]annulene            → 2/3 ✓ substrate-canonical
+      n=12,m=12: [12]annulene            → ≈0.622 (4n anti-aromatic;
+                                                Jahn-Teller, degenerate HOMO)
 
-    The 2/3 substrate-canonical hit occurs for n = 3k cyclic systems
-    at half-filling (k = 1, 2, 4, 8, … verified).
+    The 2/3 = 2/RANK_SO7 substrate-canonical hit occurs cleanly for
+    4n+2 aromatic systems with non-degenerate HOMO: benzene (n=6),
+    cyclopropenyl cation (n=3, m=2). 4n anti-aromatic systems (n=4, 8,
+    12) have degenerate HOMO at the Fermi level — bond order is the
+    basis-invariant symmetric-fill value, not 2/3.
     """
     if n_atoms < 3:
         raise ValueError(f"n_atoms must be >= 3, got {n_atoms}")

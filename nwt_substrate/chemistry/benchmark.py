@@ -54,6 +54,13 @@ from .molecular_knots import (
     carrier_class_of,
     substrate_predicted_tier,
 )
+from .transition_metal import (
+    TRANSITION_METAL_REFERENCE,
+    electron_count_class,
+    is_substrate_predicted_stable,
+    substrate_canonical_form,
+    transition_metal_entry,
+)
 
 
 # DFT/CCSD scaling reference (single CPU core, B3LYP/cc-pVDZ basis).
@@ -463,6 +470,67 @@ def benchmark_molecular_knot_accessibility(n_repeats: int = 10_000) -> Benchmark
     )
 
 
+def benchmark_transition_metal_electron_count(n_repeats: int = 10_000) -> BenchmarkResult:
+    """Benchmark substrate electron-count classification for the canonical
+    transition-metal / f-block reference set.
+
+    Substrate: O(1) per complex — ladder lookup (electron count → k →
+    ElectronCountClass + substrate_canonical_form).
+
+    Standard alternative: DFT B3LYP/cc-pVDZ single-point + MO analysis to
+    determine bonding electron count + frontier orbital occupancies.
+    Per-complex DFT cost ~5-30 min for medium-sized organometallics
+    (Cr(CO)₆ ~150 BFs, ferrocene ~200 BFs); cerocene/uranocene
+    ~30-60 min with f-electron correlations.
+
+    Note: substrate predicts the *stable-count class* (18e / 16e / 14e /
+    12e / 32e) via algebraic identification; DFT predicts the actual
+    electronic structure. Different observables — substrate gives the
+    structural reason, DFT gives the numbers.
+    """
+    complexes = list(TRANSITION_METAL_REFERENCE.keys())
+
+    # Warm up
+    for f in complexes:
+        transition_metal_entry(f)
+
+    t0 = time.perf_counter()
+    for _ in range(n_repeats):
+        for f in complexes:
+            entry = transition_metal_entry(f)
+            electron_count_class(entry.electron_count)
+            substrate_canonical_form(entry.electron_count)
+            is_substrate_predicted_stable(entry.electron_count)
+    t1 = time.perf_counter()
+    substrate_total_s = t1 - t0
+    n_calls = n_repeats * len(complexes) * 4
+    substrate_per_us = (substrate_total_s / n_calls) * 1e6
+
+    # DFT reference: ~15 min average per complex
+    dft_per_complex_s = 900
+    dft_total_s = dft_per_complex_s * len(complexes)
+    speedup = dft_total_s / substrate_total_s * n_repeats
+
+    return BenchmarkResult(
+        observable="transition_metal_electron_count",
+        n_molecules=len(complexes),
+        substrate_time_us=substrate_per_us,
+        dft_time_estimate_s=dft_per_complex_s,
+        speedup=speedup,
+        substrate_accuracy=(
+            "20/20 canonical complexes classified via Spin(7) rep-class ladder. "
+            "Form D win: {18, 16, 14, 12} via N_EDGES_K7 − k for k ∈ {3, 5, 7, 9}; "
+            "32 via K_7_TRIANGLES − RANK_SO7. 18 and 32 substrate-unique."
+        ),
+        notes=(
+            "Substrate: O(1) ladder lookup → ElectronCountClass. "
+            "DFT reference: ~15 min/complex single-point + MO analysis. "
+            "Substrate predicts the structural reason for stability; "
+            "DFT predicts the absolute energetics."
+        ),
+    )
+
+
 def run_full_benchmark_suite() -> list[BenchmarkResult]:
     """Run all substrate-vs-DFT benchmarks and return results.
 
@@ -478,6 +546,7 @@ def run_full_benchmark_suite() -> list[BenchmarkResult]:
     results.append(benchmark_closo_3d_aromaticity())
     results.append(benchmark_deltahedron_counts())
     results.append(benchmark_molecular_knot_accessibility(n_repeats=10_000))
+    results.append(benchmark_transition_metal_electron_count(n_repeats=10_000))
     return results
 
 
@@ -522,6 +591,7 @@ def compare_to_dft(observable: str, n_molecules: int = 1) -> BenchmarkResult:
         "closo_3d":        benchmark_closo_3d_aromaticity,
         "deltahedron":     benchmark_deltahedron_counts,
         "molecular_knots": lambda: benchmark_molecular_knot_accessibility(n_repeats=max(1000, n_molecules)),
+        "transition_metal": lambda: benchmark_transition_metal_electron_count(n_repeats=max(1000, n_molecules)),
     }
     if observable not in dispatch:
         raise ValueError(f"Unknown observable {observable!r}; "

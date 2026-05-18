@@ -121,6 +121,16 @@ from .molecular_knots import (
     substrate_predicted_tier,
     accessibility_for_knot,
 )
+from .transition_metal import (
+    ElectronCountClass,
+    OrganometallicEntry,
+    TRANSITION_METAL_REFERENCE,
+    electron_count_class,
+    ladder_k_for_count,
+    substrate_canonical_form,
+    is_substrate_predicted_stable,
+    transition_metal_entry,
+)
 from . import benchmark
 
 __all__ = [
@@ -186,6 +196,15 @@ __all__ = [
     "carrier_class_of",
     "substrate_predicted_tier",
     "accessibility_for_knot",
+    # Transition-metal electron-count rules (Tier C.7)
+    "ElectronCountClass",
+    "OrganometallicEntry",
+    "TRANSITION_METAL_REFERENCE",
+    "electron_count_class",
+    "ladder_k_for_count",
+    "substrate_canonical_form",
+    "is_substrate_predicted_stable",
+    "transition_metal_entry",
     # Benchmarks
     "benchmark",
 ]

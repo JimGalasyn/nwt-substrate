@@ -162,6 +162,22 @@ from .healing_length import (
     scale_regime_table,
 )
 
+from .nhek import (
+    Sigma,
+    Lambda_factor,
+    nhek_metric,
+    nhek_inverse_metric,
+    nhek_metric_determinant,
+    nhek_signature,
+    killing_vectors_constant_basis,
+    is_axisymmetric_invariant,
+    substrate_vortex_centerline_radius,
+    is_near_bifurcation_sphere,
+    nhek_symbolic,
+    verify_nhek_vacuum,
+    christoffels_numeric,
+)
+
 
 __all__ = [
     # constants
@@ -228,4 +244,18 @@ __all__ = [
     "k_chern_simons",
     "xi_cosmo_m",
     "scale_regime_table",
+    # NHEK geometry (vortex-vision Layer 3, 2026-05-19)
+    "Sigma",
+    "Lambda_factor",
+    "nhek_metric",
+    "nhek_inverse_metric",
+    "nhek_metric_determinant",
+    "nhek_signature",
+    "killing_vectors_constant_basis",
+    "is_axisymmetric_invariant",
+    "substrate_vortex_centerline_radius",
+    "is_near_bifurcation_sphere",
+    "nhek_symbolic",
+    "verify_nhek_vacuum",
+    "christoffels_numeric",
 ]

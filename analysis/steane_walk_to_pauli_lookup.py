@@ -97,6 +97,34 @@ def pauli_word_string(x_part, z_part):
     return " ".join(parts) if parts else "I"
 
 
+# Logical-Z support choice (matches steane_pair_synthesis helper):
+# weight-3 Z on Fano line {qubit 0, 1, 2} = positions {1, 2, 3}
+LOGICAL_Z_SUPPORT = (0, 1, 2)
+
+
+def predicted_logical_z(x_part, z_part) -> int:
+    """Predicted logical-Z eigenvalue (+1 or -1) for the post-Pauli state.
+
+    Z_L acting on the post-Pauli state |ψ⟩ = P_W|0_L⟩ has eigenvalue
+    determined by whether P_W commutes with Z_L:
+      - Commutes: eigenvalue = +1 (|0_L⟩-like)
+      - Anti-commutes: eigenvalue = -1 (|1_L⟩-like)
+      - Mixed (P_W contains Y components, or X-part overlap with Z_L_support
+        is odd while Z-part on Z_L_support qubits matter): need to check both
+        parts.
+
+    For our purposes:
+      Z_L = Z_0 Z_1 Z_2.
+      [Z_L, X_q] = 0 iff q ∉ {0, 1, 2}; anti-commutes iff q ∈ {0, 1, 2}.
+      [Z_L, Z_q] = 0 always.
+      [Z_L, Y_q] inherits from [Z_L, X_q] (Y is Pauli X with sign).
+    So Z_L (anti-)commutes with P_W iff
+      (X-part ∩ Z_L_support) is even-weighted.
+    """
+    overlap = sum(x_part[i] for i in LOGICAL_Z_SUPPORT)
+    return +1 if overlap % 2 == 0 else -1
+
+
 def main():
     walks = bfs_shortest_walks(max_length=25)
 
@@ -109,6 +137,9 @@ def main():
                 "vertex_to_qubit": {str(v): VERTEX_TO_QUBIT[v]
                                        for v in range(7)},
                 "vertex_to_fano_label": VERTEX_LABEL,
+                "qubit_to_fano_label": {
+                    str(q): VERTEX_LABEL[QUBIT_TO_VERTEX[q]] for q in range(7)
+                },
                 "QR_directions": sorted(QR_DIRECTIONS),
                 "NR_directions": sorted(NR_DIRECTIONS),
                 "pauli_rule": "X on destination qubit for QR-direction step; Z on destination for NR-direction step",
@@ -118,6 +149,8 @@ def main():
                 "z_stab_supports_qubits": [
                     [q for q in range(7) if g[q]] for g in Z_STAB_GENS
                 ],
+                "logical_z_support_qubits": list(LOGICAL_Z_SUPPORT),
+                "logical_z_eigenvalue_rule": "+1 if X-part overlap with Z_L support {0,1,2} is even-weighted, else -1",
             }
         },
         "particles": [],
@@ -166,6 +199,7 @@ def main():
                 "z_err_fano": qubit_to_label(q_Z),
                 "predicted_syndrome_fano_pair": [qubit_to_label(q_X),
                                                    qubit_to_label(q_Z)],
+                "predicted_logical_z": predicted_logical_z(x_part, z_part),
             },
             "reverse_pauli": {
                 "x_part_bits": list(rx_part),
@@ -175,6 +209,7 @@ def main():
                 "z_syndrome_bits": list(rs_Z),
                 "x_err_fano": qubit_to_label(syndrome_to_qubit(rs_X)),
                 "z_err_fano": qubit_to_label(syndrome_to_qubit(rs_Z)),
+                "predicted_logical_z": predicted_logical_z(rx_part, rz_part),
             },
         })
 

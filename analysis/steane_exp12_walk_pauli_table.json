@@ -22,6 +22,15 @@
         "5": "F2",
         "6": "F3"
       },
+      "qubit_to_fano_label": {
+        "0": "E3",
+        "1": "E2",
+        "2": "F1",
+        "3": "E1",
+        "4": "F2",
+        "5": "F3",
+        "6": "P"
+      },
       "QR_directions": [
         1,
         2,
@@ -72,7 +81,13 @@
           5,
           6
         ]
-      ]
+      ],
+      "logical_z_support_qubits": [
+        0,
+        1,
+        2
+      ],
+      "logical_z_eigenvalue_rule": "+1 if X-part overlap with Z_L support {0,1,2} is even-weighted, else -1"
     }
   },
   "particles": [
@@ -146,7 +161,8 @@
         "predicted_syndrome_fano_pair": [
           "I",
           "I"
-        ]
+        ],
+        "predicted_logical_z": -1
       },
       "reverse_pauli": {
         "x_part_bits": [
@@ -179,7 +195,8 @@
           0
         ],
         "x_err_fano": "I",
-        "z_err_fano": "I"
+        "z_err_fano": "I",
+        "predicted_logical_z": 1
       }
     },
     {
@@ -278,7 +295,8 @@
         "predicted_syndrome_fano_pair": [
           "P",
           "F3"
-        ]
+        ],
+        "predicted_logical_z": 1
       },
       "reverse_pauli": {
         "x_part_bits": [
@@ -311,7 +329,8 @@
           0
         ],
         "x_err_fano": "F1",
-        "z_err_fano": "E2"
+        "z_err_fano": "E2",
+        "predicted_logical_z": -1
       }
     },
     {
@@ -376,7 +395,8 @@
         "predicted_syndrome_fano_pair": [
           "F2",
           "E2"
-        ]
+        ],
+        "predicted_logical_z": -1
       },
       "reverse_pauli": {
         "x_part_bits": [
@@ -409,7 +429,8 @@
           0
         ],
         "x_err_fano": "P",
-        "z_err_fano": "I"
+        "z_err_fano": "I",
+        "predicted_logical_z": 1
       }
     },
     {
@@ -488,7 +509,8 @@
         "predicted_syndrome_fano_pair": [
           "P",
           "E1"
-        ]
+        ],
+        "predicted_logical_z": 1
       },
       "reverse_pauli": {
         "x_part_bits": [
@@ -521,7 +543,8 @@
           0
         ],
         "x_err_fano": "I",
-        "z_err_fano": "F1"
+        "z_err_fano": "F1",
+        "predicted_logical_z": -1
       }
     },
     {
@@ -611,7 +634,8 @@
         "predicted_syndrome_fano_pair": [
           "P",
           "F3"
-        ]
+        ],
+        "predicted_logical_z": -1
       },
       "reverse_pauli": {
         "x_part_bits": [
@@ -644,7 +668,8 @@
           0
         ],
         "x_err_fano": "F1",
-        "z_err_fano": "E2"
+        "z_err_fano": "E2",
+        "predicted_logical_z": -1
       }
     },
     {
@@ -723,7 +748,8 @@
         "predicted_syndrome_fano_pair": [
           "E2",
           "E2"
-        ]
+        ],
+        "predicted_logical_z": 1
       },
       "reverse_pauli": {
         "x_part_bits": [
@@ -756,7 +782,8 @@
           0
         ],
         "x_err_fano": "F1",
-        "z_err_fano": "F1"
+        "z_err_fano": "F1",
+        "predicted_logical_z": -1
       }
     },
     {
@@ -837,7 +864,8 @@
         "predicted_syndrome_fano_pair": [
           "E1",
           "E1"
-        ]
+        ],
+        "predicted_logical_z": 1
       },
       "reverse_pauli": {
         "x_part_bits": [
@@ -870,7 +898,8 @@
           1
         ],
         "x_err_fano": "P",
-        "z_err_fano": "P"
+        "z_err_fano": "P",
+        "predicted_logical_z": -1
       }
     },
     {
@@ -959,7 +988,8 @@
         "predicted_syndrome_fano_pair": [
           "I",
           "I"
-        ]
+        ],
+        "predicted_logical_z": -1
       },
       "reverse_pauli": {
         "x_part_bits": [
@@ -992,7 +1022,8 @@
           0
         ],
         "x_err_fano": "I",
-        "z_err_fano": "I"
+        "z_err_fano": "I",
+        "predicted_logical_z": 1
       }
     },
     {
@@ -1075,7 +1106,8 @@
         "predicted_syndrome_fano_pair": [
           "F3",
           "F1"
-        ]
+        ],
+        "predicted_logical_z": -1
       },
       "reverse_pauli": {
         "x_part_bits": [
@@ -1108,7 +1140,8 @@
           1
         ],
         "x_err_fano": "E3",
-        "z_err_fano": "E1"
+        "z_err_fano": "E1",
+        "predicted_logical_z": 1
       }
     },
     {
@@ -1207,7 +1240,8 @@
         "predicted_syndrome_fano_pair": [
           "P",
           "E1"
-        ]
+        ],
+        "predicted_logical_z": 1
       },
       "reverse_pauli": {
         "x_part_bits": [
@@ -1240,7 +1274,8 @@
           0
         ],
         "x_err_fano": "I",
-        "z_err_fano": "F1"
+        "z_err_fano": "F1",
+        "predicted_logical_z": -1
       }
     },
     {
@@ -1323,7 +1358,8 @@
         "predicted_syndrome_fano_pair": [
           "F2",
           "F3"
-        ]
+        ],
+        "predicted_logical_z": -1
       },
       "reverse_pauli": {
         "x_part_bits": [
@@ -1356,7 +1392,8 @@
           0
         ],
         "x_err_fano": "F1",
-        "z_err_fano": "I"
+        "z_err_fano": "I",
+        "predicted_logical_z": -1
       }
     },
     {
@@ -1449,7 +1486,8 @@
         "predicted_syndrome_fano_pair": [
           "E3",
           "P"
-        ]
+        ],
+        "predicted_logical_z": 1
       },
       "reverse_pauli": {
         "x_part_bits": [
@@ -1482,7 +1520,8 @@
           1
         ],
         "x_err_fano": "E3",
-        "z_err_fano": "P"
+        "z_err_fano": "P",
+        "predicted_logical_z": -1
       }
     },
     {
@@ -1569,7 +1608,8 @@
         "predicted_syndrome_fano_pair": [
           "E3",
           "P"
-        ]
+        ],
+        "predicted_logical_z": 1
       },
       "reverse_pauli": {
         "x_part_bits": [
@@ -1602,7 +1642,8 @@
           1
         ],
         "x_err_fano": "E3",
-        "z_err_fano": "P"
+        "z_err_fano": "P",
+        "predicted_logical_z": 1
       }
     },
     {
@@ -1693,7 +1734,8 @@
         "predicted_syndrome_fano_pair": [
           "F2",
           "E2"
-        ]
+        ],
+        "predicted_logical_z": -1
       },
       "reverse_pauli": {
         "x_part_bits": [
@@ -1726,7 +1768,8 @@
           0
         ],
         "x_err_fano": "P",
-        "z_err_fano": "I"
+        "z_err_fano": "I",
+        "predicted_logical_z": -1
       }
     },
     {
@@ -1815,7 +1858,8 @@
         "predicted_syndrome_fano_pair": [
           "P",
           "E3"
-        ]
+        ],
+        "predicted_logical_z": 1
       },
       "reverse_pauli": {
         "x_part_bits": [
@@ -1848,7 +1892,8 @@
           0
         ],
         "x_err_fano": "F2",
-        "z_err_fano": "F1"
+        "z_err_fano": "F1",
+        "predicted_logical_z": -1
       }
     },
     {
@@ -1937,7 +1982,8 @@
         "predicted_syndrome_fano_pair": [
           "E1",
           "E1"
-        ]
+        ],
+        "predicted_logical_z": 1
       },
       "reverse_pauli": {
         "x_part_bits": [
@@ -1970,7 +2016,8 @@
           1
         ],
         "x_err_fano": "P",
-        "z_err_fano": "P"
+        "z_err_fano": "P",
+        "predicted_logical_z": -1
       }
     }
   ],

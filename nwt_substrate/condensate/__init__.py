@@ -23,11 +23,47 @@ from nwt_substrate.condensate.abelian_higgs import (
     healing_length,
     line_tension_BPS,
 )
+from nwt_substrate.condensate.walks import (
+    edge_to_orbit,
+    bfs_shortest_walks,
+    closed_walk_winding,
+    walk_arc_length_unit_torus,
+    walk_signed_step_distribution,
+    walk_symmetric_d_distribution,
+    walk_QR_NR_fractions,
+    walk_sigma_sequence,
+    walk_sigma_composition,
+    walk_sigma_transitions,
+    walk_sigma_complete_coverage,
+    walk_invariants,
+    walk_to_3d_curve,
+    WalkInvariants,
+    QR_SIGNED, NR_SIGNED,
+)
+from nwt_substrate.condensate.antimatter import (
+    antimatter_reverse,
+    antimatter_negate_winding,
+    matter_direction_fraction,
+    is_pure_matter_walk,
+    is_pure_antimatter_walk,
+    cpt_verification,
+)
 
 __all__ = [
-    "AbelianHiggsParams",
-    "bogoliubov_dispersion",
-    "sound_speed",
-    "healing_length",
-    "line_tension_BPS",
+    # abelian_higgs
+    "AbelianHiggsParams", "bogoliubov_dispersion",
+    "sound_speed", "healing_length", "line_tension_BPS",
+    # walks
+    "edge_to_orbit", "bfs_shortest_walks", "closed_walk_winding",
+    "walk_arc_length_unit_torus", "walk_signed_step_distribution",
+    "walk_symmetric_d_distribution", "walk_QR_NR_fractions",
+    "walk_sigma_sequence", "walk_sigma_composition",
+    "walk_sigma_transitions", "walk_sigma_complete_coverage",
+    "walk_invariants", "walk_to_3d_curve", "WalkInvariants",
+    "QR_SIGNED", "NR_SIGNED",
+    # antimatter
+    "antimatter_reverse", "antimatter_negate_winding",
+    "matter_direction_fraction",
+    "is_pure_matter_walk", "is_pure_antimatter_walk",
+    "cpt_verification",
 ]

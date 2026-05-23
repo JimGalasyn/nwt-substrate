@@ -70,6 +70,18 @@ from .process import (
     sigma_qed_only,
 )
 
+from .substrate_gf import (
+    ALPHA_SUBSTRATE,
+    M_E_GEV,
+    V_EW_PDG_GEV,
+    v_ew_substrate,
+    fermi_constant_substrate,
+    fermi_constant_from_vev,
+    precision_chain,
+    verify_substrate_gf,
+    precision_chain_summary,
+)
+
 # ---- Substrate-ISA identities ----
 from ..isa import (
     N_GENERATIONS,
@@ -158,6 +170,13 @@ class _SubstrateNamespace:
     N_EDGES_K7 = N_EDGES_K7
     RANK_SO7 = RANK_SO7
     N_C_SU3 = N_C_SU3
+    # Substrate G_F derivation chain (Galasyn 2026-05-23 P7b §7.4)
+    ALPHA_SUBSTRATE = ALPHA_SUBSTRATE
+    fermi_constant = staticmethod(fermi_constant_substrate)
+    v_ew = staticmethod(v_ew_substrate)
+    g_f_precision_chain = staticmethod(precision_chain)
+    verify_g_f = staticmethod(verify_substrate_gf)
+
     breakdown = staticmethod(substrate_breakdown)
     verify_b_qed_sm = staticmethod(verify_b_qed_sm)
 
@@ -179,6 +198,10 @@ __all__ = [
     "branching_ratios_Z", "width_summary",
     # process
     "chi", "M_squared_avg", "dsigma_dcos", "sigma_total", "sigma_qed_only",
+    # substrate G_F (P7b §7.4 closure)
+    "ALPHA_SUBSTRATE", "M_E_GEV", "V_EW_PDG_GEV",
+    "v_ew_substrate", "fermi_constant_substrate", "fermi_constant_from_vev",
+    "precision_chain", "verify_substrate_gf", "precision_chain_summary",
     # substrate identities
     "substrate", "substrate_breakdown", "verify_b_qed_sm",
 ]

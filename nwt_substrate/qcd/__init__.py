@@ -178,6 +178,21 @@ from . import diagram as _diag_mod
 from ..qed.diagram import Diagram
 
 
+# ---- Substrate universal mass formula for hidden-gluon bound states ----
+# P7b §7.8 closure (Galasyn 2026-05-23): glueballs, tetraquarks,
+# pentaquarks, exotic Z_b all live on m² = (4 m_π⁰)² · N substrate ladder.
+from .exotic_states import (
+    pi_zero_mass,
+    gluon_pair_scale,
+    universal_mass,
+    universal_N,
+    BOUND_STATES_CATALOG,
+    precision_chain as exotic_precision_chain,
+    verify_universal_mass_formula,
+    precision_chain_summary as exotic_precision_chain_summary,
+)
+
+
 # ---- Gallery ----
 def gallery_all(figsize=(12, 8)):
     """
@@ -216,6 +231,12 @@ __all__ = [
     "QCDEvent", "Diagram",
     # gallery
     "gallery_all",
+    # substrate universal mass formula (exotic states)
+    "pi_zero_mass", "gluon_pair_scale",
+    "universal_mass", "universal_N",
+    "BOUND_STATES_CATALOG",
+    "exotic_precision_chain", "verify_universal_mass_formula",
+    "exotic_precision_chain_summary",
     # substrate identities
     "substrate", "substrate_breakdown",
 ]

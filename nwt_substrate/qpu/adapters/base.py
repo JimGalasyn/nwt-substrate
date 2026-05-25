@@ -54,9 +54,18 @@ class Counts:
 
 
 @dataclass(frozen=True)
+class Window:
+    """A device execution window (UTC). Hours are 'HH:MM:SS' strings."""
+    day: str            # 'Monday' .. 'Sunday'
+    start_hour: str
+    end_hour: str
+
+
+@dataclass(frozen=True)
 class Capabilities:
-    """Static-ish description of a backend (subset needed for M1; windows +
-    cost guardrails are fleshed out in capabilities.py during M2)."""
+    """Static-ish description of a backend. `coupling_map` + `execution_windows`
+    are populated by capabilities.fetch_capabilities() (M2); the M1 adapters fill
+    the cheap fields directly."""
 
     name: str
     sdk: str                       # "ibm" | "braket" | "simulator"
@@ -66,6 +75,7 @@ class Capabilities:
     per_shot_usd: float = 0.0
     task_fee_usd: float = 0.0
     median_2q_fidelity: float = 0.99
+    execution_windows: tuple[Window, ...] | None = None  # None = 24/7 (e.g. IBM)
 
 
 @dataclass

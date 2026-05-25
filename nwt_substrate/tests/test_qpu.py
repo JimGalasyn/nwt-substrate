@@ -117,3 +117,71 @@ def test_fano_identity_for_codeword():
     syndrome I and logical_z +1."""
     assert decode.fano([0] * 7) == "I"
     assert decode.logical_z([0] * 7) == +1
+
+
+# --------------------------------------------------------------- M2: preflight
+# IQM Garnet's real 20-qubit grid (0-indexed).
+_GARNET_EDGES = tuple(sorted({
+    (min(a - 1, b - 1), max(a - 1, b - 1)) for a, b in [
+        (1, 2), (1, 4), (2, 5), (3, 4), (3, 8), (4, 5), (4, 9), (5, 6), (5, 10),
+        (6, 7), (6, 11), (7, 12), (8, 9), (8, 13), (9, 10), (9, 14), (10, 11),
+        (10, 15), (11, 12), (11, 16), (12, 17), (13, 14), (14, 15), (14, 18),
+        (15, 16), (15, 19), (16, 17), (16, 20), (18, 19), (19, 20)]}))
+
+
+def _garnet_caps():
+    from nwt_substrate.qpu.adapters.base import Capabilities
+    return Capabilities(name="iqm/Garnet", sdk="braket", n_qubits=20, native_2q="cz",
+                        coupling_map=_GARNET_EDGES, per_shot_usd=0.00145, task_fee_usd=0.30,
+                        median_2q_fidelity=0.98)  # effective all-in (see capabilities.py)
+
+
+@pytest.mark.skipif(not _have_qiskit, reason="qiskit not installed")
+def test_preflight_flags_ancilla_but_passes_destructive_on_garnet():
+    """Reproduces the 2026-05-25 diagnosis as a unit test: the 13-qubit ancilla
+    circuit blows Garnet's budget; the destructive variant fits."""
+    from nwt_substrate.qpu import capabilities as cap
+    base = spec.steane_base_ops(ELECTRON_X, ELECTRON_Z)
+    anc = spec.ancilla_syndrome(base, "electron")
+    z, _ = spec.destructive_css(base, "electron")
+
+    pf_anc = cap.preflight(anc, _garnet_caps(), shots=100)
+    pf_des = cap.preflight(z, _garnet_caps(), shots=100)
+
+    assert pf_anc.n_2q > 40 and not pf_anc.fits_budget       # ~58 CZ -> blows budget
+    assert pf_des.n_2q < 25 and pf_des.fits_budget           # ~15 CZ -> fits
+    assert pf_des.n_2q < pf_anc.n_2q
+
+
+def test_window_status_aqt():
+    from datetime import datetime, timezone
+    from nwt_substrate.qpu.capabilities import window_status
+    from nwt_substrate.qpu.adapters.base import Window
+    aqt = (Window("Monday", "11:00:00", "15:00:00"),
+           Window("Tuesday", "08:00:00", "15:00:00"),
+           Window("Wednesday", "08:00:00", "15:00:00"),
+           Window("Friday", "08:00:00", "15:00:00"))
+    # 2026-05-25 is a Monday; 14:00 UTC is inside the Mon window
+    in_win, nxt = window_status(aqt, datetime(2026, 5, 25, 14, 0, tzinfo=timezone.utc))
+    assert in_win and nxt is None
+    # 2026-05-23 is a Saturday -> closed; next opening is Monday 11:00
+    in_win, nxt = window_status(aqt, datetime(2026, 5, 23, 12, 0, tzinfo=timezone.utc))
+    assert not in_win and nxt.startswith("2026-05-25T11:00")
+
+
+def test_window_status_none_is_24_7():
+    from nwt_substrate.qpu.capabilities import window_status
+    assert window_status(None) == (True, None)
+
+
+def test_window_status_weekdays_aggregate():
+    """IQM Garnet reports executionDay='Weekdays' (Mon-Fri) rather than per-day."""
+    from datetime import datetime, timezone
+    from nwt_substrate.qpu.capabilities import window_status
+    from nwt_substrate.qpu.adapters.base import Window
+    garnet = (Window("Weekdays", "03:15:00", "15:30:00"),)
+    # Monday 2026-05-25 14:00 UTC -> open
+    assert window_status(garnet, datetime(2026, 5, 25, 14, 0, tzinfo=timezone.utc))[0]
+    # Saturday 2026-05-23 -> closed, next opening Monday 03:15
+    in_win, nxt = window_status(garnet, datetime(2026, 5, 23, 12, 0, tzinfo=timezone.utc))
+    assert not in_win and nxt.startswith("2026-05-25T03:15")

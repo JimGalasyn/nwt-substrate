@@ -83,8 +83,9 @@ non-Cartan generators of so(7)."""
 # domain markers).
 # ---------------------------------------------------------------------------
 
-ALPHA_NWT: float = 1.0 / (25.0 * math.pi * math.sqrt(3.0) + 1.0)
-"""The substrate (NWT) fine-structure constant.
+ALPHA_SUBSTRATE: float = 1.0 / (25.0 * math.pi * math.sqrt(3.0) + 1.0)
+"""The substrate fine-structure constant (canonical name as of 2026-05-25;
+``ALPHA_NWT`` below is a back-compat alias).
 
 Closed form: α_NWT = 1 / (25π√3 + 1) ≈ 1/137.0359...
 
@@ -97,6 +98,20 @@ This is the framework's PRIMARY substrate parameter — every other
 gravity/cosmogenesis observable below is expressed as a polynomial in
 α or √α with substrate-integer multipliers (RANK_SO7=3, H_V_SO7=5,
 DIM_OCTONION=8, H_COXETER_SO7=6)."""
+
+ALPHA_NWT: float = ALPHA_SUBSTRATE
+"""Back-compat alias for :data:`ALPHA_SUBSTRATE` (canonical name as of
+2026-05-25). Prefer ``ALPHA_SUBSTRATE`` in new code."""
+
+M_PL_GEV: float = 1.220890e19
+"""Planck mass in GeV — the cosmogenic mass anchor.
+
+The single absolute mass scale of the framework, fixed at cosmogenesis by the
+parent black hole's mass no-hair (Paper 22). Every other mass derives from it
+by a forced dimensionless factor: the electroweak scale
+v_EW = (H_V_SO7/2)·α^DIM_OCTONION·M_Pl = (5/2)·α^8·M_Pl ≈ 245.5 GeV, and
+m_e = (8/7)·α^(21/2)·(NNLO bracket)·M_Pl. This is the full Planck mass
+(1.220890e19 GeV = 2.176e-8 kg), not the reduced M_Pl."""
 
 KAPPA_MACKEN: float = math.sqrt((25.0 * math.pi * math.sqrt(3.0) + 1.0)
                                  / math.sqrt(2.0))

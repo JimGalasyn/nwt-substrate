@@ -8,10 +8,11 @@ analysis/paper21_p7b_GF_substrate.md in null-worldtube-private):
     G_F^sub  = 1 / (√2 v_EW²)                            [SM tree-level identity]
              = α⁴ / (625 √2 m_e² (1 + 25 α / (4 √3))²)  [closed form]
 
-Substrate inputs: α (Paper 17 K_7 Wilson) and m_e (scale anchor).
+Substrate inputs: α (Paper 17 K_7 Wilson) and the mass scale m_e (itself
+derived from the cosmogenic anchor M_Pl; see isa.constants.M_PL_GEV).
 Zero free EW parameters.  Combined with P6b (CKM in 4 substrate integers
-+ α at 0.03 %), the SM EW + flavor sector is now down to one free
-parameter (m_e as dimensional anchor).
++ α at 0.03 %), the SM EW + flavor sector reduces to a single mass scale,
+which is the cosmogenic M_Pl (m_e = (8/7)·α^(21/2)·(NNLO)·M_Pl).
 
 Precision chain vs PDG (substrate α = 1/(25π√3 + 1)):
 
@@ -35,20 +36,21 @@ from __future__ import annotations
 import math
 
 from .constants import G_F_GEV  # PDG value for comparison
+from ..isa.constants import ALPHA_SUBSTRATE  # canonical substrate α (single source of truth)
 
 
 # ============================================================
 # Substrate inputs
 # ============================================================
 
-ALPHA_SUBSTRATE: float = 1.0 / (25.0 * math.pi * math.sqrt(3.0) + 1.0)
-"""Substrate fine-structure constant α = 1/(25π√3 + 1).  Paper 17 K_7 Wilson
-amplitude derivation.  Matches PDG α at +7.6 ppm."""
+# ALPHA_SUBSTRATE is imported from isa.constants (single source of truth);
+# α = 1/(25π√3 + 1), Paper 17 K_7 Wilson amplitude, +7.6 ppm vs PDG.
 
 
 M_E_GEV: float = 0.5109989461e-3
-"""Electron mass in GeV (PDG); the one dimensional anchor of substrate EW
-sector after P6b (CKM) and P7b §7.4 (G_F) closures."""
+"""Electron mass in GeV (PDG), the mass scale entering the G_F chain here.
+It is NOT itself fundamental: m_e = (8/7)·α^(21/2)·(NNLO bracket)·M_Pl derives
+from the cosmogenic mass anchor M_Pl (see isa.constants.M_PL_GEV)."""
 
 
 V_EW_PDG_GEV: float = 246.21965

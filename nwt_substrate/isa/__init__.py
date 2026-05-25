@@ -71,7 +71,9 @@ from .constants import (
     H_COXETER_SO7,
     N_POS_ROOTS_SO7,
     # Substrate α and Macken aspect ratio
+    ALPHA_SUBSTRATE,
     ALPHA_NWT,
+    M_PL_GEV,
     KAPPA_MACKEN,
     # K_7 combinatorics
     N_VERTICES_K7,
@@ -149,7 +151,9 @@ __all__ = [
     "H_V_SO7",
     "H_COXETER_SO7",
     "N_POS_ROOTS_SO7",
+    "ALPHA_SUBSTRATE",
     "ALPHA_NWT",
+    "M_PL_GEV",
     "KAPPA_MACKEN",
     "N_VERTICES_K7",
     "N_EDGES_K7",

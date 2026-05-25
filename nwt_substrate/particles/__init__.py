@@ -13,6 +13,15 @@ from .particle import Particle
 from .factory import particle, list_particles
 from .mass import paper6_mass_ratio, paper6_mass_mev, ME_MEV
 from .charge import gell_mann_nishijima
+from .stability_ratio import (
+    COMPENDIUM_STABILITY,
+    stability_ratio,
+    stability_ratio_for,
+    log10_stability_ratio_for,
+    classify_regime,
+    all_k7_walks_are_passive_or_BPS,
+    stability_summary,
+)
 
 from ..isa import (
     N_CARRIER_TYPES,
@@ -87,4 +96,12 @@ __all__ = [
     "gell_mann_nishijima",
     "substrate",
     "substrate_breakdown",
+    # substrate pattern-stability ratio ρ = m/Γ (P7b synthesis)
+    "COMPENDIUM_STABILITY",
+    "stability_ratio",
+    "stability_ratio_for",
+    "log10_stability_ratio_for",
+    "classify_regime",
+    "all_k7_walks_are_passive_or_BPS",
+    "stability_summary",
 ]

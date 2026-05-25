@@ -82,6 +82,80 @@ from .substrate_gf import (
     precision_chain_summary,
 )
 
+from .form_factors import (
+    FORM_FACTORS,
+    cos_theta_C_substrate,
+    sin_theta_C_substrate,
+    f_plus_substrate,
+    f_plus_for,
+    f_plus_leading_order,
+    precision_chain as form_factor_precision_chain,
+    verify_form_factors,
+    precision_chain_summary as form_factor_precision_chain_summary,
+)
+
+from .vector_meson_decay_constants import (
+    VECTOR_MESONS,
+    tau_mass_substrate,
+    vector_binding_scale,
+    vector_meson_fX,
+    vector_meson_fX_for,
+    precision_chain as vector_meson_fX_precision_chain,
+    c_ratio_precision_chain,
+    verify_vector_meson_fX,
+    precision_chain_summary as vector_meson_fX_precision_chain_summary,
+)
+
+from .light_meson_decay_constants import (
+    LIGHT_PSEUDOSCALARS,
+    cabibbo_scale_fX,
+    fibonacci_anomaly_fX,
+    light_meson_fX_for,
+    precision_chain as light_meson_fX_precision_chain,
+    verify_light_meson_fX,
+    precision_chain_summary as light_meson_fX_precision_chain_summary,
+)
+
+from .heavy_meson_decay_constants import (
+    R_S_NONSTRANGE,
+    R_S_STRANGE,
+    HEAVY_PSEUDOSCALARS,
+    pi_zero_mass as heavy_meson_pi_zero_mass,
+    f_pi_substrate,
+    heavy_meson_fX,
+    heavy_meson_fX_for,
+    fX_ratio_strange_over_nonstrange,
+    precision_chain as heavy_meson_fX_precision_chain,
+    verify_heavy_meson_fX,
+    precision_chain_summary as heavy_meson_fX_precision_chain_summary,
+)
+
+from .substrate_ckm import (
+    N_VERTICES_K7 as CKM_N_VERTICES_K7,
+    Q_B as CKM_Q_B,
+    DIM_G2 as CKM_DIM_G2,
+    DIM_SO7 as CKM_DIM_SO7,
+    DELTA_CP_CKM,
+    wolfenstein_lambda,
+    wolfenstein_lambda_sq,
+    wolfenstein_A,
+    wolfenstein_A_sq,
+    wolfenstein_apex_magnitude,
+    wolfenstein_apex_magnitude_sq,
+    wolfenstein_rho_bar,
+    wolfenstein_eta_bar,
+    V_us as ckm_V_us,
+    V_cb as ckm_V_cb,
+    V_ub as ckm_V_ub,
+    V_td as ckm_V_td,
+    jarlskog_ckm,
+    jarlskog_coefficient,
+    ckm_matrix,
+    precision_chain as ckm_precision_chain,
+    verify_substrate_ckm,
+    precision_chain_summary as ckm_precision_chain_summary,
+)
+
 # ---- Substrate-ISA identities ----
 from ..isa import (
     N_GENERATIONS,
@@ -177,6 +251,39 @@ class _SubstrateNamespace:
     g_f_precision_chain = staticmethod(precision_chain)
     verify_g_f = staticmethod(verify_substrate_gf)
 
+    # Substrate Wolfenstein CKM (Galasyn 2026-05-23 P6b)
+    DELTA_CP_CKM = DELTA_CP_CKM
+    ckm = staticmethod(ckm_matrix)
+    wolfenstein_lambda = staticmethod(wolfenstein_lambda)
+    wolfenstein_A = staticmethod(wolfenstein_A)
+    wolfenstein_apex_magnitude = staticmethod(wolfenstein_apex_magnitude)
+    jarlskog_ckm = staticmethod(jarlskog_ckm)
+    ckm_precision_chain = staticmethod(ckm_precision_chain)
+    verify_ckm = staticmethod(verify_substrate_ckm)
+
+    # Substrate heavy-meson decay constants (Galasyn 2026-05-23 P7b §7.5)
+    f_pi = staticmethod(f_pi_substrate)
+    heavy_meson_fX = staticmethod(heavy_meson_fX)
+    heavy_meson_fX_for = staticmethod(heavy_meson_fX_for)
+    heavy_meson_fX_chain = staticmethod(heavy_meson_fX_precision_chain)
+    verify_heavy_meson_fX = staticmethod(verify_heavy_meson_fX)
+
+    # Substrate vector-meson + B_c decay constants (Galasyn 2026-05-23 P7b §7.6)
+    tau_mass = staticmethod(tau_mass_substrate)
+    vector_binding_scale = staticmethod(vector_binding_scale)
+    vector_meson_fX = staticmethod(vector_meson_fX)
+    vector_meson_fX_for = staticmethod(vector_meson_fX_for)
+    vector_meson_fX_chain = staticmethod(vector_meson_fX_precision_chain)
+    vector_meson_c_ratios = staticmethod(c_ratio_precision_chain)
+    verify_vector_meson_fX = staticmethod(verify_vector_meson_fX)
+
+    # Substrate Dalitz form factors f_+(0) (Galasyn 2026-05-23 P7b §7.7)
+    cos_theta_C = staticmethod(cos_theta_C_substrate)
+    f_plus = staticmethod(f_plus_substrate)
+    f_plus_for = staticmethod(f_plus_for)
+    form_factor_chain = staticmethod(form_factor_precision_chain)
+    verify_form_factors = staticmethod(verify_form_factors)
+
     breakdown = staticmethod(substrate_breakdown)
     verify_b_qed_sm = staticmethod(verify_b_qed_sm)
 
@@ -202,6 +309,38 @@ __all__ = [
     "ALPHA_SUBSTRATE", "M_E_GEV", "V_EW_PDG_GEV",
     "v_ew_substrate", "fermi_constant_substrate", "fermi_constant_from_vev",
     "precision_chain", "verify_substrate_gf", "precision_chain_summary",
+    # substrate Wolfenstein CKM (P6b closure)
+    "DELTA_CP_CKM",
+    "wolfenstein_lambda", "wolfenstein_lambda_sq",
+    "wolfenstein_A", "wolfenstein_A_sq",
+    "wolfenstein_apex_magnitude", "wolfenstein_apex_magnitude_sq",
+    "wolfenstein_rho_bar", "wolfenstein_eta_bar",
+    "ckm_V_us", "ckm_V_cb", "ckm_V_ub", "ckm_V_td",
+    "jarlskog_ckm", "jarlskog_coefficient", "ckm_matrix",
+    "ckm_precision_chain", "verify_substrate_ckm",
+    "ckm_precision_chain_summary",
+    # substrate heavy-meson decay constants (P7b §7.5 closure)
+    "R_S_NONSTRANGE", "R_S_STRANGE", "HEAVY_PSEUDOSCALARS",
+    "f_pi_substrate", "heavy_meson_fX", "heavy_meson_fX_for",
+    "fX_ratio_strange_over_nonstrange",
+    "heavy_meson_fX_precision_chain", "verify_heavy_meson_fX",
+    "heavy_meson_fX_precision_chain_summary",
+    # substrate light-meson decay constants (P7b §2-3 closure)
+    "LIGHT_PSEUDOSCALARS",
+    "cabibbo_scale_fX", "fibonacci_anomaly_fX", "light_meson_fX_for",
+    "light_meson_fX_precision_chain", "verify_light_meson_fX",
+    "light_meson_fX_precision_chain_summary",
+    # substrate vector-meson + B_c decay constants (P7b §7.6 closure)
+    "VECTOR_MESONS", "tau_mass_substrate", "vector_binding_scale",
+    "vector_meson_fX", "vector_meson_fX_for",
+    "vector_meson_fX_precision_chain", "c_ratio_precision_chain",
+    "verify_vector_meson_fX",
+    "vector_meson_fX_precision_chain_summary",
+    # substrate Dalitz form factors (P7b §7.7 closure)
+    "FORM_FACTORS", "cos_theta_C_substrate", "sin_theta_C_substrate",
+    "f_plus_substrate", "f_plus_for", "f_plus_leading_order",
+    "form_factor_precision_chain", "verify_form_factors",
+    "form_factor_precision_chain_summary",
     # substrate identities
     "substrate", "substrate_breakdown", "verify_b_qed_sm",
 ]

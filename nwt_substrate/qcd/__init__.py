@@ -178,6 +178,29 @@ from . import diagram as _diag_mod
 from ..qed.diagram import Diagram
 
 
+# ---- Substrate confinement theorem (closed-walk on K_7) ----
+# P5b closure (Galasyn 2026-05-23): color confinement is a STRUCTURAL
+# CONSEQUENCE of the K_7 graph + SU(3) ⊂ G_2 ⊂ Spin(7) chain, not a
+# dynamical mechanism.  Every closed K_7 walk is in the SU(3)-singlet
+# sector under the canonical v̂ = e_4 partition (3 + 3̄ + 1).
+from .confinement import (
+    POLAR_VERTEX,
+    TRIPLET_VERTICES,
+    ANTITRIPLET_VERTICES,
+    VERTEX_INDICES,
+    color_charge,
+    Walk,
+    net_color,
+    is_singlet_walk,
+    enumerate_closed_walks,
+    verify_confinement,
+    verify_confinement_range,
+    GLUEBALL_CANDIDATE_WALK,
+    MESON_CANDIDATE_WALK,
+    BARYON_CANDIDATE_WALK,
+)
+
+
 # ---- Substrate universal mass formula for hidden-gluon bound states ----
 # P7b §7.8 closure (Galasyn 2026-05-23): glueballs, tetraquarks,
 # pentaquarks, exotic Z_b all live on m² = (4 m_π⁰)² · N substrate ladder.
@@ -237,6 +260,14 @@ __all__ = [
     "BOUND_STATES_CATALOG",
     "exotic_precision_chain", "verify_universal_mass_formula",
     "exotic_precision_chain_summary",
+    # substrate confinement theorem (P5b closure)
+    "POLAR_VERTEX", "TRIPLET_VERTICES", "ANTITRIPLET_VERTICES",
+    "VERTEX_INDICES", "color_charge",
+    "Walk", "net_color", "is_singlet_walk",
+    "enumerate_closed_walks", "verify_confinement",
+    "verify_confinement_range",
+    "GLUEBALL_CANDIDATE_WALK", "MESON_CANDIDATE_WALK",
+    "BARYON_CANDIDATE_WALK",
     # substrate identities
     "substrate", "substrate_breakdown",
 ]

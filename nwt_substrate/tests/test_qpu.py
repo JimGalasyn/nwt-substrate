@@ -174,6 +174,15 @@ def test_window_status_none_is_24_7():
     assert window_status(None) == (True, None)
 
 
+def test_default_scheme_is_destructive_everywhere():
+    """M4 policy: destructive CSS readout is the default cross-vendor scheme."""
+    from nwt_substrate.qpu.runner import choose_scheme
+    from nwt_substrate.qpu.adapters.base import Capabilities
+    for sdk in ("ibm", "braket", "simulator"):
+        assert choose_scheme(Capabilities("x", sdk, 20)) == "destructive"
+    assert choose_scheme(None) == "destructive"
+
+
 def test_window_status_weekdays_aggregate():
     """IQM Garnet reports executionDay='Weekdays' (Mon-Fri) rather than per-day."""
     from datetime import datetime, timezone

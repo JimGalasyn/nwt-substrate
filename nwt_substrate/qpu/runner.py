@@ -35,10 +35,15 @@ def build_specs(item: Item, scheme: str):
 
 
 def choose_scheme(caps) -> str:
-    """Default policy: destructive everywhere (strictly cleaner; portable). Only
-    a heavy-hex IBM device with no routing pressure keeps the ancilla option."""
-    if caps is not None and caps.sdk == "ibm":
-        return "ancilla" if False else "destructive"  # destructive preferred even on IBM
+    """Default measurement-scheme policy (set 2026-05-25): **destructive CSS
+    readout everywhere**.
+
+    The ancilla scheme decohered to flat output on IQM Garnet's sparse grid
+    (58-67 CZ after routing), while destructive (15 CZ) passed 8/8 there and
+    matched it on IBM heavy-hex (8/8, modal 0.76-0.83). Destructive is strictly
+    shallower on every topology and trades only an extra circuit per walk, so it
+    is the portable default. Pass `scheme='ancilla'` explicitly to override
+    (e.g. to reproduce a legacy heavy-hex run)."""
     return "destructive"
 
 

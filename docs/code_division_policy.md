@@ -1,9 +1,9 @@
 # Code-division policy — library vs paper vs record
 
-**Status: PROPOSED (VV draft, 2026-05-25) — pending NWT sign-off.**
+**Status: RATIFIED (VV draft + NWT sign-off, 2026-05-25).** Fold into `CONTRIBUTING`.
 A cross-session governance proposal for how code is divided between
 `nwt-substrate` (this library), the `null-worldtube` paper repos, and the
-research record. Once ratified, fold into `CONTRIBUTING`.
+research record.
 
 ## The problem
 
@@ -23,9 +23,11 @@ without bloating the library with one-off paper glue.
    library, by version/DOI.**
 2. **Paper-glue — `null-worldtube` `analysis/`.** Paper-specific
    *orchestration*: figure generation, data fetch/reduction (HEALPix, Gaia),
-   the run that produced a specific figure, a one-off falsifier Monte Carlo.
-   These **import the physics from the library** and add only plotting/data/glue.
-   Cited only for figure reproduction.
+   the run that produced a specific figure, a one-off falsifier Monte Carlo, and
+   **hardware experiment drivers** (the Steane/Heron/Braket submit–poll–decode
+   harnesses, which import the `qpu` library). These **import the physics from
+   the library** and add only plotting/data/glue/orchestration. Cited only for
+   figure or run reproduction.
 3. **Research record.** Eliminated routes, diagnostics, superseded attempts
    (e.g. the α_KL radius route-eliminations). Preserved as the record; **never
    cited as a paper's method, never in the library.**
@@ -59,10 +61,19 @@ without bloating the library with one-off paper glue.
   paper-glue scripts only for figure reproduction.
 - Paper `analysis/` = **import-from-library + figures/data**; no re-defined
   constants (import from `isa.constants`).
+- **No `nwt_substrate/` package code in the paper repos — ever.** Every library
+  change lands in the canonical `nwt-substrate` repo; paper repos only consume
+  it. (The 2026-05-25 split-brain's root cause was not just vendoring but
+  *different sessions committing library code to different repos*.)
 - **Treat the library as a pinned dependency, never vendor it** —
   `pip install nwt-substrate==X` or a submodule pinned to a tag. (The 2026-05-25
   split-brain — a vendored copy at 3b6a178 vs canonical dc84602, with an
   egg-info resolving to the stale copy — is the failure mode this prevents.)
+- **Transition state (2026-05-25):** the library is `0.1.x.dev` and un-DOI'd, and
+  the paper `analysis/` scripts currently reach it via a `sys.path.insert(...)`
+  hack. Before "cite by version + DOI" and "pinned dependency" are real, two
+  concrete steps: (i) cut a tagged `nwt-substrate` release + Zenodo DOI; (ii)
+  migrate the analysis scripts off `sys.path.insert` onto the installed package.
 - **Triage the existing `analysis/` backlog** against the discriminator:
   promote mature physics (started with `cosmology.eta_B`; Ω_b/Ω_c and Λ_cc
   next), leave the glue, archive the eliminated routes.
@@ -76,3 +87,6 @@ Use the bundle as the first test of the policy:
 - 22a's figure/data scripts stay in the paper repo, importing the library.
 - Anything still re-deriving physics in a paper script before release is a
   promote-or-justify item.
+- **Release prerequisite:** the bundle cannot ship a "cite by version + DOI"
+  reference until `nwt-substrate` has a tagged release + Zenodo DOI — cutting one
+  is now a gating item for the 21a/21b/22a release.

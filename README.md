@@ -291,7 +291,7 @@ If you use this library in a publication, please cite both:
 - The relevant NWT paper(s) — typically one of
   [Paper 14–19](https://zenodo.org/communities/nwt) for the result
   you're using.
-- The library Zenodo record (auto-archived per release):
+- The library Zenodo record (concept DOI `10.5281/zenodo.20012027`, auto-archived per release — resolves to the latest version):
 
 ```bibtex
 @software{nwt_substrate,
@@ -300,7 +300,7 @@ If you use this library in a publication, please cite both:
                   library for Null Worldtube Theory},
   year         = {2026},
   publisher    = {Zenodo},
-  doi          = {10.5281/zenodo.20041585}
+  doi          = {10.5281/zenodo.20012027}
 }
 ```
 

@@ -18,7 +18,7 @@ intuition into closed-form quantitative predictions. The
 [paper series on Zenodo](https://zenodo.org/communities/nwt) is the
 derivation record; this library is the executable companion.
 
-**As of v0.2 (Phase Q.16, 2026-05-11)**, the library ships a
+**As of v0.2.0 (released 2026-05-26)**, the library ships a
 **substrate Instruction Set Architecture** (`nwt_substrate.isa`) that
 makes the K_7 algebra load-bearing across every shim. ~25
 structural constants (`N_EDGES_K7 = 21`, `N_VERTICES_K7 = 7`,
@@ -57,7 +57,7 @@ All derived from the substrate algebra at zero free parameters
   ≈ (14.8, 17.2, 53) meV, three sterile masses ≈ (61.3, 70.8, 218.8)
   MeV, mixing |U_α4|² ≈ 2.4×10⁻¹⁰, PMNS angles + δ_CP = −2π/3 from
   π_1(PSU(3)) winding. Call: `nwt.neutrino.substrate_breakdown()`.
-- **606 substrate tests pass in ~7 seconds**, including 92
+- **1233 substrate tests pass in ~10 seconds**, including 92
   substrate-identity enforcement tests across seven K_7 shims plus
   31 K_8 neutrino-sector tests — the substrate algebra is enforced
   by the codebase, not merely described.
@@ -207,7 +207,12 @@ Heron K_7 quantum circuit, structurally verified:
   registry for IBM Heron processors. Supports Experiments 4 / 5 / 9
   / 10 / 11 from the paper series. K_7-circuit gate counts are
   runtime-verified against `isa.N_VERTICES_K7` / `isa.N_EDGES_K7`.
-- **Neutrino sector** (v0.3 new, K_8 extension for Paper 20) — closed-form
+- **Cross-architecture QPU interface** (`nwt_substrate.qpu`, v0.2.0) — a
+  vendor-neutral spec → decode → adapter layer for running the K_7 / Steane
+  circuits on real hardware: IBM, AWS Braket, and simulator adapters, a
+  capabilities/preflight guardrail, and a canonical-counts decode contract.
+  Used by the Paper 21b cross-vendor / cross-architecture experiments.
+- **Neutrino sector** (K_8 extension for Paper 20) — closed-form
   active masses (Wilson amplitude on K_8 with `N_v=8, N_e=28`), sterile
   masses (Wilson amplitude with `N_v=8, N_e=19` from the Z_3 ⊂ G_2
   triality seesaw, edge difference 9 = 12 − 3), `|U_α4|² = α^(9/2)`,
@@ -216,6 +221,14 @@ Heron K_7 quantum circuit, structurally verified:
   (`N_VERTICES_K8 = 8`, `N_EDGES_K8 = 28`, `K8_PARTITION = (6,3,12,1,6)`,
   `K8_SEESAW_EDGE_DIFFERENCE = 9`) live in `isa.constants` alongside
   the K_7 family.
+- **Cosmology** (`nwt_substrate.cosmology`, v0.2.0) — substrate cosmological
+  observables: baryon asymmetry `eta_B`, the Ω_b/Ω_c bridge partition
+  (`omega_b_c`), the cosmological constant `lambda_cc`, and CMB-anisotropy
+  axes, all importing `isa.constants`.
+- **Decay constants + stability ratio** (`particles.decay_constants`,
+  `particles.stability_ratio`, `qcd.confinement`) — P7b §7.5/§7.6 substrate
+  decay constants (heavy + vector mesons + B_c) and the ρ = m_X/Γ_X
+  substrate-applicability ratio.
 - **Diagrams** — programmatic figure factories for the canonical
   substrate visualisations (torus knots, K_7 traversals,
   Heegaard-torus unification).
@@ -270,7 +283,7 @@ enforced by it.
 
 ```bash
 pytest nwt_substrate/tests/ -q
-# 606 passed in ~7s
+# 1233 passed in ~10s
 ```
 
 This includes:
@@ -304,6 +317,9 @@ If you use this library in a publication, please cite both:
 }
 ```
 
+Each tagged release also mints a version-specific DOI (e.g.\ v0.2.0 =
+`10.5281/zenodo.20398451`) for citing an exact snapshot.
+
 A `CITATION.cff` is included in this repo for tools that auto-resolve
 software citations.
 
@@ -329,13 +345,22 @@ The library implements the computations described in:
   implementation in `nwt_substrate.neutrino`; K_8 structural
   constants in `isa.constants`. DOI:
   [10.5281/zenodo.20259632](https://doi.org/10.5281/zenodo.20259632).
+- **Paper 21a / 21b** — Standard Model particles as closed walks on K_7
+  (theory + quantum-hardware experiment): the K_7 = Steane [[7,1,3]]
+  identification, the (2,F_n) carrier-knot family, closed-form n_q^q, and
+  cross-vendor / cross-architecture stabilizer-syndrome reproduction on IBM
+  Heron, IQM Garnet, and AQT Ibex-Q1. *(in preparation)*
 
 The Zenodo community for the full series is at
 https://zenodo.org/communities/nwt (collected DOIs).
 
 ## Status
 
-**v0.2 (Phase Q.16, 2026-05-11)**: the active-encoding architecture.
+**v0.2.0 (released 2026-05-26)**: active-encoding architecture + the
+cross-architecture QPU interface + cosmology migration, consolidated into
+this canonical repo. Archived on Zenodo (version DOI
+`10.5281/zenodo.20398451`; concept DOI `10.5281/zenodo.20012027`) — the
+version the Paper 21a/21b bundle cites.
 
 API surface is stable for particles, compositions, walk_phase, gauge
 shims, gravity, chemistry, diagrams, and the new ISA layer. Minor

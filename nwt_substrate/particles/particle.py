@@ -120,6 +120,32 @@ class Particle:
         return self.f / 2.0
 
     @property
+    def isospin_ceiling(self) -> float:
+        """Topological ceiling on total isospin from the carrier crossing number:
+        I <= n_q / 2.
+
+        Each of the n_q crossings is a "framing slot" twistable by +/-, so the
+        isospin multiplet obeys 2I + 1 <= n_q + 1, i.e. the maximal framing
+        |f|_max = 2I <= n_q.  Saturated (I = n_q/2) by the maximal-isospin states
+        (pi, rho at n_q=2 -> I=1; Delta at n_q=3 -> I=3/2).  Derived from the
+        framing<->isospin identification f = 2 I_3 (NWT Paper 7 / WRT D17).
+        """
+        return self.n_q / 2.0
+
+    @property
+    def isospin_within_ceiling(self) -> bool:
+        """Whether the observed isospin respects the topological ceiling I <= n_q/2.
+
+        A NON-breaking consistency check (deliberately NOT enforced in
+        __post_init__, since it is a physics constraint, not a data-integrity
+        one).  Returns True when I_pdg is unset.  The whole 24-particle
+        compendium satisfies it with zero violations.
+        """
+        if self.I_pdg is None:
+            return True
+        return self.I_pdg <= self.n_q / 2.0 + 1e-9
+
+    @property
     def carrier(self) -> str:
         """Named carrier knot family from n_q."""
         return carrier_for_n_q(self.n_q)

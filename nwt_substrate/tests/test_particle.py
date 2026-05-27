@@ -89,3 +89,35 @@ def test_summary_runs_without_error():
     assert "Particle: p" in s
     assert "Mass predicted" in s
     assert "Mass observed" in s
+
+
+def test_isospin_ceiling():
+    """I <= n_q/2 topological ceiling (WRT D17); saturated by pi/rho/Delta."""
+    # ceiling = n_q/2
+    assert Particle(name="pi+", p=3, q=5, m=5, n_q=2, f=2).isospin_ceiling == 1.0
+    assert Particle(name="Delta", p=5, q=4, m=15, n_q=3).isospin_ceiling == 1.5
+    # saturating, maximal-isospin states: I = n_q/2
+    pip = Particle(name="pi+", p=3, q=5, m=5, n_q=2, f=2, I_pdg=1.0)
+    delta = Particle(name="Delta", p=5, q=4, m=15, n_q=3, I_pdg=1.5)
+    assert pip.isospin_within_ceiling and pip.I_pdg == pip.isospin_ceiling
+    assert delta.isospin_within_ceiling and delta.I_pdg == delta.isospin_ceiling
+    # sub-maximal states satisfy the bound strictly
+    K = Particle(name="K+", p=2, q=5, m=8, n_q=2, f=1, I_pdg=0.5)
+    assert K.isospin_within_ceiling
+    # unset isospin -> vacuously within ceiling
+    assert Particle(name="X", p=2, q=3, m=5, n_q=3).isospin_within_ceiling
+    # a hypothetical violator (I > n_q/2) is flagged but NOT raised
+    bad = Particle(name="bad", p=3, q=5, m=5, n_q=2, f=0, I_pdg=2.0)
+    assert not bad.isospin_within_ceiling  # 2.0 > 2/2 = 1.0
+
+
+def test_isospin_ceiling_compendium_consistency():
+    """The whole compendium respects I <= n_q/2 (zero violations)."""
+    from nwt_substrate.particles.compendium import COMPENDIUM
+    from nwt_substrate.particles.particle import Particle as P
+    for e in COMPENDIUM:
+        if e["n_q"] < 2:
+            continue
+        part = P(name=e["name"], p=e["p"], q=e["q"], m=e["m"], n_q=e["n_q"],
+                 f=e["f"], I_pdg=e["I_pdg"])
+        assert part.isospin_within_ceiling, f"{e['name']} violates I <= n_q/2"

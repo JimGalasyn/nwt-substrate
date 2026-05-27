@@ -14,6 +14,16 @@ from .K7 import (
     is_genus_one_embedding,
 )
 
+from .colored_jones import (
+    quantum_integer,
+    torus_channels,
+    cabling_space_dimension,
+    cabled_state,
+    colored_jones,
+    colored_jones_qtrace,
+    DEFAULT_LEVEL,
+)
+
 __all__ = [
     "knot_family",
     "seifert_genus",
@@ -23,4 +33,11 @@ __all__ = [
     "heffter_rotation",
     "trace_K7_faces",
     "is_genus_one_embedding",
+    "quantum_integer",
+    "torus_channels",
+    "cabling_space_dimension",
+    "cabled_state",
+    "colored_jones",
+    "colored_jones_qtrace",
+    "DEFAULT_LEVEL",
 ]

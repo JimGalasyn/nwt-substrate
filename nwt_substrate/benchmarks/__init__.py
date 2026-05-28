@@ -24,8 +24,13 @@ from .compute_speed import (
     benchmark_mass_spectrum,
     benchmark_modular_data,
     benchmark_ckm_cabibbo,
+    benchmark_full_ckm,
     benchmark_k7_face_structure,
     benchmark_wimp_tower,
+    benchmark_gravitational_constant,
+    benchmark_lambda_cc,
+    benchmark_omega_b_c,
+    benchmark_eta_B,
     run_all,
 )
 
@@ -35,7 +40,12 @@ __all__ = [
     "benchmark_mass_spectrum",
     "benchmark_modular_data",
     "benchmark_ckm_cabibbo",
+    "benchmark_full_ckm",
     "benchmark_k7_face_structure",
     "benchmark_wimp_tower",
+    "benchmark_gravitational_constant",
+    "benchmark_lambda_cc",
+    "benchmark_omega_b_c",
+    "benchmark_eta_B",
     "run_all",
 ]

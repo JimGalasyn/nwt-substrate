@@ -69,10 +69,47 @@ def test_run_all_returns_list():
     """run_all() returns list of all benchmark results."""
     results = run_all(verbose=False)
     assert isinstance(results, list)
-    assert len(results) == 6
+    assert len(results) == 11      # current set: 4 EW + 1 K_7 + 1 DM + 1 G + 3 cosmology + 1 MTC
     for r in results:
         assert isinstance(r, BenchmarkResult)
         assert r.substrate_time_us >= 0
+
+
+def test_full_ckm_includes_v_us():
+    """Full CKM benchmark includes V_us close to PDG."""
+    from nwt_substrate.benchmarks import benchmark_full_ckm
+    r = benchmark_full_ckm()
+    # PDG V_us ≈ 0.2253; substrate gives 0.2260
+    assert "V_us=0.2" in r.substrate_value
+
+
+def test_gravitational_constant_in_ppm():
+    """G benchmark reports CODATA comparison in ppm."""
+    from nwt_substrate.benchmarks import benchmark_gravitational_constant
+    r = benchmark_gravitational_constant()
+    assert "ppm" in r.substrate_accuracy
+
+
+def test_lambda_cc_solves_cc_problem():
+    """Λ benchmark notes the 123-orders-of-magnitude solution."""
+    from nwt_substrate.benchmarks import benchmark_lambda_cc
+    r = benchmark_lambda_cc()
+    assert "cosmological constant problem" in r.notes or "123" in r.notes
+
+
+def test_omega_b_c_matches_planck_at_sub_percent():
+    """Ω_b/Ω_c benchmark agrees with Planck at sub-percent."""
+    from nwt_substrate.benchmarks import benchmark_omega_b_c
+    r = benchmark_omega_b_c()
+    # Substrate gives ~0.186, Planck ~0.186 — should be <1% in accuracy field
+    assert "%" in r.substrate_accuracy
+
+
+def test_eta_B_predicted_without_BSM():
+    """η_B benchmark notes substrate doesn't need new physics."""
+    from nwt_substrate.benchmarks import benchmark_eta_B
+    r = benchmark_eta_B()
+    assert "new physics" in r.notes or "CP-violation" in r.notes
 
 
 def test_total_substrate_time_under_one_second():

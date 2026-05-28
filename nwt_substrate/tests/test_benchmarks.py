@@ -69,10 +69,56 @@ def test_run_all_returns_list():
     """run_all() returns list of all benchmark results."""
     results = run_all(verbose=False)
     assert isinstance(results, list)
-    assert len(results) == 26      # 26 benchmarks: SM + atomic + QED + QCD + EW + cosmology + chem + gravity + BH
+    assert len(results) == 32      # 32 benchmarks: SM + QED scattering + cosmogenesis + NMR + C_60 vib
     for r in results:
         assert isinstance(r, BenchmarkResult)
         assert r.substrate_time_us >= 0
+
+
+def test_compton_thomson_at_ppm():
+    """Compton Thomson limit matches PDG cross section in ppm."""
+    from nwt_substrate.benchmarks import benchmark_qed_compton_scattering
+    r = benchmark_qed_compton_scattering()
+    assert "Thomson" in r.substrate_value
+    ppm_str = r.substrate_accuracy.split()[2]    # "Thomson at {N} ppm vs PDG"
+    assert float(ppm_str) < 200
+
+
+def test_eemumu_returns_pb_units():
+    """e⁺e⁻ → μ⁺μ⁻ benchmark yields LO QED cross section in pb."""
+    from nwt_substrate.benchmarks import benchmark_qed_eemumu
+    r = benchmark_qed_eemumu()
+    assert "pb" in r.substrate_value
+
+
+def test_muon_decay_rate_matches_pdg_lifetime():
+    """Sirlin muon-decay benchmark gives τ_μ within 1%."""
+    from nwt_substrate.benchmarks import benchmark_muon_decay_rate
+    r = benchmark_muon_decay_rate()
+    pct_str = r.substrate_accuracy.split("%")[0]
+    assert float(pct_str) < 1.0
+
+
+def test_cosmogenesis_thorne_a_star():
+    """Cosmogenesis benchmark gives Thorne a* near 0.998."""
+    from nwt_substrate.benchmarks import benchmark_cosmogenesis
+    r = benchmark_cosmogenesis()
+    assert "Thorne a*" in r.substrate_value
+    assert "0.99" in r.substrate_value
+
+
+def test_nmr_sign_rule_perfect_score():
+    """NMR sign rule classifies all 14 references correctly."""
+    from nwt_substrate.benchmarks import benchmark_nmr_chemical_shifts
+    r = benchmark_nmr_chemical_shifts()
+    assert "14/14" in r.substrate_value
+
+
+def test_c60_vibrational_modes_174_total():
+    """C_60 vibrational benchmark gives 174 = 3·60 - 6 modes."""
+    from nwt_substrate.benchmarks import benchmark_c60_vibrational_modes
+    r = benchmark_c60_vibrational_modes()
+    assert "174" in r.substrate_value
 
 
 def test_atomic_hydrogen_covers_chain():

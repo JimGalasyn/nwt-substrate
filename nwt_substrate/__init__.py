@@ -21,6 +21,14 @@ Structure:
     nwt_substrate.walk_phase   — substrate-algebraic Compton, decay
     nwt_substrate.compositions — molecular and Hopf-linked composites
     nwt_substrate.gravity      — K_7 Wilson amplitude, G derivation
+    nwt_substrate.cosmology    — Λ, η_B, Ω_b/Ω_c, anisotropy axes
+    nwt_substrate.neutrino     — K_8 mass tower, PMNS, sterile spectrum
+    nwt_substrate.electroweak  — couplings, CKM, decays, decay constants
+    nwt_substrate.atomic       — hydrogen spectroscopy + a_e
+    nwt_substrate.qed/.qcd     — gauge-theory shims with substrate α
+    nwt_substrate.chemistry    — aromaticity, NICS, vibrational modes
+    nwt_substrate.dark_sector  — L_NWT Higgs portal for K_8 DM tower
+    nwt_substrate.benchmarks   — substrate vs traditional speed/accuracy
     nwt_substrate.qiskit       — quantum-hardware interface (TODO)
 """
 

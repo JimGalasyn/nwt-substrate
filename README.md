@@ -57,6 +57,16 @@ All derived from the substrate algebra at zero free parameters
   ≈ (14.8, 17.2, 53) meV, three sterile masses ≈ (61.3, 70.8, 218.8)
   MeV, mixing |U_α4|² ≈ 2.4×10⁻¹⁰, PMNS angles + δ_CP = −2π/3 from
   π_1(PSU(3)) winding. Call: `nwt.neutrino.substrate_breakdown()`.
+- **32 forward-prediction benchmarks** (`nwt_substrate.benchmarks`,
+  added 2026-05-28) — substrate algebra vs traditional-method speed
+  and accuracy across particle physics, atomic physics, QED/QCD,
+  electroweak precision, cosmology, gravity, black-hole thermodynamics,
+  and chemistry. Full suite in **~100 ms**: α at 7.6 ppm, G at 11 ppm,
+  v_EW at 28 ppm, sin²θ_W at 43 ppm, **Ω_b/Ω_c at 0.0067 %** (better
+  than Planck systematic), Higgs mass via λ_H = 18α at 0.9 %, etc.
+  Anti-numerology argument made empirically concrete:
+  `from nwt_substrate.benchmarks import run_all; run_all()`.
+  See [`nwt_substrate/benchmarks/README.md`](nwt_substrate/benchmarks/README.md).
 - **1233 substrate tests pass in ~10 seconds**, including 92
   substrate-identity enforcement tests across seven K_7 shims plus
   31 K_8 neutrino-sector tests — the substrate algebra is enforced
@@ -232,6 +242,24 @@ Heron K_7 quantum circuit, structurally verified:
 - **Diagrams** — programmatic figure factories for the canonical
   substrate visualisations (torus knots, K_7 traversals,
   Heegaard-torus unification).
+- **Dark sector** (`nwt_substrate.dark_sector`, v0.3 new) — L_NWT
+  Higgs-portal calculation for the 98 GeV WIMP from VV's K_8 mass
+  tower (N_e = 16 rung). Provides direct-detection σ_SI at substrate
+  α + portal coupling g_Hχχ, comparison against LZ-2024 limit, and
+  rough LHC off-shell production cross section. The K_7/K_8 portal
+  must be at least α⁴ suppressed for the 98 GeV WIMP to be consistent
+  with current LZ data — a falsifiable structural constraint. Call:
+  `dark_sector.predict_all(dark_sector.WIMP_98GeV())`.
+- **Benchmarks** (`nwt_substrate.benchmarks`, v0.3 new) —
+  substrate-vs-traditional comparison for 32 physical observables
+  spanning every domain the substrate program touches, runnable in
+  ~100 ms. Sub-percent accuracy on cosmology (Ω_b/Ω_c at 0.0067 %,
+  η_B at 0.38 %), sub-ppm chains (electron Schwinger a_e exact, α
+  at 7.6 ppm, G at 11 ppm), and 100 % on chemistry (aromaticity 15/15,
+  NICS 14/14, C_60 174-mode vibrational decomposition exact). The
+  anti-numerology argument made empirically concrete. Call:
+  `from nwt_substrate.benchmarks import run_all; run_all()`. See
+  [`nwt_substrate/benchmarks/README.md`](nwt_substrate/benchmarks/README.md).
 
 ## The active-encoding architecture
 

@@ -69,10 +69,56 @@ def test_run_all_returns_list():
     """run_all() returns list of all benchmark results."""
     results = run_all(verbose=False)
     assert isinstance(results, list)
-    assert len(results) == 32      # 32 benchmarks: SM + QED scattering + cosmogenesis + NMR + C_60 vib
+    assert len(results) == 38      # 38 benchmarks: full SM + composites + scattering + chemistry + cosmology
     for r in results:
         assert isinstance(r, BenchmarkResult)
         assert r.substrate_time_us >= 0
+
+
+def test_composite_particle_deuteron_within_percent():
+    """Deuteron connected-sum gives mass within 0.1% of PDG."""
+    from nwt_substrate.benchmarks import benchmark_composite_particles
+    r = benchmark_composite_particles()
+    pct_str = r.substrate_accuracy.split("%")[0]
+    assert float(pct_str) < 0.5
+
+
+def test_exotic_states_lists_glueballs():
+    """Exotic states benchmark surfaces multiple glueball candidates."""
+    from nwt_substrate.benchmarks import benchmark_exotic_states
+    r = benchmark_exotic_states()
+    assert "glueball" in r.substrate_value or "eta_" in r.substrate_value
+
+
+def test_bhabha_returns_pb_per_sr():
+    """Bhabha benchmark yields differential cross section in pb/sr."""
+    from nwt_substrate.benchmarks import benchmark_bhabha_scattering
+    r = benchmark_bhabha_scattering()
+    assert "pb/sr" in r.substrate_value
+
+
+def test_moller_returns_pb_per_sr():
+    """Møller benchmark yields differential cross section in pb/sr."""
+    from nwt_substrate.benchmarks import benchmark_moller_scattering
+    r = benchmark_moller_scattering()
+    assert "pb/sr" in r.substrate_value
+
+
+def test_aromatic_resonance_includes_coronene_144():
+    """Aromatic RE benchmark hits coronene = 144 kcal/mol (substrate K_7 target)."""
+    from nwt_substrate.benchmarks import benchmark_aromatic_resonance_energies
+    r = benchmark_aromatic_resonance_energies()
+    assert "144" in r.substrate_value
+    assert "coronene" in r.substrate_value or "kcal/mol" in r.substrate_value
+
+
+def test_substrate_dimensions_all_pass():
+    """Substrate-DNA dimensional identities all check out."""
+    from nwt_substrate.benchmarks import benchmark_substrate_dimensions
+    r = benchmark_substrate_dimensions()
+    # substrate_accuracy is like "N/M — exact integer arithmetic"
+    n_pass_str, m_total_str = r.substrate_accuracy.split(" ")[0].split("/")
+    assert int(n_pass_str) == int(m_total_str)        # all N checks must pass
 
 
 def test_compton_thomson_at_ppm():

@@ -59,10 +59,11 @@ jobs:
         if: matrix.python-version == '3.12'
         uses: codecov/codecov-action@v4
         with:
+          token: ${{ secrets.CODECOV_TOKEN }}     # required for protected branches
           files: ./coverage.xml
           flags: unittests
           name: nwt-substrate-py${{ matrix.python-version }}
-          fail_ci_if_error: false             # don't fail CI just because Codecov is down
+          fail_ci_if_error: false                 # don't fail CI just because Codecov is down
 
       - name: Upload coverage artifacts
         if: always() && matrix.python-version == '3.12'

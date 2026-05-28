@@ -69,10 +69,51 @@ def test_run_all_returns_list():
     """run_all() returns list of all benchmark results."""
     results = run_all(verbose=False)
     assert isinstance(results, list)
-    assert len(results) == 21      # 21 benchmarks: full SM + chemistry + cosmology
+    assert len(results) == 26      # 26 benchmarks: SM + atomic + QED + QCD + EW + cosmology + chem + gravity + BH
     for r in results:
         assert isinstance(r, BenchmarkResult)
         assert r.substrate_time_us >= 0
+
+
+def test_atomic_hydrogen_covers_chain():
+    """Atomic hydrogen benchmark covers a₀, R_H, Lyman α, 21cm, Lamb shift."""
+    from nwt_substrate.benchmarks import benchmark_atomic_hydrogen
+    r = benchmark_atomic_hydrogen()
+    for token in ["a₀", "R_H", "Lyman", "21cm"]:
+        assert token in r.substrate_value
+
+
+def test_electron_anomaly_matches_schwinger():
+    """Electron a_e benchmark agrees with Schwinger formula essentially exactly."""
+    from nwt_substrate.benchmarks import benchmark_electron_anomaly
+    r = benchmark_electron_anomaly()
+    pct_str = r.substrate_accuracy.split("%")[0]
+    assert float(pct_str) < 1e-6     # 1-loop = Schwinger to machine precision
+
+
+def test_qcd_constants_recover_pdg_alpha_s():
+    """QCD benchmark recovers α_s(M_Z) ≈ 0.118."""
+    from nwt_substrate.benchmarks import benchmark_qcd_constants
+    r = benchmark_qcd_constants()
+    assert "α_s" in r.substrate_value
+    assert "0.117" in r.substrate_value or "0.118" in r.substrate_value
+
+
+def test_sin2_theta_w_at_ppm():
+    """sin²θ_W substrate matches PDG to ppm."""
+    from nwt_substrate.benchmarks import benchmark_sin2_theta_W
+    r = benchmark_sin2_theta_W()
+    ppm_str = r.substrate_accuracy.split()[0]
+    assert float(ppm_str) < 200      # < 200 ppm easily
+
+
+def test_black_hole_thermodynamics_includes_evaporation():
+    """Black hole benchmark mentions Hawking T + Schwarzschild r_S + evaporation."""
+    from nwt_substrate.benchmarks import benchmark_black_hole_thermodynamics
+    r = benchmark_black_hole_thermodynamics()
+    assert "T_H" in r.substrate_value
+    assert "r_S" in r.substrate_value
+    assert "τ_evap" in r.substrate_value or "evap" in r.substrate_value
 
 
 def test_neutrino_sector_predicts_active_and_sterile():

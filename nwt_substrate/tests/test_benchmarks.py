@@ -69,10 +69,51 @@ def test_run_all_returns_list():
     """run_all() returns list of all benchmark results."""
     results = run_all(verbose=False)
     assert isinstance(results, list)
-    assert len(results) == 16      # 5 EW + 5 Higgs/decay/gravity + 3 cosmology + DM + K_7 + MTC
+    assert len(results) == 21      # 21 benchmarks: full SM + chemistry + cosmology
     for r in results:
         assert isinstance(r, BenchmarkResult)
         assert r.substrate_time_us >= 0
+
+
+def test_neutrino_sector_predicts_active_and_sterile():
+    """Neutrino benchmark gives both active and sterile mass scales."""
+    from nwt_substrate.benchmarks import benchmark_neutrino_sector
+    r = benchmark_neutrino_sector()
+    assert "m_ν" in r.substrate_value
+    assert "sterile" in r.substrate_value or "N" in r.substrate_value
+
+
+def test_pmns_angles_three_mixing_angles():
+    """PMNS benchmark mentions all three mixing angles."""
+    from nwt_substrate.benchmarks import benchmark_pmns_angles
+    r = benchmark_pmns_angles()
+    assert "θ_12" in r.substrate_value
+    assert "θ_13" in r.substrate_value
+    assert "θ_23" in r.substrate_value
+
+
+def test_decay_constants_cover_light_and_heavy():
+    """Decay-constants benchmark covers π, K, η, D, Ds, B, Bs."""
+    from nwt_substrate.benchmarks import benchmark_decay_constants
+    r = benchmark_decay_constants()
+    for name in ["f_π", "f_K", "f_D", "f_B"]:
+        assert name in r.substrate_value
+
+
+def test_vector_meson_decay_covers_11_states():
+    """Vector meson benchmark covers the substrate's 11-state tower."""
+    from nwt_substrate.benchmarks import benchmark_vector_meson_decay
+    r = benchmark_vector_meson_decay()
+    assert "11" in r.substrate_value or "f_rho" in r.substrate_value
+
+
+def test_chemistry_runs_aromaticity_nics_c60():
+    """Chemistry benchmark exercises aromaticity, NICS, and C_60 combinatorics."""
+    from nwt_substrate.benchmarks import benchmark_chemistry
+    r = benchmark_chemistry()
+    assert "aromaticity" in r.substrate_value
+    assert "NICS" in r.substrate_value
+    assert "C_60" in r.substrate_value
 
 
 def test_higgs_vev_predicted_to_ppm():

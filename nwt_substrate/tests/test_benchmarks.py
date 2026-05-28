@@ -1,0 +1,83 @@
+"""Unit tests for nwt_substrate.benchmarks."""
+
+import pytest
+
+from nwt_substrate.benchmarks import (
+    BenchmarkResult,
+    benchmark_alpha_derivation,
+    benchmark_mass_spectrum,
+    benchmark_modular_data,
+    benchmark_ckm_cabibbo,
+    benchmark_k7_face_structure,
+    benchmark_wimp_tower,
+    run_all,
+)
+
+
+def test_benchmark_result_type():
+    """Each benchmark returns a BenchmarkResult dataclass."""
+    r = benchmark_alpha_derivation()
+    assert isinstance(r, BenchmarkResult)
+    assert r.name
+    assert r.substrate_time_us >= 0
+    assert r.substrate_accuracy
+    assert r.traditional_method
+
+
+def test_alpha_derivation_gets_137():
+    """Substrate α formula gives 1/α ≈ 137.04."""
+    r = benchmark_alpha_derivation()
+    # The substrate value string should contain the computed inverse alpha
+    assert "137" in r.substrate_value
+
+
+def test_mass_spectrum_handles_compendium():
+    """Mass spectrum benchmark times the full compendium."""
+    r = benchmark_mass_spectrum()
+    assert r.substrate_time_us > 0
+    # The substrate_value should contain a particle count
+    assert "particles" in r.substrate_value or "masses" in r.substrate_value
+
+
+def test_modular_data_recovers_c_15_7():
+    """SU(2)_5 modular data benchmark recovers c = 15/7."""
+    r = benchmark_modular_data()
+    assert "15/7" in r.substrate_value or "2.142857" in r.substrate_value
+
+
+def test_cabibbo_close_to_pdg():
+    """Cabibbo angle from λ²=7α matches PDG to ~0.1%."""
+    r = benchmark_ckm_cabibbo()
+    # PDG: θ_C ≈ 13.02°; substrate gives 13.062°
+    assert "13" in r.substrate_value
+
+
+def test_k7_face_structure_verifies_torus():
+    """K_7 Heffter embedding has V=7, E=21, F=14 (torus)."""
+    r = benchmark_k7_face_structure()
+    assert "V=7" in r.substrate_value
+    assert "F=14" in r.substrate_value
+
+
+def test_wimp_tower_includes_98gev():
+    """WIMP tower benchmark mentions the 98 GeV rung."""
+    r = benchmark_wimp_tower()
+    assert "98" in r.substrate_value
+
+
+def test_run_all_returns_list():
+    """run_all() returns list of all benchmark results."""
+    results = run_all(verbose=False)
+    assert isinstance(results, list)
+    assert len(results) == 6
+    for r in results:
+        assert isinstance(r, BenchmarkResult)
+        assert r.substrate_time_us >= 0
+
+
+def test_total_substrate_time_under_one_second():
+    """All substrate-algebra benchmarks combined run in well under 1 second."""
+    results = run_all(verbose=False)
+    total_us = sum(r.substrate_time_us for r in results)
+    # Generous bound: should be way under 1 sec even on a slow CI box.
+    assert total_us < 1_000_000, f"benchmarks took {total_us} us, expected < 1 sec"

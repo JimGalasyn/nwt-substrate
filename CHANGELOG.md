@@ -6,6 +6,12 @@ The format follows [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/
 
 ## [Unreleased]
 
+(Nothing yet for v0.4.0. Add entries here as work lands.)
+
+## [0.3.0] - 2026-05-28
+
+[Full narrative release notes](docs/releases/v0.3.0.md)
+
 ### Added
 - `nwt_substrate.benchmarks` subpackage: **38 forward-prediction benchmarks** spanning particle physics, atomic physics, QED/QCD, electroweak precision, cosmology, gravity, black-hole thermodynamics, and chemistry. Full suite runs in ~100 ms via `python -m nwt_substrate.benchmarks` and serves as the empirical anti-numerology argument made concrete. Each benchmark returns a `BenchmarkResult` dataclass with substrate timing, substrate value, accuracy vs reference, and the traditional method that would otherwise be needed.
 - `nwt_substrate.benchmarks.run_all()` and a CLI entry point (`python -m nwt_substrate.benchmarks --summary | --json | --max-time-ms`).
@@ -123,7 +129,8 @@ See [`CITATION.cff`](CITATION.cff). For pinned-version reproducibility:
 }
 ```
 
-[Unreleased]: https://github.com/JimGalasyn/nwt-substrate/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/JimGalasyn/nwt-substrate/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/JimGalasyn/nwt-substrate/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/JimGalasyn/nwt-substrate/compare/v0.1.3...v0.2.0
 [0.1.3]: https://github.com/JimGalasyn/nwt-substrate/compare/v0.1.2...v0.1.3
 [0.1.2]: https://github.com/JimGalasyn/nwt-substrate/compare/v0.1.1...v0.1.2

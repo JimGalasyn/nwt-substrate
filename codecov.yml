@@ -1,0 +1,25 @@
+coverage:
+  status:
+    project:
+      default:
+        target: auto
+        threshold: 1%                  # tolerate ±1% movement without flagging
+    patch:
+      default:
+        target: 80%                    # new code should be 80%+ covered
+        threshold: 5%
+
+  range: 60..90                        # red/yellow/green bands
+
+comment:
+  layout: "reach, diff, flags, files"
+  behavior: default
+  require_changes: true                # only comment on PRs that change coverage
+  require_base: false
+  require_head: true
+
+ignore:
+  - "nwt_substrate/tests/**"           # test code excluded from coverage
+  - "**/__main__.py"                   # CLI dispatchers
+  - "nwt_substrate/diagrams.py"        # figure factories — no logic
+  - "**/diagrams.py"

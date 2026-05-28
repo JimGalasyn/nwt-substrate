@@ -2,6 +2,7 @@
 
 [![tests](https://github.com/JimGalasyn/nwt-substrate/actions/workflows/test.yml/badge.svg)](https://github.com/JimGalasyn/nwt-substrate/actions/workflows/test.yml)
 [![benchmarks](https://github.com/JimGalasyn/nwt-substrate/actions/workflows/benchmarks.yml/badge.svg)](https://github.com/JimGalasyn/nwt-substrate/actions/workflows/benchmarks.yml)
+[![codecov](https://codecov.io/gh/JimGalasyn/nwt-substrate/branch/main/graph/badge.svg)](https://codecov.io/gh/JimGalasyn/nwt-substrate)
 [![Python](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12-blue)](https://github.com/JimGalasyn/nwt-substrate)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
@@ -312,12 +313,27 @@ If a refactor violates any of these identities in any one shim, the
 The substrate algebra is no longer described by the code — it is
 enforced by it.
 
-## Tests
+## Tests + coverage
 
 ```bash
 pytest nwt_substrate/tests/ -q
 # 1233 passed in ~10s
 ```
+
+For coverage:
+
+```bash
+pytest nwt_substrate/tests/ \
+    --cov=nwt_substrate --cov-branch \
+    --cov-report=term --cov-report=html
+# generates htmlcov/index.html
+```
+
+CI runs the full test suite with branch coverage on Python 3.10, 3.11,
+and 3.12, uploads the report to Codecov, and saves an HTML coverage
+report as a workflow artifact (30-day retention) — see the
+[tests workflow](.github/workflows/test.yml) for details. Coverage
+configuration lives in `[tool.coverage]` in `pyproject.toml`.
 
 This includes:
 - 92 cross-shim tests (`test_isa_cross_shim.py`) enforcing K_7 algebra

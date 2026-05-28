@@ -49,6 +49,7 @@ torch = [
 ]
 test = [
     "pytest>=7.0",
+    "pytest-cov>=4.0",
     "qiskit>=1.0",
 ]
 all = ["nwt-substrate[heron,torch,test]"]
@@ -69,3 +70,25 @@ packages = { find = { include = ["nwt_substrate*"] } }
 [tool.pytest.ini_options]
 testpaths = ["nwt_substrate/tests"]
 addopts = "-q"
+
+[tool.coverage.run]
+source = ["nwt_substrate"]
+branch = true
+omit = [
+    "nwt_substrate/tests/*",
+    "nwt_substrate/*/tests/*",
+    "*/__main__.py",                       # CLI dispatchers
+    "*/diagrams.py",                        # figure factories — no logic to cover
+]
+
+[tool.coverage.report]
+exclude_also = [
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+    "@overload",
+    "pragma: no cover",
+]
+show_missing = true
+skip_covered = false
+precision = 1

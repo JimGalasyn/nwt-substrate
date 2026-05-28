@@ -1,5 +1,10 @@
 # nwt-substrate
 
+[![tests](https://github.com/JimGalasyn/nwt-substrate/actions/workflows/test.yml/badge.svg)](https://github.com/JimGalasyn/nwt-substrate/actions/workflows/test.yml)
+[![benchmarks](https://github.com/JimGalasyn/nwt-substrate/actions/workflows/benchmarks.yml/badge.svg)](https://github.com/JimGalasyn/nwt-substrate/actions/workflows/benchmarks.yml)
+[![Python](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12-blue)](https://github.com/JimGalasyn/nwt-substrate)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 A substrate-algebraic computation library for Null Worldtube Theory (NWT).
 
 `nwt-substrate` is the reference implementation of the substrate algebra
@@ -57,7 +62,7 @@ All derived from the substrate algebra at zero free parameters
   ≈ (14.8, 17.2, 53) meV, three sterile masses ≈ (61.3, 70.8, 218.8)
   MeV, mixing |U_α4|² ≈ 2.4×10⁻¹⁰, PMNS angles + δ_CP = −2π/3 from
   π_1(PSU(3)) winding. Call: `nwt.neutrino.substrate_breakdown()`.
-- **32 forward-prediction benchmarks** (`nwt_substrate.benchmarks`,
+- **38 forward-prediction benchmarks** (`nwt_substrate.benchmarks`,
   added 2026-05-28) — substrate algebra vs traditional-method speed
   and accuracy across particle physics, atomic physics, QED/QCD,
   electroweak precision, cosmology, gravity, black-hole thermodynamics,
@@ -251,7 +256,7 @@ Heron K_7 quantum circuit, structurally verified:
   with current LZ data — a falsifiable structural constraint. Call:
   `dark_sector.predict_all(dark_sector.WIMP_98GeV())`.
 - **Benchmarks** (`nwt_substrate.benchmarks`, v0.3 new) —
-  substrate-vs-traditional comparison for 32 physical observables
+  substrate-vs-traditional comparison for 38 physical observables
   spanning every domain the substrate program touches, runnable in
   ~100 ms. Sub-percent accuracy on cosmology (Ω_b/Ω_c at 0.0067 %,
   η_B at 0.38 %), sub-ppm chains (electron Schwinger a_e exact, α

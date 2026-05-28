@@ -1,9 +1,11 @@
 # `nwt_substrate.benchmarks`
 
+[![benchmarks](https://github.com/JimGalasyn/nwt-substrate/actions/workflows/benchmarks.yml/badge.svg)](https://github.com/JimGalasyn/nwt-substrate/actions/workflows/benchmarks.yml)
+
 Substrate algebra vs traditional methods: speed and accuracy comparison
-across 32 physical observables spanning particle physics, atomic physics,
-QED/QCD, electroweak precision, cosmology, gravity, black-hole
-thermodynamics, and chemistry.
+across **38 physical observables** spanning particle physics, atomic
+physics, QED/QCD, electroweak precision, cosmology, gravity, black-hole
+thermodynamics, and chemistry. Full suite runs in **~110 ms**.
 
 ## What this is
 
@@ -16,7 +18,7 @@ program, etc.).
 
 If you can reproduce this output on your hardware, you have empirical
 evidence that the substrate algebra is genuinely predictive — not
-fitted, not numerology. **32 substantive physical observables in
+fitted, not numerology. **38 substantive physical observables in
 ~100 ms of CPU time**, zero free parameters tuned to any single one.
 
 ## Quick start
@@ -26,7 +28,7 @@ from nwt_substrate.benchmarks import run_all
 run_all()
 ```
 
-This prints a comparison table for each of the 32 benchmarks plus a
+This prints a comparison table for each of the 38 benchmarks plus a
 summary line at the bottom.
 
 For a single benchmark:
@@ -189,7 +191,7 @@ exports.
 
 ## Tests
 
-35 unit tests (`nwt_substrate/tests/test_benchmarks.py`) verify each
+48 unit tests (`nwt_substrate/tests/test_benchmarks.py`) verify each
 benchmark returns the expected structure and characteristic values.
 Run with:
 

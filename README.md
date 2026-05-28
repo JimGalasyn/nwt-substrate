@@ -423,16 +423,28 @@ this repo; exploratory work stays private.
 
 ## Contributing
 
-Issues and pull requests welcome. Please run the test suite
-(`pytest nwt_substrate/tests/`) before submitting, and include a
-short note describing the physics motivation for any new feature
-(this is a physics library; please don't add tooling that has no
-substrate-algebraic content).
+Issues and pull requests welcome. See **[`CONTRIBUTING.md`](CONTRIBUTING.md)**
+for the full guide: dev setup, testing/coverage workflow, hard rules
+(no fitted constants, no magic numbers, no silent constant changes),
+soft rules (style, dataclasses, einsum kernels), and how to add a new
+observable / benchmark / shim. AI coding agents should read
+**[`AGENTS.md`](AGENTS.md)** instead — same rules, agent-targeted phrasing.
 
-If your contribution touches the K_7 substrate algebra, please update
-`nwt_substrate/isa/constants.py` rather than introducing magic numbers
-in shim code — the cross-shim tests in `tests/test_isa_cross_shim.py`
-will catch identity violations across all seven shims.
+Quick version: run `pytest` before submitting, route any substrate-algebra
+integer through `nwt_substrate/isa/constants.py`, and add a `CHANGELOG.md`
+entry under `[Unreleased]`. Cross-shim tests in
+`tests/test_isa_cross_shim.py` will catch identity violations across
+all seven shims.
+
+## Changelog and releases
+
+- **[`CHANGELOG.md`](CHANGELOG.md)** — structured changelog
+  ([Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/)
+  format). Every user-visible change lands here.
+- **[`docs/releases/`](docs/releases/)** — narrative release notes
+  per minor version. The latest is
+  [`v0.2.0`](docs/releases/v0.2.0.md) — the substrate Instruction Set
+  Architecture release.
 
 ## License
 

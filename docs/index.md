@@ -10,6 +10,8 @@
 | An AI search engine or agent | [`llms.txt`](../llms.txt) (short) or [`llms-full.txt`](../llms-full.txt) (long) |
 | Looking for a one-liner answer | [`docs/FAQ.md`](FAQ.md) |
 | An AI coding agent contributing to the repo | [`AGENTS.md`](../AGENTS.md) |
+| A human contributor | [`CONTRIBUTING.md`](../CONTRIBUTING.md) |
+| Looking for version history / what changed | [`CHANGELOG.md`](../CHANGELOG.md) (structured) · [`docs/releases/`](releases/) (narrative) |
 | Looking for a specific shim's API | This page → [Shim reference](#shim-reference) below |
 | Looking for the 38 forward predictions | [`nwt_substrate/benchmarks/README.md`](../nwt_substrate/benchmarks/README.md) |
 | Looking for the substrate constants | [`nwt_substrate/isa/README.md`](../nwt_substrate/isa/README.md) |

@@ -94,41 +94,10 @@ from .form_factors import (
     precision_chain_summary as form_factor_precision_chain_summary,
 )
 
-from .vector_meson_decay_constants import (
-    VECTOR_MESONS,
-    tau_mass_substrate,
-    vector_binding_scale,
-    vector_meson_fX,
-    vector_meson_fX_for,
-    precision_chain as vector_meson_fX_precision_chain,
-    c_ratio_precision_chain,
-    verify_vector_meson_fX,
-    precision_chain_summary as vector_meson_fX_precision_chain_summary,
-)
-
-from .light_meson_decay_constants import (
-    LIGHT_PSEUDOSCALARS,
-    cabibbo_scale_fX,
-    fibonacci_anomaly_fX,
-    light_meson_fX_for,
-    precision_chain as light_meson_fX_precision_chain,
-    verify_light_meson_fX,
-    precision_chain_summary as light_meson_fX_precision_chain_summary,
-)
-
-from .heavy_meson_decay_constants import (
-    R_S_NONSTRANGE,
-    R_S_STRANGE,
-    HEAVY_PSEUDOSCALARS,
-    pi_zero_mass as heavy_meson_pi_zero_mass,
-    f_pi_substrate,
-    heavy_meson_fX,
-    heavy_meson_fX_for,
-    fX_ratio_strange_over_nonstrange,
-    precision_chain as heavy_meson_fX_precision_chain,
-    verify_heavy_meson_fX,
-    precision_chain_summary as heavy_meson_fX_precision_chain_summary,
-)
+# Meson decay constants live in `nwt_substrate.particles.decay_constants` — the
+# single canonical home for the unified light + heavy + vector + B_c sectors.
+# Import directly from there (no re-export here, to avoid a circular import
+# with `electroweak.substrate_gf`).
 
 from .substrate_ckm import (
     N_VERTICES_K7 as CKM_N_VERTICES_K7,
@@ -261,21 +230,9 @@ class _SubstrateNamespace:
     ckm_precision_chain = staticmethod(ckm_precision_chain)
     verify_ckm = staticmethod(verify_substrate_ckm)
 
-    # Substrate heavy-meson decay constants (Galasyn 2026-05-23 P7b §7.5)
-    f_pi = staticmethod(f_pi_substrate)
-    heavy_meson_fX = staticmethod(heavy_meson_fX)
-    heavy_meson_fX_for = staticmethod(heavy_meson_fX_for)
-    heavy_meson_fX_chain = staticmethod(heavy_meson_fX_precision_chain)
-    verify_heavy_meson_fX = staticmethod(verify_heavy_meson_fX)
-
-    # Substrate vector-meson + B_c decay constants (Galasyn 2026-05-23 P7b §7.6)
-    tau_mass = staticmethod(tau_mass_substrate)
-    vector_binding_scale = staticmethod(vector_binding_scale)
-    vector_meson_fX = staticmethod(vector_meson_fX)
-    vector_meson_fX_for = staticmethod(vector_meson_fX_for)
-    vector_meson_fX_chain = staticmethod(vector_meson_fX_precision_chain)
-    vector_meson_c_ratios = staticmethod(c_ratio_precision_chain)
-    verify_vector_meson_fX = staticmethod(verify_vector_meson_fX)
+    # Meson decay constants now live in nwt_substrate.particles.decay_constants
+    # (P7b §2-3, §7.5, §7.6 — light + heavy + vector + B_c sectors).
+    # Removed from this namespace to avoid a circular import.
 
     # Substrate Dalitz form factors f_+(0) (Galasyn 2026-05-23 P7b §7.7)
     cos_theta_C = staticmethod(cos_theta_C_substrate)

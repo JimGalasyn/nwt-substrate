@@ -19,7 +19,16 @@ comment:
   require_head: true
 
 ignore:
-  - "nwt_substrate/tests/**"           # test code excluded from coverage
-  - "**/__main__.py"                   # CLI dispatchers
-  - "nwt_substrate/diagrams.py"        # figure factories — no logic
+  - "nwt_substrate/tests/**"                          # test code excluded from coverage
+  - "**/__main__.py"                                  # CLI dispatchers
+  - "nwt_substrate/diagrams.py"                       # figure factories — no logic
   - "**/diagrams.py"
+  # Hardware-SDK paths — not coverable without a live backend (IBM Quantum,
+  # AWS Braket, Steane device). These are thin adapter layers around vendor
+  # SDKs; integration-tested via Heron experiments, not unit tests.
+  - "nwt_substrate/qpu/adapters/ibm.py"
+  - "nwt_substrate/qpu/adapters/braket.py"
+  - "nwt_substrate/qpu/runner.py"
+  - "nwt_substrate/qpu/experiments.py"
+  - "nwt_substrate/heron/steane_pair_synthesis.py"
+  - "nwt_substrate/heron/exp11_controls.py"

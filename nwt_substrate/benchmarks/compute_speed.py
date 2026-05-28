@@ -535,8 +535,9 @@ def benchmark_pmns_angles() -> BenchmarkResult:
 
 def benchmark_decay_constants() -> BenchmarkResult:
     """Pseudoscalar meson decay constants f_π, f_K, f_η, f_D, f_Ds, f_B, f_Bs."""
-    from nwt_substrate.electroweak.light_meson_decay_constants import light_meson_fX_for
-    from nwt_substrate.electroweak.heavy_meson_decay_constants import heavy_meson_fX_for
+    from nwt_substrate.particles.decay_constants import (
+        light_meson_fX_for, heavy_meson_fX_for,
+    )
 
     t0 = time.perf_counter_ns()
     light = {name: light_meson_fX_for(name) for name in ['pi', 'K', 'eta']}
@@ -561,7 +562,9 @@ def benchmark_decay_constants() -> BenchmarkResult:
 
 def benchmark_vector_meson_decay() -> BenchmarkResult:
     """Vector meson decay constants (ρ, ω, K*, φ, J/ψ, Υ, D*, D_s*, …)."""
-    from nwt_substrate.electroweak.vector_meson_decay_constants import vector_meson_fX, VECTOR_MESONS
+    from nwt_substrate.particles.decay_constants import (
+        vector_meson_fX, VECTOR_MESONS,
+    )
 
     t0 = time.perf_counter_ns()
     constants = {}

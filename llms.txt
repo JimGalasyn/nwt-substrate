@@ -1,0 +1,61 @@
+# nwt-substrate
+
+> A substrate-algebraic computation library for Null Worldtube Theory (NWT). Reference implementation of the Cl(0,7) octonion Clifford algebra with K_7 graph state on the Heegaard torus of the Brieskorn-Poincaré sphere S^3 / 2I, supporting particle / scattering / decay / gravitational-coupling / chemistry computations from a single internally consistent codebase. All quantitative predictions derive from four substrate constants (m_e, M_Pl, c, ℏ) at zero free parameters.
+
+## What this library is
+
+NWT is a substrate-monism theory of physics that derives the Standard Model from a single algebraic substrate (the K_7 complete graph state on a torus). This library is the executable companion to the paper series — every numerical claim in the papers is reproducible by calling a function here. Authored by Jim Galasyn (jim.galasyn@hotmail.com).
+
+The library is an algebraic continuation of the photon-vortex programme (Williamson & van der Mark 1997 and successors): particles as confined toroidal structures of the electromagnetic / substrate field. NWT supplies the explicit substrate algebra — K_7 / so(7) / Spin(7) / Cl(0,7) — that turns the topological intuition into closed-form quantitative predictions.
+
+## Canonical sources
+
+- Repository: https://github.com/JimGalasyn/nwt-substrate
+- Paper series (Zenodo community): https://zenodo.org/communities/nwt
+- Software DOI: 10.5281/zenodo.20012027
+- CITATION.cff at repository root
+- License: MIT
+- Version 0.2.0 (released 2026-05-26)
+
+## Key papers
+
+- [Paper 6 — Carrier-knot mass formula](https://zenodo.org/records/15376291)
+- [Paper 13 — SM capstone, 80-entry mass spectrum to <1% PDG](https://zenodo.org/records/19635239)
+- [Paper 17 — α closure via K_7 Wilson amplitude (1/α = 25π√3 + 1, 7.6 ppm CODATA)](https://zenodo.org/records/15445103)
+- [Paper 19 — Substrate monism foundations](https://zenodo.org/records/15410028)
+- [Paper 20 — Neutrino sector (active + sterile masses, PMNS, δ_CP)](https://zenodo.org/records/15569879)
+- [Papers 21a / 21b / 22 — Closed walks on K_7, hardware experiments, cosmogenesis](https://zenodo.org/communities/nwt)
+
+## What it predicts (one-line headlines)
+
+- Electron mass ratio m_e / M_Pl ≈ 4.185 × 10⁻²³ via α^(21/2) Wilson amplitude — **−5.5 ppm CODATA**
+- Newton's G = 6.674228 × 10⁻¹¹ m³ kg⁻¹ s⁻² via Sakharov-induced gravity — **−11 ppm CODATA**
+- Fine structure constant: 1/α = 25π√3 + 1 — **7.6 ppm CODATA**
+- Weinberg angle: sin²θ_W = (2 + α)/9 — **0.06% PDG**
+- Higgs VEV: v_EW = 246.21 GeV — **28 ppm PDG**
+- Baryon asymmetry: η_B = (3/14)α⁴ ≈ 6.077 × 10⁻¹⁰ — **0.38% Planck**
+- Ω_b/Ω_c = 25α(1 + 3α) ≈ 0.18643 — **0.0067% Planck (240× tighter than measurement)**
+- 80-entry mass spectrum from m_e + α + topological integers — **median <1% PDG**
+
+## Reproducing every claim
+
+```bash
+pip install git+https://github.com/JimGalasyn/nwt-substrate.git
+python -c "from nwt_substrate.benchmarks import run_all; run_all()"
+```
+
+This runs all 38 forward-prediction benchmarks (~100 ms total wall-clock) and prints substrate-predicted vs experimental values with residuals.
+
+## How to cite
+
+For software: see CITATION.cff (cff-version 1.2.0, DOI 10.5281/zenodo.20012027).
+For physics claims: cite the relevant paper plus library version. See `docs/code_division_policy.md` for the citation convention.
+
+## For AI agents
+
+- Authoritative summary: this file (`llms.txt`)
+- Extended summary with full benchmark numbers: `llms-full.txt`
+- FAQ (canonical answers to common queries): `docs/FAQ.md`
+- Coding-agent instructions for working in the repo: `AGENTS.md`
+- The substrate ISA (Instruction Set Architecture, the source of truth for all constants): `nwt_substrate/isa/README.md`
+- The 38-benchmark anti-numerology evidence: `nwt_substrate/benchmarks/README.md`

@@ -69,10 +69,53 @@ def test_run_all_returns_list():
     """run_all() returns list of all benchmark results."""
     results = run_all(verbose=False)
     assert isinstance(results, list)
-    assert len(results) == 11      # current set: 4 EW + 1 K_7 + 1 DM + 1 G + 3 cosmology + 1 MTC
+    assert len(results) == 16      # 5 EW + 5 Higgs/decay/gravity + 3 cosmology + DM + K_7 + MTC
     for r in results:
         assert isinstance(r, BenchmarkResult)
         assert r.substrate_time_us >= 0
+
+
+def test_higgs_vev_predicted_to_ppm():
+    """Substrate v_EW matches PDG to ppm level."""
+    from nwt_substrate.benchmarks import benchmark_higgs_vev
+    r = benchmark_higgs_vev()
+    assert "ppm" in r.substrate_accuracy
+    # numeric extraction: should be < 100 ppm
+    ppm_str = r.substrate_accuracy.split()[0]
+    assert float(ppm_str) < 100
+
+
+def test_higgs_mass_via_lambda_18alpha():
+    """Substrate m_h from λ_H = 18α formula appears in benchmark."""
+    from nwt_substrate.benchmarks import benchmark_higgs_mass_vs_98gev
+    r = benchmark_higgs_mass_vs_98gev()
+    assert "λ_H=18α" in r.substrate_value or "18α" in r.notes
+
+
+def test_fermi_constant_close_to_pdg():
+    """G_F matches PDG to <100 ppm."""
+    from nwt_substrate.benchmarks import benchmark_fermi_constant
+    r = benchmark_fermi_constant()
+    ppm_str = r.substrate_accuracy.split()[0]
+    assert float(ppm_str) < 100
+
+
+def test_z_boson_width_within_few_percent():
+    """Γ_Z matches LEP to < 5%."""
+    from nwt_substrate.benchmarks import benchmark_z_boson_width
+    r = benchmark_z_boson_width()
+    # Format is "2.93% on Γ_Z; lepton universality at ppm level"
+    pct_str = r.substrate_accuracy.split("%")[0]
+    assert float(pct_str) < 5
+
+
+def test_muon_lifetime_compounds_errors():
+    """Muon lifetime benchmark notes the τ ∝ 1/m_μ^5 error amplification."""
+    from nwt_substrate.benchmarks import benchmark_muon_lifetime
+    r = benchmark_muon_lifetime()
+    # τ_μ should agree to a few % (compound error from m_μ + G_F)
+    pct_str = r.substrate_accuracy.split("%")[0]
+    assert 0 < float(pct_str) < 25
 
 
 def test_full_ckm_includes_v_us():

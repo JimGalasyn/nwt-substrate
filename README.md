@@ -3,6 +3,8 @@
 [![tests](https://github.com/JimGalasyn/nwt-substrate/actions/workflows/test.yml/badge.svg)](https://github.com/JimGalasyn/nwt-substrate/actions/workflows/test.yml)
 [![benchmarks](https://github.com/JimGalasyn/nwt-substrate/actions/workflows/benchmarks.yml/badge.svg)](https://github.com/JimGalasyn/nwt-substrate/actions/workflows/benchmarks.yml)
 [![codecov](https://codecov.io/gh/JimGalasyn/nwt-substrate/branch/main/graph/badge.svg)](https://codecov.io/gh/JimGalasyn/nwt-substrate)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20012027.svg)](https://doi.org/10.5281/zenodo.20012027)
+[![release](https://img.shields.io/github/v/release/JimGalasyn/nwt-substrate?label=release)](https://github.com/JimGalasyn/nwt-substrate/releases)
 [![Python](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12-blue)](https://github.com/JimGalasyn/nwt-substrate)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 

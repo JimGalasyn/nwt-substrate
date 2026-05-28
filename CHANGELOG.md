@@ -10,7 +10,7 @@ The format follows [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/
 
 ## [0.3.0] - 2026-05-28
 
-[Full narrative release notes](docs/releases/v0.3.0.md)
+[Full narrative release notes](docs/releases/v0.3.0.md). Version DOI [10.5281/zenodo.20435950](https://doi.org/10.5281/zenodo.20435950), concept DOI [10.5281/zenodo.20012027](https://doi.org/10.5281/zenodo.20012027).
 
 ### Added
 - `nwt_substrate.benchmarks` subpackage: **38 forward-prediction benchmarks** spanning particle physics, atomic physics, QED/QCD, electroweak precision, cosmology, gravity, black-hole thermodynamics, and chemistry. Full suite runs in ~100 ms via `python -m nwt_substrate.benchmarks` and serves as the empirical anti-numerology argument made concrete. Each benchmark returns a `BenchmarkResult` dataclass with substrate timing, substrate value, accuracy vs reference, and the traditional method that would otherwise be needed.
@@ -64,7 +64,7 @@ These were dead code at the import-graph level (only the now-deleted test files 
 - Cross-shim consistency checks: same `N_EDGES_K7 = 21` integer appears in qed (running coefficient), gravity (`α^(21/2)` Wilson amplitude), chemistry (K_7 hub stabilization), and substrate ISA.
 
 ### Changed
-- Released as v0.2.0 with Zenodo DOI [10.5281/zenodo.20012027](https://doi.org/10.5281/zenodo.20012027).
+- Released as v0.2.0 — version DOI [10.5281/zenodo.20398451](https://doi.org/10.5281/zenodo.20398451), concept DOI [10.5281/zenodo.20012027](https://doi.org/10.5281/zenodo.20012027).
 - `CITATION.cff` and README updated for v0.2.0 release metadata.
 - The K_7 substrate algebra now compiles all the way through to the 21 CZ gates that fire on IBM Heron when `k7_graph_state()` runs — gate counts are runtime-verified against `isa.N_VERTICES_K7` and `isa.N_EDGES_K7`.
 
@@ -123,11 +123,13 @@ See [`CITATION.cff`](CITATION.cff). For pinned-version reproducibility:
 @software{nwt_substrate,
   author  = {Galasyn, Jim},
   title   = {nwt-substrate: a substrate-algebraic computation library for Null Worldtube Theory},
-  version = {0.2.0},
-  doi     = {10.5281/zenodo.20012027},
+  version = {0.3.0},
+  doi     = {10.5281/zenodo.20435950},
   url     = {https://github.com/JimGalasyn/nwt-substrate}
 }
 ```
+
+Concept DOI (always-latest, version-agnostic): [`10.5281/zenodo.20012027`](https://doi.org/10.5281/zenodo.20012027).
 
 [Unreleased]: https://github.com/JimGalasyn/nwt-substrate/compare/v0.3.0...HEAD
 [0.3.0]: https://github.com/JimGalasyn/nwt-substrate/compare/v0.2.0...v0.3.0

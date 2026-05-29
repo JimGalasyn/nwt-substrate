@@ -31,6 +31,7 @@ commutative-diagram checks.
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 from enum import IntEnum
 
@@ -55,6 +56,10 @@ class Node:
     commutative: bool = False     # True iff this node is a "two-paths-to-one-value"
     #                               identity (parent values must agree); multi-INPUT
     #                               formula nodes are Horn-clause conjunctions, not this.
+    dev: float | None = None      # OUTPUT relative deviation from its witness (fraction),
+    #                               set directly for suite benchmarks; None -> computed
+    #                               from values, or qualitative (no metric).
+    kind: str = ""                # provenance of dev: ppm / pct / exact / score / qualitative
 
 
 @dataclass
@@ -64,9 +69,10 @@ class DerivationDAG:
     edges: list[tuple[str, str]] = field(default_factory=list)
 
     def add(self, name: str, stage: Stage, value: float | None = None,
-            note: str = "", commutative: bool = False) -> str:
+            note: str = "", commutative: bool = False,
+            dev: float | None = None, kind: str = "") -> str:
         if name not in self.nodes:
-            self.nodes[name] = Node(name, stage, value, note, commutative)
+            self.nodes[name] = Node(name, stage, value, note, commutative, dev, kind)
         return name
 
     def link(self, src: str, dst: str) -> None:
@@ -146,16 +152,30 @@ class DerivationDAG:
         return sorted(frontier)
 
     def cit_readout(self, tol: float = 0.01) -> list[dict]:
-        """Per OUTPUT->WITNESS edge: derived vs witness + admissibility.
-        cit holds on the path iff the output agrees with its witness within tol."""
+        """Per OUTPUT->WITNESS edge: relative deviation + admissibility.  cit holds
+        iff the output agrees with its witness within ``tol``.  Qualitative outputs
+        (no numeric metric) are skipped here and listed by qualitative_outputs()."""
         rows = []
         for s, d in self.edges:
-            if self.nodes[s].stage == Stage.OUTPUT and self.nodes[d].stage == Stage.WITNESS:
-                pv, wv = self.nodes[s].value, self.nodes[d].value
+            so, do = self.nodes[s], self.nodes[d]
+            if so.stage != Stage.OUTPUT or do.stage != Stage.WITNESS:
+                continue
+            if so.dev is not None:                       # suite: deviation set directly
+                dev, pv, wv = so.dev, so.value, do.value
+            elif so.value is not None and do.value is not None:
+                pv, wv = so.value, do.value              # headline: compute from values
                 dev = abs(pv - wv) / abs(wv)
-                rows.append({"output": s, "witness": d, "predicted": pv,
-                             "measured": wv, "rel_dev": dev, "admissible": dev <= tol})
+            else:
+                continue                                  # qualitative — not cit-checked
+            rows.append({"output": s, "witness": d, "predicted": pv,
+                         "measured": wv, "rel_dev": dev, "admissible": dev <= tol})
         return rows
+
+    def qualitative_outputs(self) -> list[str]:
+        """OUTPUT nodes with no numeric deviation — O10 marks these as
+        qualitative/uncertain rather than fabricating a number."""
+        return sorted(n for n, nd in self.nodes.items()
+                      if nd.stage == Stage.OUTPUT and nd.dev is None and nd.value is None)
 
     def cit_defects(self, tol: float = 0.01) -> list[str]:
         """Output names whose cit edge fails at ``tol`` (marked, not repaired)."""
@@ -252,7 +272,110 @@ def build_constants_dag() -> DerivationDAG:
     return g
 
 
+# ---------------------------------------------------------------------------
+# Full benchmark-suite DAG
+# ---------------------------------------------------------------------------
+
+def _parse_deviation(accuracy: str) -> tuple[float | None, str]:
+    """Parse a BenchmarkResult.substrate_accuracy into (relative deviation
+    fraction, provenance kind).  'X%' -> X/100; 'X ppm' -> X/1e6;
+    'exact'/'machine'/'100%'/'N/N' -> 0.0 (perfect); otherwise None — O10 marks
+    a missing metric as *qualitative* rather than fabricating a number.  A
+    leading headline metric wins; ranges and embedded metrics take the upper
+    bound (conservative for defect-marking)."""
+    s = accuracy.strip()
+    low = s.lower()
+    if low.startswith("exact") or "machine" in low:
+        return 0.0, "exact"
+    m = re.match(r"[~<≈]?\s*([\d.]+)\s*(ppm|%)", s)
+    if m:
+        v = float(m.group(1))
+        if m.group(2) == "ppm":
+            return v / 1e6, "ppm"
+        return (0.0, "score") if v >= 100 else (v / 100.0, "pct")
+    m = re.search(r"\b(\d+)\s*/\s*(\d+)\b", s)            # N/M score
+    if (m and m.group(1) == m.group(2)) or re.search(r"\b100\s*%", s):
+        return 0.0, "score"
+    pcts = [float(x) for x in re.findall(r"([\d.]+)\s*%", s) if float(x) < 100]
+    ppms = [float(x) for x in re.findall(r"([\d.]+)\s*ppm", s)]
+    if pcts:
+        return max(pcts) / 100.0, "pct"
+    if ppms:
+        return max(ppms) / 1e6, "ppm"
+    return None, "qualitative"
+
+
+def benchmark_functions() -> dict:
+    """The 38 suite benchmark functions keyed by name (the sensitivity sweep's keys)."""
+    from . import compute_speed as cs
+    return {n: f for n, f in vars(cs).items()
+            if n.startswith("benchmark_") and callable(f)}
+
+
+def build_suite_dag(report=None) -> DerivationDAG:
+    """The whole 38-benchmark suite as one O10 DAG.
+
+    Each benchmark is an OUTPUT node with a WITNESS edge carrying its deviation
+    (parsed from ``substrate_accuracy``; qualitative benchmarks left unscored and
+    surfaced by ``qualitative_outputs()``).  The STRUCTURAL->OUTPUT edges are the
+    *computed* coupling: pass a ``SensitivityReport`` and an edge
+    ``integer -> benchmark`` is drawn for every integer that moves that benchmark,
+    so the DAG's ``load_ranking()`` equals the sweep's structural load.  Without a
+    report, a single 'ISA' structural hub feeds every benchmark."""
+    g = DerivationDAG()
+    g.add("ISA", Stage.STRUCTURAL, note="K_7/Spin(7) structural integers (isa)")
+    for name, fn in sorted(benchmark_functions().items()):
+        res = fn()
+        dev, kind = _parse_deviation(res.substrate_accuracy)
+        g.add(name, Stage.OUTPUT, note=res.name, dev=dev, kind=kind)
+        g.add(f"wit:{name}", Stage.WITNESS, note="measured (CODATA-2018 / PDG / Planck)")
+        g.link(name, f"wit:{name}")
+        if report is None:
+            g.link("ISA", name)
+    if report is not None:
+        for integer in report.per_integer:
+            g.add(integer, Stage.STRUCTURAL, note="isa leaf integer")
+            for bench in report.movers(integer):
+                if bench in g.nodes:
+                    g.link(integer, bench)
+    return g
+
+
+def _main_suite(use_sensitivity: bool = False) -> int:
+    report = None
+    if use_sensitivity:
+        from ..sensitivity import integer_sweep
+        report = integer_sweep()
+    g = build_suite_dag(report=report)
+    cit, defects, qual = g.cit_readout(0.01), g.cit_defects(0.01), g.qualitative_outputs()
+    n_bench = len(benchmark_functions())
+    lines = [f"O10 suite DAG — {len(g.nodes)} nodes, {len(g.edges)} edges, {n_bench} benchmarks", ""]
+    lines.append("Acceptance checklist (O10 structural invariants):")
+    for k, v in g.acceptance_checklist().items():
+        lines.append(f"  [{'PASS' if v else 'FAIL'}]  {k}")
+    lines += ["", f"cit readout: {len(cit)} scored, {len(cit) - len(defects)} admissible, "
+              f"{len(defects)} defect edge(s) marked, {len(qual)} qualitative:"]
+    for r in sorted(cit, key=lambda r: -r["rel_dev"]):
+        if not r["admissible"]:
+            lines.append(f"  [DEFECT]  {r['output']:36s} {r['rel_dev'] * 100:6.2f}%")
+    if qual:
+        lines.append(f"  qualitative (no vs-measurement metric): {', '.join(qual)}")
+    if report is not None:
+        lines += ["", "Structural-load ranking (isa integers by # benchmarks moved):"]
+        for n, load in g.load_ranking()[:10]:
+            lines.append(f"  {n:30s} reaches {load} benchmark(s)")
+    else:
+        lines += ["", "(add --sensitivity for the real structural->benchmark coupling "
+                  "edges + load ranking; slow — the sweep patches isa per integer.)"]
+    print("\n".join(lines))
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
+    import sys
+    argv = sys.argv[1:] if argv is None else argv
+    if "--suite" in argv:
+        return _main_suite(use_sensitivity="--sensitivity" in argv)
     g = build_constants_dag()
     lines = [f"O10 DAG cit-readout — {len(g.nodes)} nodes, {len(g.edges)} edges", ""]
 

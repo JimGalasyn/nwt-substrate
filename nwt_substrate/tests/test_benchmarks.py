@@ -378,3 +378,46 @@ def test_o10_dag_cit_readout():
     assert all(r["commutes"] for r in g.commutative_checks())
     # Horn-clause frontier of a witness lists its structural premises
     assert "N_VERTICES_K7" in g.horn_frontier("wit:cabibbo_lambda")
+
+
+def test_o10_suite_dag_full_38():
+    """The whole 38-benchmark suite as one O10 DAG: structural invariants hold,
+    cit marks the known >1% benchmarks as defect edges (not repaired), and the
+    no-metric benchmarks are flagged qualitative rather than fabricated."""
+    from nwt_substrate.benchmarks import o10
+    assert len(o10.benchmark_functions()) == 38
+    g = o10.build_suite_dag()
+    outs = [n for n, nd in g.nodes.items() if nd.stage == o10.Stage.OUTPUT]
+    assert len(outs) == 38
+    assert all(g.acceptance_checklist().values())
+    assert g.backward_edges() == [] and g.is_acyclic() and g.witnesses_are_sinks()
+    defects = g.cit_defects(0.01)
+    assert "benchmark_muon_lifetime" in defects     # m⁵-amplified compound
+    assert "benchmark_sin2_theta_W" in defects       # leading-order angle
+    assert 4 <= len(defects) <= 12
+    qual = g.qualitative_outputs()
+    assert "benchmark_bhabha_scattering" in qual      # emits a cross-section, no vs-measurement
+    # parser spot-checks
+    assert o10._parse_deviation("exact (closed form)") == (0.0, "exact")
+    assert o10._parse_deviation("7.6 ppm vs CODATA")[0] < 1e-4
+    assert o10._parse_deviation("LO QED formula at substrate α")[0] is None
+
+
+def test_o10_suite_dag_couples_to_sensitivity_report():
+    """With a SensitivityReport the structural integers wire to the benchmarks
+    they move, and load_ranking reflects that computed coupling."""
+    from nwt_substrate.benchmarks import o10
+    from nwt_substrate.sensitivity import SensitivityReport
+    rep = SensitivityReport(
+        benchmarks=["benchmark_z_boson_width", "benchmark_fermi_constant"],
+        baseline={},
+        per_integer={
+            "H_V_SO7": {1: {"status": "ok",
+                            "moved": ["benchmark_fermi_constant", "benchmark_z_boson_width"]}},
+            "RANK_SO7": {1: {"status": "ok", "moved": ["benchmark_z_boson_width"]}},
+        },
+    )
+    g = o10.build_suite_dag(report=rep)
+    load = dict(g.load_ranking())
+    assert load["H_V_SO7"] == 2 and load["RANK_SO7"] == 1
+    assert all(g.acceptance_checklist().values())

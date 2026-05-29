@@ -36,7 +36,7 @@ from __future__ import annotations
 import math
 
 from .constants import G_F_GEV  # PDG value for comparison
-from ..isa.constants import ALPHA_SUBSTRATE  # canonical substrate α (single source of truth)
+from ..isa.constants import ALPHA_SUBSTRATE, H_V_SO7  # canonical substrate α + h_v(so7)=5=q_cinq (single source of truth)
 
 
 # ============================================================
@@ -79,8 +79,8 @@ def v_ew_substrate(alpha: float = ALPHA_SUBSTRATE,
     Matches PDG v_EW = 246.21965 GeV at ~28 ppm with substrate α.
     """
     sqrt3 = math.sqrt(3.0)
-    leading = 25.0 * m_e / alpha ** 2
-    nlo = 1.0 + 25.0 * alpha / (4.0 * sqrt3)
+    leading = H_V_SO7 ** 2 * m_e / alpha ** 2          # 25 = q_cinq² = H_V_SO7²
+    nlo = 1.0 + H_V_SO7 ** 2 * alpha / (4.0 * sqrt3)    # 25/4 = q_cinq²/C_A²(SU2)
     return leading * nlo
 
 
@@ -107,8 +107,8 @@ def fermi_constant_substrate(alpha: float = ALPHA_SUBSTRATE,
     """
     sqrt2 = math.sqrt(2.0)
     sqrt3 = math.sqrt(3.0)
-    nlo = 1.0 + 25.0 * alpha / (4.0 * sqrt3)
-    return alpha ** 4 / (625.0 * sqrt2 * m_e ** 2 * nlo ** 2)
+    nlo = 1.0 + H_V_SO7 ** 2 * alpha / (4.0 * sqrt3)    # 25/4 = q_cinq²/C_A²(SU2)
+    return alpha ** 4 / (H_V_SO7 ** 4 * sqrt2 * m_e ** 2 * nlo ** 2)   # 625 = q_cinq⁴ = H_V_SO7⁴
 
 
 def fermi_constant_from_vev(v_ew: float) -> float:

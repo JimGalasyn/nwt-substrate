@@ -55,23 +55,28 @@ from typing import Tuple
 import numpy as np
 
 from .substrate_gf import ALPHA_SUBSTRATE
+# Structural integers imported from the single source of truth (isa) so that a
+# perturbation to the ISA propagates into the CKM predictions (sensitivity sweep).
+from ..isa.constants import N_VERTICES_K7, DIM_ADJ_SPIN7
 
 
 # ============================================================
 # Substrate integers (K_7 / so(7) / G_2 / particle vocabulary)
 # ============================================================
 
-N_VERTICES_K7: int = 7
-"""|V(K_7)| = 7.  Vertices of the complete graph K_7; Cabibbo coefficient."""
+# N_VERTICES_K7 (|V(K_7)| = 7, the Cabibbo coefficient) is imported from isa above.
 
 Q_B: int = 9
-"""Bottom-quark trefoil winding number q_b from Paper 6 T(2,9) carrier knot."""
+"""Bottom-quark trefoil winding number q_b from Paper 6 T(2,9) carrier knot.
+Numerically coincides with N_POS_ROOTS_SO7=9 but is a distinct structural
+integer (carrier winding, not a root count), so it is kept local."""
 
 DIM_G2: int = 14
-"""dim(G_2) = 14.  Octonion automorphism Lie-algebra dimension."""
+"""dim(G_2) = 14.  Octonion automorphism Lie-algebra dimension. No standalone
+ISA constant (= 2·N_VERTICES_K7); kept local."""
 
-DIM_SO7: int = 21
-"""dim(so(7)) = 21 = |E(K_7)|.  Adjoint of Spin(7); also K_7 edge count."""
+DIM_SO7: int = DIM_ADJ_SPIN7
+"""dim(so(7)) = 21 = |E(K_7)|.  Adjoint of Spin(7); = isa.DIM_ADJ_SPIN7 (= N_EDGES_K7)."""
 
 
 # ============================================================

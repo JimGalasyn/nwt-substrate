@@ -14,6 +14,14 @@ Pasquale Kaboth flagged the two largest benchmark deviations (Z-boson width, muo
 - **Muon lifetime** (was 9.94%) is the **m⁵ amplification of the Paper-6 m_μ residual** (m_μ is −1.97%; τ ∝ m_μ⁵ → ≈ 5× → ~9.8%), *not* a missing weak layer. `benchmark_muon_decay_rate` — the weak-sector closure, isolated from the mass formula with PDG m_μ — gains the standard phase-space `f(x)` + 1-loop QED radiative correction layer: **0.45% (tree) → 0.007%**. `benchmark_muon_lifetime` is re-labeled the *compound* probe and its deviation correctly attributed to the mass formula, cross-referencing the weak-closure benchmark. Both corrections are parameter-free (α is substrate-predicted).
 - Pasquale's second point — sensitivity of predictions to small changes in the structural integers — is answered by the v0.3.1 ISA sensitivity sweep (`python -m nwt_substrate.sensitivity`).
 
+### Sensitivity — structural-criticality layer (M. Wende's d12rg insight)
+
+Marcel Wende observed that *sensitivity* (how strongly an observable responds) is not the only interesting quantity — *structural criticality* (which integers carry the most load, and which observables move together) reveals the architecture. Added to `SensitivityReport`:
+
+- `structural_load()` — integers ranked by the number of observables each moves (the load-bearing vs localized distinction).
+- `comovement(min_shared)` — benchmark pairs that move *together* under the same integers, ranked by shared count: correlated structural dependencies, even where the individual shifts are modest.
+- `criticality_summary()` and a `python -m nwt_substrate.sensitivity --criticality` flag that prints both layers on top of the raw counts.
+
 ### Self-consistency audit (library-internal, value-preserving)
 
 A full audit of the library against the canonical v0.3.1 `isa/constants.py`:

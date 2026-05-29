@@ -54,6 +54,32 @@ def test_sweep_couples_and_restores():
     assert len(report.benchmarks) == 38
 
 
+# ---- structural-criticality layer (Marcel Wende, d12rg) ----
+
+def test_structural_load_and_comovement():
+    """Load ranking + correlated-cluster diagnostic on a synthetic report."""
+    r = sens.SensitivityReport(
+        benchmarks=["a", "b", "c"],
+        baseline={"a": "1", "b": "2", "c": "3"},
+        per_integer={
+            "X": {1: {"status": "ok", "moved": ["a", "b"], "value": 7}},
+            "Y": {1: {"status": "ok", "moved": ["a", "b", "c"], "value": 3}},
+            "Z": {1: {"status": "ok", "moved": [], "value": 5}},
+        },
+    )
+    load = dict(r.structural_load())
+    assert load == {"X": 2, "Y": 3, "Z": 0}
+    # ranked by load descending: Y (3) then X (2) then Z (0)
+    assert [i for i, _ in r.structural_load()] == ["Y", "X", "Z"]
+    # a,b co-move under BOTH X and Y -> 2; a,c and b,c only under Y -> 1
+    comov = dict(r.comovement(min_shared=1))
+    assert comov[("a", "b")] == 2
+    assert comov[("a", "c")] == 1 and comov[("b", "c")] == 1
+    # min_shared=2 keeps only the (a,b) correlated pair
+    assert r.comovement(min_shared=2) == [(("a", "b"), 2)]
+    assert "Structural-load ranking" in r.criticality_summary()
+
+
 @pytest.mark.skipif(not os.access(sens.CONSTANTS_PATH, os.W_OK),
                     reason="sensitivity sweep needs a writable (editable) install")
 def test_gf_refactor_couples_fermi_to_h_v():

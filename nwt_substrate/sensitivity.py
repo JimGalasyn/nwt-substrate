@@ -172,6 +172,53 @@ class SensitivityReport:
                 counts[b] += 1
         return counts
 
+    # ------------------------------------------------------------------
+    # Structural-criticality layer (M. Wende, d12rg v0.3.1 thread):
+    # beyond *sensitivity* (how strongly an observable responds), ask which
+    # structural integers carry the most *load* (organise many observables)
+    # and which observables move together (correlated structural dependence).
+    # ------------------------------------------------------------------
+
+    def structural_load(self) -> list[tuple[str, int]]:
+        """Integers ranked by structural load = number of benchmarks each moves
+        (descending, ties broken by name).  The top entries are the framework's
+        load-bearing integers; a load of 0 is inert.  A high load is *critical*
+        (a single structural quantity organising many observables) rather than
+        merely sensitive."""
+        load = [(i, len(self.movers(i))) for i in self.per_integer]
+        return sorted(load, key=lambda kv: (-kv[1], kv[0]))
+
+    def comovement(self, min_shared: int = 2) -> list[tuple[tuple[str, str], int]]:
+        """Benchmark pairs that move *together*, ranked by how many integers move
+        BOTH.  High co-movement reveals a correlated structural dependency — two
+        observables governed by the same part of the architecture — even when the
+        individual numerical shifts are modest.  Returns ``[((a, b), n), ...]``."""
+        pair_counts: dict[tuple[str, str], int] = {}
+        for integer in self.per_integer:
+            movers = self.movers(integer)
+            for i in range(len(movers)):
+                for j in range(i + 1, len(movers)):
+                    key = tuple(sorted((movers[i], movers[j])))
+                    pair_counts[key] = pair_counts.get(key, 0) + 1
+        pairs = [(k, n) for k, n in pair_counts.items() if n >= min_shared]
+        return sorted(pairs, key=lambda kv: (-kv[1], kv[0]))
+
+    def criticality_summary(self, top: int = 8) -> str:
+        """Structural-criticality view: load ranking + correlated benchmark
+        clusters, layered on top of the raw sensitivity counts."""
+        lines = ["Structural-load ranking (integers by # observables they move):", ""]
+        for i, n in self.structural_load():
+            if n > 0:
+                lines.append(f"  {i:30} moves {n:>2} benchmark(s)")
+        lines += ["", "Correlated benchmark pairs (move together under ≥2 integers):", ""]
+        comov = self.comovement(min_shared=2)[:top]
+        if comov:
+            for (a, b), n in comov:
+                lines.append(f"  [{n}×]  {a}  <->  {b}")
+        else:
+            lines.append("  (no benchmark pair shares ≥2 moving integers)")
+        return "\n".join(lines)
+
     def __str__(self) -> str:
         lines = [
             f"ISA sensitivity sweep — {len(self.per_integer)} integers × "
@@ -259,8 +306,13 @@ def integer_sweep(integers: list[str] | None = None,
 
 
 def main(argv: list[str] | None = None) -> int:
+    import sys
+    argv = sys.argv[1:] if argv is None else argv
     report = integer_sweep()
     print(report)
+    if "--criticality" in argv or "--load" in argv:
+        print()
+        print(report.criticality_summary())
     return 0
 
 

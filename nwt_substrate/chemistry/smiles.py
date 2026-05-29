@@ -653,7 +653,8 @@ def smiles_to_aromaticity(smiles: str,
     )
 
 
-K7_CORRECTION_KCAL_PER_RING_SET = 56.0
+# Single source of truth: defined in chemistry.aromaticity (was duplicated here).
+from .aromaticity import K7_CORRECTION_KCAL_PER_RING_SET
 
 
 # Per-heteroatom RE correction relative to all-carbon ring (kcal/mol).

@@ -10,7 +10,7 @@ import json
 from pathlib import Path
 
 from .runner import Item
-from .spec import steane_base_ops, control_base_ops
+from .spec import steane_base_ops, control_base_ops, STEANE_LZ
 
 _LOOKUP = Path(__file__).parents[2] / "analysis" / "steane_exp12_walk_pauli_table.json"
 
@@ -31,7 +31,7 @@ def exp12_phase2_items(include_controls: bool = True) -> list[Item]:
         fp = pq[(p, q)]["forward_pauli"]
         xb, zb = fp["x_part_bits"], fp["z_part_bits"]
         xf, zf = fp["predicted_syndrome_fano_pair"]
-        lz = +1 if sum(xb[i] for i in (0, 1, 2)) % 2 == 0 else -1
+        lz = +1 if sum(xb[i] for i in STEANE_LZ) % 2 == 0 else -1
         items.append(Item(f"class_p{p}_q{q}", steane_base_ops(xb, zb), (xf, zf, lz)))
     if include_controls:
         for kind in ("identity", "x7", "z7", "h7"):

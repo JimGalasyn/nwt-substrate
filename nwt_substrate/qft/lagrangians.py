@@ -17,13 +17,17 @@ from __future__ import annotations
 
 from .fields import ScalarField, DiracSpinor, GaugeField, FaddeevPopovGhost
 from .lagrangian import Lagrangian, InteractionTerm
+from ..isa.constants import N_C_SU3, N_GLUONS
 
 
 # ===========================================================================
-# Constants (re-exported from existing modules so the QFT shim is self-contained)
+# Constants
 # ===========================================================================
+# Structural integers (colour count, gluon count) come from the isa anchor.
+# The couplings below are the MEASURED inputs (CODATA/PDG), deliberately
+# distinct from the substrate-PREDICTED isa.ALPHA_SUBSTRATE (= 1/(25π√3+1)).
 
-ALPHA_QED = 1.0 / 137.035999084
+ALPHA_QED = 1.0 / 137.035999084   # CODATA measured α (NOT isa.ALPHA_SUBSTRATE)
 E_CHARGE = 0.30282212        # = sqrt(4 pi alpha) at q^2 -> 0
 ALPHA_S = 0.1179             # at M_Z
 G_S = (4.0 * 3.141592653589793 * ALPHA_S) ** 0.5
@@ -50,12 +54,12 @@ muon     = DiracSpinor("μ",   M_MU, charge=-1.0, n_color=1)
 tau      = DiracSpinor("τ",   M_TAU, charge=-1.0, n_color=1)
 
 # Quarks
-up_quark    = DiracSpinor("u", M_U, charge=+2.0/3.0, n_color=3)
-down_quark  = DiracSpinor("d", M_D, charge=-1.0/3.0, n_color=3)
-strange     = DiracSpinor("s", M_S, charge=-1.0/3.0, n_color=3)
-charm       = DiracSpinor("c", M_C, charge=+2.0/3.0, n_color=3)
-bottom      = DiracSpinor("b", M_B, charge=-1.0/3.0, n_color=3)
-top         = DiracSpinor("t", M_T, charge=+2.0/3.0, n_color=3)
+up_quark    = DiracSpinor("u", M_U, charge=+2.0/3.0, n_color=N_C_SU3)
+down_quark  = DiracSpinor("d", M_D, charge=-1.0/3.0, n_color=N_C_SU3)
+strange     = DiracSpinor("s", M_S, charge=-1.0/3.0, n_color=N_C_SU3)
+charm       = DiracSpinor("c", M_C, charge=+2.0/3.0, n_color=N_C_SU3)
+bottom      = DiracSpinor("b", M_B, charge=-1.0/3.0, n_color=N_C_SU3)
+top         = DiracSpinor("t", M_T, charge=+2.0/3.0, n_color=N_C_SU3)
 
 
 # ===========================================================================
@@ -115,7 +119,7 @@ gluon = GaugeField(
     name="A_g",
     gauge_group="SU(3)_color",
     coupling=G_S,
-    n_generators=8,
+    n_generators=N_GLUONS,
 )
 
 ghost_qcd = FaddeevPopovGhost(

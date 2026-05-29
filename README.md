@@ -26,7 +26,7 @@ intuition into closed-form quantitative predictions. The
 [paper series on Zenodo](https://zenodo.org/communities/nwt) is the
 derivation record; this library is the executable companion.
 
-**As of v0.2.0 (released 2026-05-26)**, the library ships a
+**Since v0.2.0** (current release **v0.4.0**, 2026-05-29), the library ships a
 **substrate Instruction Set Architecture** (`nwt_substrate.isa`) that
 makes the K_7 algebra load-bearing across every shim. ~25
 structural constants (`N_EDGES_K7 = 21`, `N_VERTICES_K7 = 7`,
@@ -65,13 +65,18 @@ All derived from the substrate algebra at zero free parameters
   ≈ (14.8, 17.2, 53) meV, three sterile masses ≈ (61.3, 70.8, 218.8)
   MeV, mixing |U_α4|² ≈ 2.4×10⁻¹⁰, PMNS angles + δ_CP = −2π/3 from
   π_1(PSU(3)) winding. Call: `nwt.neutrino.substrate_breakdown()`.
-- **38 forward-prediction benchmarks** (`nwt_substrate.benchmarks`,
-  added 2026-05-28) — substrate algebra vs traditional-method speed
-  and accuracy across particle physics, atomic physics, QED/QCD,
-  electroweak precision, cosmology, gravity, black-hole thermodynamics,
-  and chemistry. Full suite in **~100 ms**: α at 7.6 ppm, G at 11 ppm,
-  v_EW at 28 ppm, sin²θ_W at 3.5% (leading order), **Ω_b/Ω_c at 0.0067 %** (better
-  than Planck systematic), Higgs mass via λ_H = 18α at 0.9 %, etc.
+- **38 forward-prediction benchmarks** (`nwt_substrate.benchmarks`) —
+  substrate algebra vs traditional-method speed and accuracy across particle
+  physics, atomic physics, QED/QCD, electroweak precision, cosmology, gravity,
+  black-hole thermodynamics, and chemistry. Full suite in **~100 ms**: α at
+  7.6 ppm, G at 11 ppm, v_EW at 28 ppm, **sin²θ_W (on-shell, (2+α)/9) at <0.1 %**
+  (it *is* `1 − M_W²/M_Z²`; the effective angle is +3.68 % via radiative running),
+  **Ω_b/Ω_c at 0.0067 %** (better than the Planck systematic), Higgs mass via
+  λ_H = 18α at 0.9 %, etc. **v0.4.0** added the standard hadronic QCD correction
+  to the Z width (Γ_Z 2.93 % → 0.31 %), decomposed the muon lifetime (weak-sector
+  closure now 0.007 %), a sensitivity **structural-criticality** layer
+  (`--criticality`), and L. Leighton's **O10 derivation-separation** predictor +
+  DAG cit-readout (`benchmarks.predict`, `benchmarks.o10 --suite`).
   Anti-numerology argument made empirically concrete:
   `from nwt_substrate.benchmarks import run_all; run_all()`.
   See [`nwt_substrate/benchmarks/README.md`](nwt_substrate/benchmarks/README.md).
@@ -265,7 +270,13 @@ Heron K_7 quantum circuit, structurally verified:
   η_B at 0.38 %), sub-ppm chains (electron Schwinger a_e exact, α
   at 7.6 ppm, G at 11 ppm), and 100 % on chemistry (aromaticity 15/15,
   NICS 14/14, C_60 174-mode vibrational decomposition exact). The
-  anti-numerology argument made empirically concrete. Call:
+  anti-numerology argument made empirically concrete. **v0.4.0** adds
+  L. Leighton's O10 **derivation-separation** layer — `benchmarks.predict`
+  (standalone, zero-input, CODATA-2018-witness predictions, `diff`-comparable)
+  and `benchmarks.o10 --suite` (the whole 38-benchmark suite as one validated
+  DAG cit-readout: one-way proof-order edges, witness sinks, defect edges
+  *marked* not repaired) — plus the hadronic QCD layer on the Z width and the
+  muon-lifetime decomposition. Call:
   `from nwt_substrate.benchmarks import run_all; run_all()`. See
   [`nwt_substrate/benchmarks/README.md`](nwt_substrate/benchmarks/README.md).
 
@@ -407,11 +418,14 @@ https://zenodo.org/communities/nwt (collected DOIs).
 
 ## Status
 
-**v0.2.0 (released 2026-05-26)**: active-encoding architecture + the
-cross-architecture QPU interface + cosmology migration, consolidated into
-this canonical repo. Archived on Zenodo (version DOI
-`10.5281/zenodo.20398451`; concept DOI `10.5281/zenodo.20012027`) — the
-version the Paper 21a/21b bundle cites.
+**v0.4.0 (released 2026-05-29)**: review-driven correction layers (Z-width QCD,
+muon-lifetime decomposition), the O10 derivation-separation predictor + DAG
+cit-readout, a sensitivity structural-criticality layer, and a full library
+self-consistency audit (every structural integer anchored on `isa`). Archived on
+Zenodo (version DOI `10.5281/zenodo.20448443`; concept DOI
+`10.5281/zenodo.20012027`, resolves to latest). The active-encoding architecture
++ cross-architecture QPU interface + ISA layer landed in v0.2.0 (the version the
+Paper 21a/21b bundle cites).
 
 API surface is stable for particles, compositions, walk_phase, gauge
 shims, gravity, chemistry, diagrams, and the new ISA layer. Minor
@@ -445,8 +459,8 @@ all seven shims.
   format). Every user-visible change lands here.
 - **[`docs/releases/`](docs/releases/)** — narrative release notes
   per minor version. The latest is
-  [`v0.2.0`](docs/releases/v0.2.0.md) — the substrate Instruction Set
-  Architecture release.
+  [`v0.4.0`](docs/releases/v0.4.0.md) — review-driven correction layers, O10,
+  and the self-consistency audit.
 
 ## License
 

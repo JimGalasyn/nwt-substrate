@@ -50,7 +50,7 @@ print(result.substrate_time_us)          # ~1 microsecond
 | Fine structure constant α | 7.6 ppm |
 | Newton's G | 11 ppm |
 | Fermi constant G_F | 55 ppm |
-| Weak mixing angle sin²θ_W | 3.5% (LO) |
+| Weak mixing angle sin²θ_W (on-shell, (2+α)/9) | <0.1% vs `1−M_W²/M_Z²` (effective angle +3.68% via running) |
 | Strong coupling α_s(M_Z), Λ_QCD, Λ_χ | matches PDG |
 
 ### Higgs sector (2 benchmarks)
@@ -75,15 +75,15 @@ print(result.substrate_time_us)          # ~1 microsecond
 |---|---|
 | Cabibbo angle θ_C | ~0.1% |
 | Full CKM matrix (V_us, V_cb, V_ub, V_td, J) | ~1% |
-| PMNS leptonic angles | ~5% on θ_12, θ_23 |
+| PMNS leptonic angles | θ_13 = √(3α) at 0.7%; θ_12/θ_23 ~5% (LO tri-bimaximal) |
 
 ### Decay constants and rates (3 benchmarks)
 
 | Observable | Substrate accuracy |
 |---|---|
 | Pseudoscalar decay constants (f_π, f_K, f_η, f_D, f_Ds, f_B, f_Bs) | 1-3% |
-| Z boson width + lepton universality | 3% / **0.9 ppm** |
-| Muon lifetime τ_μ (substrate G_F + PDG m_μ) | 0.45% |
+| Z boson width + lepton universality | 0.31% (with hadronic QCD correction) / **0.9 ppm** |
+| Muon lifetime — weak-sector closure (substrate G_F + PDG m_μ + SM correction) | 0.007% (the m⁵-amplified compound benchmark is a separate mass-formula probe) |
 
 ### Atomic physics + QED (3 benchmarks)
 
@@ -123,6 +123,26 @@ print(result.substrate_time_us)          # ~1 microsecond
 | Aromaticity + NICS + C_60 combinatorics | 100% on Hückel/Möbius set, 14/14 NICS, C_60 exact |
 | NMR chemical shift sign rule | 14/14 (Hopf-pair parity, O(1) lookup) |
 | C_60 vibrational mode decomposition (174 modes) | exact (group theory) |
+
+### O10 derivation-separation & structural criticality (v0.4.0)
+
+Added in response to the d12rg review round (L. Leighton, M. Wende):
+
+- **`python -m nwt_substrate.benchmarks.predict`** — L. Leighton's O10
+  derivation-separation rung: emits *only* substrate-derived dimensionless
+  predictions (no input of any kind), with measured values quarantined in a
+  separate `--reference` stream (CODATA-2018 witness; post-SI2019 defined
+  constants excluded). `diff -u` of the two streams is the falsification report —
+  a measured value structurally cannot leak into a prediction.
+- **`python -m nwt_substrate.benchmarks.o10 --suite`** — the whole 38-benchmark
+  suite as one validated O10 DAG: one-way proof-order edges, witness sinks,
+  commutative-diagram identities (= isa import-time asserts, e.g. `21=C(7,2)=3·7`),
+  and a cit readout with defect edges **marked** (not repaired). With
+  `--sensitivity`, the `STRUCTURAL→OUTPUT` edges are the *computed* coupling, so
+  the DAG's load ranking equals the sweep's.
+- **`python -m nwt_substrate.sensitivity --criticality`** — M. Wende's
+  structural-criticality layer: which ISA integers carry the most load
+  (`DIM_S_SPIN7` moves 14 of 38) and which observables co-move.
 
 ## Methodology
 
@@ -191,8 +211,9 @@ exports.
 
 ## Tests
 
-48 unit tests (`nwt_substrate/tests/test_benchmarks.py`) verify each
-benchmark returns the expected structure and characteristic values.
+The unit tests (`nwt_substrate/tests/test_benchmarks.py`) verify each
+benchmark returns the expected structure and characteristic values
+(incl. the O10 suite-DAG invariants and the sin²θ_W on-shell comparison).
 Run with:
 
 ```bash

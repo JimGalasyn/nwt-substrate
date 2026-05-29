@@ -276,23 +276,9 @@ __all__ = [
     "jarlskog_ckm", "jarlskog_coefficient", "ckm_matrix",
     "ckm_precision_chain", "verify_substrate_ckm",
     "ckm_precision_chain_summary",
-    # substrate heavy-meson decay constants (P7b §7.5 closure)
-    "R_S_NONSTRANGE", "R_S_STRANGE", "HEAVY_PSEUDOSCALARS",
-    "f_pi_substrate", "heavy_meson_fX", "heavy_meson_fX_for",
-    "fX_ratio_strange_over_nonstrange",
-    "heavy_meson_fX_precision_chain", "verify_heavy_meson_fX",
-    "heavy_meson_fX_precision_chain_summary",
-    # substrate light-meson decay constants (P7b §2-3 closure)
-    "LIGHT_PSEUDOSCALARS",
-    "cabibbo_scale_fX", "fibonacci_anomaly_fX", "light_meson_fX_for",
-    "light_meson_fX_precision_chain", "verify_light_meson_fX",
-    "light_meson_fX_precision_chain_summary",
-    # substrate vector-meson + B_c decay constants (P7b §7.6 closure)
-    "VECTOR_MESONS", "tau_mass_substrate", "vector_binding_scale",
-    "vector_meson_fX", "vector_meson_fX_for",
-    "vector_meson_fX_precision_chain", "c_ratio_precision_chain",
-    "verify_vector_meson_fX",
-    "vector_meson_fX_precision_chain_summary",
+    # NOTE: meson decay constants (heavy/light/vector + B_c, P7b §7.5/§2-3/§7.6)
+    # were consolidated into nwt_substrate.particles.decay_constants in v0.3.1
+    # and are NO LONGER re-exported here — import them from that canonical home.
     # substrate Dalitz form factors (P7b §7.7 closure)
     "FORM_FACTORS", "cos_theta_C_substrate", "sin_theta_C_substrate",
     "f_plus_substrate", "f_plus_for", "f_plus_leading_order",

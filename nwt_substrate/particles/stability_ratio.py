@@ -24,12 +24,13 @@ Substrate interpretation::
     ρ < 1      Γ > m ; substrate dissolution dominates; cannot maintain
                        coherent K_7 walk pattern
 
-For all 25 compendium particles (excluding strictly-stable ones),
+For all 22 catalogued particles (excluding strictly-stable ones),
 ρ > 1 universally — the substrate K_7 walk domain sits ENTIRELY in the
-re-inscription-dominated regime.  The lowest-ρ NWT particles are the
-strong resonances (ρ-meson ρ_X ≈ 5).  The classical "ρ < 1" regime
-(fires, explosions, dissipative structures) lies OUTSIDE the K_7 walk
-domain — those patterns aren't substrate particles.
+re-inscription-dominated regime.  The lowest-ρ particles in this catalog
+are the EM resonances (Σ0, Υ) at ρ ~ 10^5; even those sit far inside the
+re-inscription regime.  The classical "ρ < 1" regime (fires, explosions,
+dissipative structures) lies OUTSIDE the K_7 walk domain — those patterns
+aren't substrate particles.
 """
 
 from __future__ import annotations

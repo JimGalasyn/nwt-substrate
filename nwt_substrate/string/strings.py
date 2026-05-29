@@ -50,7 +50,12 @@ class PQString:
 
     @property
     def is_trefoil(self) -> bool:
-        return (self.p, self.q) in [(2, 1), (1, 2), (2, 3), (3, 2)]
+        """True only for the genuine trefoil T(2,3) (== T(3,2)).
+
+        Note: T(2,1)/T(1,2) are the *unknot*, not trefoils — see the
+        Paper 2 terminological note and isa.CARRIER_NAMES (trefoil = n_q=3).
+        """
+        return {self.p, self.q} == {2, 3}
 
     @property
     def sl2z_doublet(self) -> tuple:
@@ -79,8 +84,9 @@ CANONICAL_PQ_STRINGS = {
         knot_type="T(2,1) = unknot mod gauge / canonical electron in NWT",
         compactification="K_7 toroidal embedding (Wilson amplitude n=21)",
         mass_geometric=0.5109989,
-        notes="Canonical electron: trefoil in 3D, (2,1) winding labels both "
-              "the torus-knot carrier and the (p,q)-string.",
+        notes="Canonical electron: (2,1) torus knot — the unknot in ambient "
+              "R^3 (Paper 2 terminological note), not a trefoil; the (2,1) "
+              "winding labels both the torus-knot carrier and the (p,q)-string.",
     ),
     "muon": PQString(
         "muon", p=2, q=1,

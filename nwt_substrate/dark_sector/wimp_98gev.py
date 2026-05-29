@@ -50,13 +50,17 @@ THE OPEN INPUT
 ==============
 
 g_Hχχ is the substrate-derived dimensionless Higgs-portal coupling.
-Natural candidates from substrate algebra:
-  - O(1):    naive Yukawa scale       → σ_SI ~ 1e-39 cm² (EXCLUDED)
-  - α ≈ 1/137: EM-suppressed          → σ_SI ~ 1e-42 cm² (allowed at 100 GeV)
-  - α²:      double-EM suppression    → σ_SI ~ 1e-46 cm² (allowed)
-  - α^4 = α^(N_e/4): K_8-mass-scaled  → σ_SI ~ 1e-50 cm² (below LZ-G3)
+Natural candidates from substrate algebra (σ_SI values below are the
+`sigma_si_higgs_portal` output for each tier — NOT round-number lore;
+see the parity check in `test_dark_sector_wimp.py`):
+  - O(1):    naive Yukawa scale       → σ_SI ≈ 2.4e-33 cm² (EXCLUDED, ratio ~6e14)
+  - α ≈ 1/137: EM-suppressed          → σ_SI ≈ 1.3e-37 cm² (EXCLUDED, ratio ~3e10)
+  - α²:      double-EM suppression    → σ_SI ≈ 6.8e-42 cm² (EXCLUDED, ratio ~1.6e6) [default]
+  - α^4 = α^(N_e/4): K_8-mass-scaled  → σ_SI ≈ 1.9e-50 cm² (ALLOWED, ~4.6e-3 of limit)
 
 The current LZ (2024) limit at m_χ = 100 GeV is σ_SI < 4.2 × 10⁻⁴⁸ cm².
+Only the α^4 (or smaller) coupling survives this bound: σ_SI scales as
+g_Hχχ², so each factor of α drops σ_SI by α² ≈ 5e-5.
 
 This module computes σ_SI as a function of g_Hχχ; the substrate
 program's task is to fix g_Hχχ from K_7/K_8 portal algebra.

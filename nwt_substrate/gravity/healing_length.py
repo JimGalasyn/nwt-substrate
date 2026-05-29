@@ -105,7 +105,7 @@ def xi_cosmo_m(alpha: float = ALPHA_NWT,
 
     With k_CS ≈ 31.73, α = α_NWT, ξ_substrate = ℏ/(m_e c):
 
-        ξ_cosmo ≈ 1.0 × 10²¹ m ≈ 30 kpc (galactic-halo virial scale)
+        ξ_cosmo ≈ 3.08 × 10²¹ m ≈ 100 kpc (galactic-halo virial scale)
 
     Note: the precise value depends sensitively on k_CS (exponential
     amplification). The ~100-kpc band brackets galactic halos and

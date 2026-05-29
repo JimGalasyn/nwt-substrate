@@ -17,12 +17,14 @@ from __future__ import annotations
 import numpy as np
 
 from ..algebra.dirac import make_gamma5
+from ..electroweak.constants import G_W
 
 
 # Default electric charge (sign convention: e- has charge -e, so vertex is -i e gamma^mu)
 ELECTRIC_CHARGE = 0.30282212  # e = sqrt(4 pi alpha) at low energy, dimensionless
-# Weak coupling (rough, approximate)
-G_WEAK = 0.6536          # g_W ~ e / sin(theta_W) for sin^2(theta_W) ~ 0.231
+# Weak coupling: single-sourced from the canonical Z-pole value g_W in
+# electroweak.constants (g_W^2 = g_Z^2 cos^2 theta_W, G_F-derived). Was 0.6536.
+G_WEAK = G_W
 
 
 def qed_vertex(mu: int, gammas, e: float = ELECTRIC_CHARGE) -> np.ndarray:

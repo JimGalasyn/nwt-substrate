@@ -9,8 +9,8 @@ authors:
 url: "https://github.com/JimGalasyn/nwt-substrate"
 repository-code: "https://github.com/JimGalasyn/nwt-substrate"
 license: MIT
-version: 0.3.1
-date-released: 2026-05-28
+version: 0.4.0
+date-released: 2026-05-29
 doi: 10.5281/zenodo.20012027
 keywords:
   - particle physics

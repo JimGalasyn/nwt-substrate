@@ -70,7 +70,7 @@ All derived from the substrate algebra at zero free parameters
   and accuracy across particle physics, atomic physics, QED/QCD,
   electroweak precision, cosmology, gravity, black-hole thermodynamics,
   and chemistry. Full suite in **~100 ms**: α at 7.6 ppm, G at 11 ppm,
-  v_EW at 28 ppm, sin²θ_W at 43 ppm, **Ω_b/Ω_c at 0.0067 %** (better
+  v_EW at 28 ppm, sin²θ_W at 3.5% (leading order), **Ω_b/Ω_c at 0.0067 %** (better
   than Planck systematic), Higgs mass via λ_H = 18α at 0.9 %, etc.
   Anti-numerology argument made empirically concrete:
   `from nwt_substrate.benchmarks import run_all; run_all()`.

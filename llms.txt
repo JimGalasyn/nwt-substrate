@@ -31,7 +31,7 @@ The library is an algebraic continuation of the photon-vortex programme (William
 - Electron mass ratio m_e / M_Pl ≈ 4.185 × 10⁻²³ via α^(21/2) Wilson amplitude — **−5.5 ppm CODATA**
 - Newton's G = 6.674228 × 10⁻¹¹ m³ kg⁻¹ s⁻² via Sakharov-induced gravity — **−11 ppm CODATA**
 - Fine structure constant: 1/α = 25π√3 + 1 — **7.6 ppm CODATA**
-- Weinberg angle: sin²θ_W = (2 + α)/9 — **0.06% PDG**
+- Weinberg angle: sin²θ_W = (2 + α)/9 ≈ 0.2230 — **3.5% PDG** (leading-order substrate angle)
 - Higgs VEV: v_EW = 246.21 GeV — **28 ppm PDG**
 - Baryon asymmetry: η_B = (3/14)α⁴ ≈ 6.077 × 10⁻¹⁰ — **0.38% Planck**
 - Ω_b/Ω_c = 25α(1 + 3α) ≈ 0.18643 — **0.0067% Planck (240× tighter than measurement)**

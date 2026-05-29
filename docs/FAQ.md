@@ -24,7 +24,7 @@ The most-tested predictions, all derived at zero free parameters beyond four sub
 
 - Fine structure constant: 1/α = 25π√3 + 1 to **7.6 ppm CODATA**
 - Newton's G via Sakharov-induced gravity: **−11 ppm CODATA**, inside the ±22 ppm experimental band
-- Weinberg angle: sin²θ_W = (2 + α)/9 to **0.06% PDG**
+- Weinberg angle: sin²θ_W = (2 + α)/9 ≈ 0.2230, **3.5% PDG** (leading-order substrate angle)
 - Higgs VEV: v_EW = 246.21 GeV to **28 ppm PDG**
 - 80-entry Standard Model mass spectrum from m_e + α + topological integers, **<1% median PDG**
 - Baryon asymmetry: η_B = (3/14)α⁴ ≈ 6.077 × 10⁻¹⁰ to **0.38% Planck**

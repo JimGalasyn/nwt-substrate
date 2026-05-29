@@ -18,9 +18,20 @@ GAMMA_Z = 2.4952
 M_W = 80.379
 GAMMA_W = 2.085
 
-# Weinberg angle, effective at the Z pole
+# Weinberg angle — MEASURED effective value at the Z pole. This is an INPUT for
+# the Z-pole couplings/widths below (where the absolute precision of the Z
+# observables matters); it is NOT the substrate prediction. The substrate
+# forward prediction is SIN2_THETA_W_SUBSTRATE, defined just below.
 SIN2_THETA_W = 0.23121
 COS2_THETA_W = 1.0 - SIN2_THETA_W
+
+# Substrate forward prediction (Paper 13): sin²θ_W = (2 + α) / (DIM_OCTONION + 1)
+# = (2 + α)/9 ≈ 0.22303 — a LEADING-ORDER result, ~3.5 % from PDG 0.23122. It is
+# intentionally NOT fed into the Z couplings above (a 3.5%-off angle would
+# degrade every absolute Z observable). Sourced from the isa single-source-of-
+# truth so a structural-integer perturbation propagates into this prediction.
+from ..isa.constants import ALPHA_SUBSTRATE as _ALPHA_SUB, DIM_OCTONION as _DIM_O
+SIN2_THETA_W_SUBSTRATE = (2.0 + _ALPHA_SUB) / (_DIM_O + 1)
 
 # Couplings.  We define g_Z from the Fermi constant (G_F) because the
 # Z-coupling absorbs the running of α from low energy up to M_Z (~6%

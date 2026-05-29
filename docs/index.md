@@ -96,7 +96,7 @@ All derived at zero free parameters beyond `m_e`, `M_Pl`, `c`, `ℏ`. Click thro
 |---|---|---|---|
 | Fine structure constant | `1/α = 25π√3 + 1` | 7.6 ppm CODATA | [`isa`](../nwt_substrate/isa/README.md) |
 | Newton's G | `G = (8/7)² α²¹ ℏc / m_e²` (LO) | −11 ppm CODATA (NNLO) | [`gravity`](shims/gravity.md) |
-| Weinberg angle | `sin²θ_W = (2 + α)/9` | 0.06 % PDG | [`electroweak`](shims/electroweak.md) |
+| Weinberg angle | `sin²θ_W = (2 + α)/9` | 3.5 % PDG (leading order) | [`electroweak`](shims/electroweak.md) |
 | Higgs VEV | `v_EW = 246.21 GeV` | 28 ppm PDG | [`electroweak`](shims/electroweak.md) |
 | Baryon asymmetry | `η_B = (3/14)α⁴` | 0.38 % Planck | [`cosmology`](shims/cosmology.md) |
 | Ω_b / Ω_c | `25α(1 + 3α)` | 0.0067 % Planck | [`cosmology`](shims/cosmology.md) |

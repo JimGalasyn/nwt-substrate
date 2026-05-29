@@ -50,7 +50,7 @@ print(result.substrate_time_us)          # ~1 microsecond
 | Fine structure constant α | 7.6 ppm |
 | Newton's G | 11 ppm |
 | Fermi constant G_F | 55 ppm |
-| Weak mixing angle sin²θ_W | 43 ppm |
+| Weak mixing angle sin²θ_W | 3.5% (LO) |
 | Strong coupling α_s(M_Z), Λ_QCD, Λ_χ | matches PDG |
 
 ### Higgs sector (2 benchmarks)

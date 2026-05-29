@@ -191,12 +191,15 @@ def test_qcd_constants_recover_pdg_alpha_s():
     assert "0.117" in r.substrate_value or "0.118" in r.substrate_value
 
 
-def test_sin2_theta_w_at_ppm():
-    """sin²θ_W substrate matches PDG to ppm."""
+def test_sin2_theta_w_reports_substrate_formula():
+    """sin²θ_W benchmark reports the HONEST substrate prediction (2+α)/9 ≈ 0.223
+    (~3.5% off PDG), not the measured effective input it used to report."""
     from nwt_substrate.benchmarks import benchmark_sin2_theta_W
+    from nwt_substrate.electroweak.constants import SIN2_THETA_W_SUBSTRATE
     r = benchmark_sin2_theta_W()
-    ppm_str = r.substrate_accuracy.split()[0]
-    assert float(ppm_str) < 200      # < 200 ppm easily
+    assert 0.222 < SIN2_THETA_W_SUBSTRATE < 0.224     # (2+α)/9, not 0.23121
+    assert "0.223" in r.substrate_value
+    assert "%" in r.substrate_accuracy                # honest %, not a ppm figure
 
 
 def test_black_hole_thermodynamics_includes_evaporation():

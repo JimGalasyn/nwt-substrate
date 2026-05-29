@@ -704,25 +704,28 @@ def benchmark_qcd_constants() -> BenchmarkResult:
 
 def benchmark_sin2_theta_W() -> BenchmarkResult:
     """Weak mixing angle sin²θ_W from substrate."""
-    from nwt_substrate.electroweak.couplings import SIN2_THETA_W
+    from nwt_substrate.electroweak.constants import SIN2_THETA_W_SUBSTRATE
 
     t0 = time.perf_counter_ns()
-    s2w = SIN2_THETA_W
+    s2w = SIN2_THETA_W_SUBSTRATE           # (2 + α)/9 — the substrate forward prediction
     elapsed_us = (time.perf_counter_ns() - t0) / 1e3
 
     PDG_SIN2_THETA_W = 0.23122             # PDG MS-bar at M_Z
-    err_ppm = abs(s2w - PDG_SIN2_THETA_W) / PDG_SIN2_THETA_W * 1e6
+    err_pct = abs(s2w - PDG_SIN2_THETA_W) / PDG_SIN2_THETA_W * 100.0
 
     return BenchmarkResult(
         name="Weak mixing angle sin²θ_W (Weinberg angle)",
         substrate_time_us=elapsed_us,
-        substrate_value=f"sin²θ_W = {s2w:.5f}  vs PDG {PDG_SIN2_THETA_W:.5f}",
-        substrate_accuracy=f"{err_ppm:.0f} ppm vs PDG MS-bar",
+        substrate_value=f"sin²θ_W = {s2w:.5f} = (2+α)/9  vs PDG {PDG_SIN2_THETA_W:.5f}",
+        substrate_accuracy=f"{err_pct:.1f}% vs PDG MS-bar (leading-order substrate angle)",
         traditional_method="LEP-1 + SLD + atomic parity violation + ν-DIS",
         traditional_cost="multi-decade EW precision program",
         speedup_factor_str="~10²⁰× (forward prediction vs precision EW)",
-        notes="Substrate ties sin²θ_W to the structure of K_7/K_8 (Spin(7) ⊃ SU(3)×SU(2)). "
-              "Same algebra that gives α, G_F, v_EW.",
+        notes="HONEST forward prediction: sin²θ_W = (2 + α)/(DIM_OCTONION + 1) = (2 + α)/9 "
+              "≈ 0.22303, ~3.5% from PDG — a leading-order substrate angle. The MEASURED "
+              "effective angle (0.23121) is used separately as the Z-pole coupling input; "
+              "earlier suite versions reported that measured value here (~43 ppm), which "
+              "conflated a measured input with the forward prediction.",
     )
 
 

@@ -55,7 +55,7 @@ Domain breakdown of `nwt_substrate.benchmarks.run_all()`:
 - Fine structure α: 7.6 ppm CODATA (1/α = 25π√3 + 1)
 - Newton's G: 11 ppm CODATA (Sakharov via α^(21/2))
 - Fermi G_F: 55 ppm PDG
-- Weinberg sin²θ_W: 43 ppm PDG (= (2+α)/9)
+- Weinberg sin²θ_W: (2+α)/9 ≈ 0.2230, ~3.5% PDG (leading-order substrate angle)
 - Strong α_s(M_Z), Λ_QCD, Λ_χ: matches PDG
 
 ### Higgs sector (2)

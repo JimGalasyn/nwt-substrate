@@ -1,6 +1,6 @@
 # nwt_substrate.electroweak
 
-> The electroweak sector of NWT: `SU(2)_L × U(1)_Y` broken to `U(1)_em` via the Higgs mechanism, with substrate-derived Higgs VEV (`v_EW = 246.21 GeV`, **28 ppm PDG**), Weinberg angle (`sin²θ_W = (2 + α)/9`, **0.06 % PDG**), Fermi constant (`G_F`, **55 ppm PDG**), full Z boson coupling table + partial/total widths, substrate Wolfenstein CKM (`λ`, `A`, `ρ̄`, `η̄`, `δ_CP`, `J`), and substrate Dalitz `f_+(0)` form factors for semileptonic decays.
+> The electroweak sector of NWT: `SU(2)_L × U(1)_Y` broken to `U(1)_em` via the Higgs mechanism, with substrate-derived Higgs VEV (`v_EW = 246.21 GeV`, **28 ppm PDG**), Weinberg angle (`sin²θ_W = (2 + α)/9` ≈ 0.2230, **3.5 % PDG**, leading order), Fermi constant (`G_F`, **55 ppm PDG**), full Z boson coupling table + partial/total widths, substrate Wolfenstein CKM (`λ`, `A`, `ρ̄`, `η̄`, `δ_CP`, `J`), and substrate Dalitz `f_+(0)` form factors for semileptonic decays.
 
 [← Back to index](../index.md) · Source: [`nwt_substrate/electroweak/`](../../nwt_substrate/electroweak/) · Papers: [13](https://zenodo.org/records/19635239) (SM capstone), [17](https://zenodo.org/records/15445103) (α + EW), [6b](https://zenodo.org/communities/nwt) (Cabibbo-Wilson `7α`), [7b](https://zenodo.org/communities/nwt) (`v_EW`, CKM, form factors)
 
@@ -17,7 +17,7 @@ v_ew_substrate()   # → 246.2128 GeV  (PDG 246.2197, 28 ppm)
 
 ### Does NWT predict the Weinberg angle?
 
-Yes. The substrate closed form is `sin²θ_W = (2 + α) / 9`, derived from `8/9 = b_QED^SM-mass-weighted ratio = DIM_OCTONION / (DIM_OCTONION + 1)`. PDG is `sin²θ_W = 0.23122`; substrate gives `0.23139`. **Residual: 0.06 %.**
+Yes. The substrate closed form is `sin²θ_W = (2 + α) / 9`, derived from `8/9 = b_QED^SM-mass-weighted ratio = DIM_OCTONION / (DIM_OCTONION + 1)`. PDG is `sin²θ_W = 0.23122`; the substrate closed form gives `(2 + α)/9 = 0.22303`. **Residual: ~3.5 % (leading order).** This is the honest forward prediction — earlier suite versions mistakenly reported the measured effective angle (0.23121, ~43 ppm) here, conflating a measured input with the prediction.
 
 ### Does NWT predict the Fermi constant G_F?
 
@@ -46,7 +46,7 @@ The substrate `V_us`, `V_cb`, `V_ub`, `V_td` magnitudes match PDG at ~1 %.
 | Observable | Substrate formula | Substrate value | PDG | Accuracy |
 |---|---|---|---|---|
 | Higgs VEV | `v_EW = f(α, m_e, K_7)` | 246.2128 GeV | 246.2197 | **28 ppm** |
-| `sin²θ_W` | `(2 + α) / 9` | 0.23139 | 0.23122 | **0.06 %** |
+| `sin²θ_W` | `(2 + α) / 9` | 0.22303 | 0.23122 | 3.5 % (LO) |
 | Fermi `G_F` | `v_EW⁻² (1 + α Δq)` | 1.16638 × 10⁻⁵ GeV⁻² | 1.166378 × 10⁻⁵ | **55 ppm** |
 | Cabibbo `λ` | `√(7α) = √V_us²` | 0.2265 | 0.22500 | **0.7 %** |
 | Wolfenstein `A` | substrate K_7 ratio | 0.811 | 0.811 | matches |

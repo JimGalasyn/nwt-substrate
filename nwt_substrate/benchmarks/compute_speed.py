@@ -384,6 +384,11 @@ def benchmark_z_boson_width() -> BenchmarkResult:
 
     PDG_GAMMA_Z_GEV = 2.4955                  # PDG 2024
 
+    # Warm the QCD-correction path's lazy `from ..qcd import alpha_s` (added in
+    # v0.4.0) OUT of the timed region — like every other benchmark pre-imports
+    # before t0.  Otherwise whichever benchmark hits the qcd subsystem first pays
+    # its one-time cold import inside t0 (~0.4 s), not steady-state compute.
+    total_width_Z(); branching_ratios_Z()
     t0 = time.perf_counter_ns()
     gamma_z = total_width_Z()
     brs = branching_ratios_Z()

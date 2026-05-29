@@ -54,7 +54,7 @@ The substrate `V_us`, `V_cb`, `V_ub`, `V_td` magnitudes match PDG at ~1 %.
 | CKM `\|V_cb\|` | substrate | 0.04076 | 0.04100 | 0.6 % |
 | Jarlskog `J` | substrate | 3.18 × 10⁻⁵ | 3.18 × 10⁻⁵ | matches |
 | `\|f_+(0)\|` K → π | `cos⁴(θ_C)` | 0.9696 | 0.9698 | 0.02 % |
-| Z width `Γ_Z` | substrate sum | 2.4979 GeV | 2.4955 | 0.1 % |
+| Z width `Γ_Z` | substrate sum | 2.4223 GeV | 2.4952 | 2.9 % |
 | Z lepton-universality | substrate | exact | tested | **0.9 ppm** |
 
 Each row asserted in [`nwt_substrate/tests/`](../../nwt_substrate/tests/).
@@ -78,7 +78,7 @@ print(ew.coupling_summary())     # full SM coupling table
 
 # Z partial widths
 ew.partial_width_Z("e")          # Γ(Z → e⁺e⁻) in GeV
-ew.total_width_Z()               # → 2.4979 GeV
+ew.total_width_Z()               # → 2.4223 GeV (PDG 2.4952, 2.9%)
 ew.branching_ratios_Z()          # dict of BRs
 
 # γ + Z e⁺e⁻ → f f̄ cross-section

@@ -10,6 +10,10 @@ The format follows [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/
 
 - **`benchmark_sin2_theta_W` — scheme-correct comparison.** The substrate prediction `(2+α)/9 ≈ 0.22303` is a leading-order (tree-level) angle, which *is* the **on-shell** `sin²θ_W ≡ 1 − M_W²/M_Z²` by definition — it matches the PDG on-shell value to **<0.1%** (0.009% at M_W=80.379). The benchmark had been comparing this on-shell prediction against the **effective/MS-bar** angle (0.23122), an apples-to-oranges scheme mismatch that read as a 3.5% deviation; the on-shell↔effective separation (+3.68% radiative running) *is* that gap. Now compared like-for-like against the on-shell value (computed from the PDG `M_W, M_Z` already in `constants.py` — not a hand-picked witness), it moves from a marked O10 defect edge to admissible. The prediction is unchanged; only the comparison scheme is corrected, and the notes keep the effective-angle running explicit as an open higher-order item.
 
+### Changed
+
+- **`benchmark_pmns_angles` — clearer defect framing (note-only, no numbers changed).** Documented that the PMNS leading order is tri-bimaximal + a √(3α) reactor angle: `θ_13 = √(3α) = 8.51°` is a first-principles success (0.7% vs NuFIT 8.57°), while `θ_12`/`θ_23` are the LO tri-bimaximal values whose ~5% deviation has a known but *underived* NLO correction (the α-suppressed charged-lepton `U_ℓ` rotation, Paper 20 §7.6). That correction is deliberately **not** applied — its NuFIT-reproducing magnitudes would be a fit, not a derivation — so this stays an honestly-marked O10 defect edge. Prediction and comparison witness unchanged.
+
 ## [0.4.0] - 2026-05-29
 
 [Full narrative release notes](docs/releases/v0.4.0.md). Version DOI [10.5281/zenodo.20448443](https://doi.org/10.5281/zenodo.20448443); concept DOI [10.5281/zenodo.20012027](https://doi.org/10.5281/zenodo.20012027) (resolves to latest).

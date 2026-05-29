@@ -533,15 +533,23 @@ def benchmark_pmns_angles() -> BenchmarkResult:
     elapsed_us = (time.perf_counter_ns() - t0) / 1e3
 
     return BenchmarkResult(
-        name="PMNS leptonic mixing angles θ_12, θ_13, θ_23",
+        name="PMNS leptonic mixing angles θ_12, θ_13, θ_23 (leading order)",
         substrate_time_us=elapsed_us,
         substrate_value=f"θ_12 = {th12:.2f}°, θ_13 = {th13:.2f}°, θ_23 = {th23:.2f}°",
-        substrate_accuracy="~5% on θ_12 and θ_23, structurally large θ_13",
+        substrate_accuracy="~5% on the LO tri-bimaximal angles (θ_12, θ_23); θ_13 = √(3α) to 0.7%",
         traditional_method="NuFIT global fit to JUNO + Daya Bay + T2K + NOvA",
         traditional_cost="multi-decade experimental program + hours per fit",
         speedup_factor_str="~10¹⁵× (algebraic prediction vs experiment-fit)",
-        notes="Substrate gives PMNS structure from K_8 algebra; "
-              "PDG: θ_12 ≈ 33.4°, θ_13 ≈ 8.6°, θ_23 ≈ 49.0°.",
+        notes="Leading-order tri-bimaximal + reactor angle from Spin(8) triality. "
+              "θ_13 = asin(√(RANK_SO7·α)) = 8.51° is a genuine first-principles success "
+              "(0.7% vs NuFIT 8.57° — the substrate predicts the non-zero reactor angle). "
+              "θ_12 = 35.26° (sin²=1/3) and θ_23 = 45° (maximal) are the LEADING-ORDER "
+              "values; θ_23 is consistent with data within the unresolved octant. The ~5% "
+              "on θ_12/θ_23 is the known deviation from exact tri-bimaximal — its NLO "
+              "correction (the α-suppressed charged-lepton U_ℓ rotation, Paper 20 §7.6) is "
+              "an OPEN first-principles derivation, deliberately NOT applied here: its "
+              "NuFIT-reproducing magnitudes would be a fit, not a derivation (this defect "
+              "edge stays honestly marked). PDG: θ_12≈33.4°, θ_13≈8.6°, θ_23≈49.0°.",
     )
 
 

@@ -146,8 +146,8 @@ Added in response to the d12rg review round (L. Leighton, M. Wende):
   and node **criticality** (outputs ungrounded if a node is removed) vs **load**
   (outputs reached). It separates the two — α is the master root (load 19, sole
   route for 6 pure-α observables like the electron anomaly), while `DIM_S_SPIN7`
-  (=8) is high-*load* (14 benchmarks) but, now that α backs up most of them, the
-  sole route for only one (redundancy 13).
+  (=8) is high-*load* (15 benchmarks) but, now that α backs up most of them, the
+  sole route for only one (redundancy 14).
 - **`python -m nwt_substrate.sensitivity --criticality`** — M. Wende's
   structural-criticality layer: which structural knobs carry the most load. The
   sweep perturbs the ISA integers *and* the derived scalars α and κ; α (the

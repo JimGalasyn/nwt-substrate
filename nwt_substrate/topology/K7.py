@@ -22,8 +22,9 @@ def heffter_rotation():
     Returns dict {v: [n1, ..., n6]} where each list is the cyclic order
     of v's neighbors in the embedding.
     """
+    from ..isa.constants import N_VERTICES_K7      # the 7 is |V(K_7)|, not a bare literal
     base = [1, 3, 2, 6, 4, 5]
-    return {v: [(v + b) % 7 for b in base] for v in range(7)}
+    return {v: [(v + b) % N_VERTICES_K7 for b in base] for v in range(N_VERTICES_K7)}
 
 
 def trace_K7_faces(rotation):

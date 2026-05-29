@@ -105,24 +105,30 @@ def benchmark_mass_spectrum() -> BenchmarkResult:
 def benchmark_modular_data() -> BenchmarkResult:
     """SU(2)_5 modular tensor category data (6 anyons + S/T matrices)."""
     from nwt_substrate.topology.colored_jones import quantum_integer
+    from nwt_substrate.isa.constants import H_V_SO7
 
-    K_LEVEL = 5
-    DIM = 6
+    # All of SU(2)_k's modular data follows from the one so(7)-forced level
+    # k = h^v(so7) = H_V_SO7; the "5, 6, 7, 28, 15" were bare re-encodings of it.
+    K_LEVEL = H_V_SO7          # Chern-Simons level k = 5
+    KP2 = K_LEVEL + 2          # k+2 = |V(K_7)| = 7  (quantum-group / modular denominator)
+    DIM = K_LEVEL + 1          # anyons w ∈ {0..k} = 6
+    FOUR_KP2 = 4 * KP2         # 4(k+2) = 28  (topological-spin denominator)
+    THREE_K = 3 * K_LEVEL      # 3k = 15  (c = 3k/(k+2) numerator)
 
     t0 = time.perf_counter_ns()
-    # 6 quantum dimensions
+    # quantum dimensions (one per anyon)
     quantum_dims = [abs(quantum_integer(w + 1, level=K_LEVEL)) for w in range(DIM)]
-    # 6 topological spins
-    spins = [math.cos(2 * math.pi * w * (w + 2) / 28) for w in range(DIM)]
-    # 6×6 modular S matrix (sin formula)
-    S = [[math.sqrt(2.0 / 7.0) * math.sin((a + 1) * (b + 1) * math.pi / 7.0)
+    # topological spins
+    spins = [math.cos(2 * math.pi * w * (w + 2) / FOUR_KP2) for w in range(DIM)]
+    # modular S matrix (sin formula)
+    S = [[math.sqrt(2.0 / KP2) * math.sin((a + 1) * (b + 1) * math.pi / KP2)
           for b in range(DIM)] for a in range(DIM)]
-    # 6×6 modular T matrix (diagonal phases)
-    T = [(w, 2 * math.pi * (w * (w + 2) / 28 - 15 / (7 * 24))) for w in range(DIM)]
+    # modular T matrix (diagonal phases); 24 = universal CFT framing
+    T = [(w, 2 * math.pi * (w * (w + 2) / FOUR_KP2 - THREE_K / (KP2 * 24))) for w in range(DIM)]
     # Chiral central charge from Gauss sum
-    G_real = sum(d * d * math.cos(2 * math.pi * w * (w + 2) / 28)
+    G_real = sum(d * d * math.cos(2 * math.pi * w * (w + 2) / FOUR_KP2)
                  for w, d in enumerate(quantum_dims))
-    G_imag = sum(d * d * math.sin(2 * math.pi * w * (w + 2) / 28)
+    G_imag = sum(d * d * math.sin(2 * math.pi * w * (w + 2) / FOUR_KP2)
                  for w, d in enumerate(quantum_dims))
     D_total = math.sqrt(sum(d * d for d in quantum_dims))
     c = (4.0 / math.pi) * math.atan2(G_imag, G_real) % 8.0
@@ -131,7 +137,7 @@ def benchmark_modular_data() -> BenchmarkResult:
     return BenchmarkResult(
         name="SU(2)_5 MTC: 6 anyons + qdim + spins + modular S/T + c",
         substrate_time_us=elapsed_us,
-        substrate_value=f"D = {D_total:.4f}, c = {c:.6f} = 15/7",
+        substrate_value=f"D = {D_total:.4f}, c = {c:.6f} = {THREE_K}/{KP2}",
         substrate_accuracy="exact (closed-form from k=5 algebra)",
         traditional_method="Lattice many-body diagonalization (e.g. our D43)",
         traditional_cost="N=5 sector dim 324k: D43 Lanczos timed out at 30 min",
@@ -777,16 +783,22 @@ def benchmark_black_hole_thermodynamics() -> BenchmarkResult:
     HBAR_J_S = 1.0545718e-34
     C_LIGHT = 299792458.0
 
+    # Use the substrate-PREDICTED G (from the K_7 Wilson amplitude), which is what
+    # this benchmark claims to do — it was importing G_substrate_SI but silently
+    # falling back to the CODATA G default of the black_holes helpers (so its
+    # values never reflected the substrate prediction, and no structural integer
+    # moved it).  Computed before t0 so the coupling import is not timed.
+    G_sub = G_substrate_SI()
     t0 = time.perf_counter_ns()
     # Solar mass ~ 1.989e30 kg
     M_SUN_KG = 1.989e30
-    r_s = schwarzschild_radius_m(M_SUN_KG)
-    T_H = hawking_temperature_K(M_SUN_KG)
-    tau_evap = evaporation_time_s(M_SUN_KG)
+    r_s = schwarzschild_radius_m(M_SUN_KG, G_sub)
+    T_H = hawking_temperature_K(M_SUN_KG, G_sub)
+    tau_evap = evaporation_time_s(M_SUN_KG, G_sub)
     # Also test a "primordial" 10¹² kg BH (~mountain mass)
     M_PRIM = 1e12
-    T_H_prim = hawking_temperature_K(M_PRIM)
-    tau_evap_prim = evaporation_time_s(M_PRIM)
+    T_H_prim = hawking_temperature_K(M_PRIM, G_sub)
+    tau_evap_prim = evaporation_time_s(M_PRIM, G_sub)
     elapsed_us = (time.perf_counter_ns() - t0) / 1e3
 
     return BenchmarkResult(

@@ -10,7 +10,7 @@ The format follows [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/
 
 ## [0.3.1] - 2026-05-28
 
-[Full narrative release notes](docs/releases/v0.3.1.md). Concept DOI [10.5281/zenodo.20012027](https://doi.org/10.5281/zenodo.20012027); version DOI minted on release.
+[Full narrative release notes](docs/releases/v0.3.1.md). Version DOI [10.5281/zenodo.20438240](https://doi.org/10.5281/zenodo.20438240), concept DOI [10.5281/zenodo.20012027](https://doi.org/10.5281/zenodo.20012027).
 
 Prompted by the first independent reproduction of the v0.3.0 benchmark suite (P. Kaboth, d12rg). This release adds a sensitivity-analysis tool and — in building it — found and fixed two predictions that were reporting measured inputs or overstated accuracies. A total-transparency patch.
 

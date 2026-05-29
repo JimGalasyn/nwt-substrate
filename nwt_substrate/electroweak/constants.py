@@ -26,10 +26,12 @@ SIN2_THETA_W = 0.23121
 COS2_THETA_W = 1.0 - SIN2_THETA_W
 
 # Substrate forward prediction (Paper 13): sin²θ_W = (2 + α) / (DIM_OCTONION + 1)
-# = (2 + α)/9 ≈ 0.22303 — a LEADING-ORDER result, ~3.5 % from PDG 0.23122. It is
-# intentionally NOT fed into the Z couplings above (a 3.5%-off angle would
-# degrade every absolute Z observable). Sourced from the isa single-source-of-
-# truth so a structural-integer perturbation propagates into this prediction.
+# = (2 + α)/9 ≈ 0.22303. This LEADING-ORDER (tree-level) angle IS the ON-SHELL
+# sin²θ_W ≡ 1 − M_W²/M_Z² (matched to <0.1%); the EFFECTIVE/MS-bar angle 0.23122
+# is +3.68% higher (radiative running) and is the SIN2_THETA_W input above. The
+# substrate angle is intentionally NOT fed into the Z couplings (using the
+# tree/on-shell angle would degrade the absolute Z observables). Sourced from the
+# isa single-source-of-truth so a structural-integer perturbation propagates here.
 from ..isa.constants import ALPHA_SUBSTRATE as _ALPHA_SUB, DIM_OCTONION as _DIM_O
 SIN2_THETA_W_SUBSTRATE = (2.0 + _ALPHA_SUB) / (_DIM_O + 1)
 

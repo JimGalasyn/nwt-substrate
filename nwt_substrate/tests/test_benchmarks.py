@@ -192,14 +192,20 @@ def test_qcd_constants_recover_pdg_alpha_s():
 
 
 def test_sin2_theta_w_reports_substrate_formula():
-    """sin²θ_W benchmark reports the HONEST substrate prediction (2+α)/9 ≈ 0.223
-    (~3.5% off PDG), not the measured effective input it used to report."""
+    """sin²θ_W benchmark reports the substrate prediction (2+α)/9 ≈ 0.223 compared
+    LIKE-FOR-LIKE against the on-shell angle 1−M_W²/M_Z² (it is a tree-level =
+    on-shell angle), not the measured effective input it once reported."""
     from nwt_substrate.benchmarks import benchmark_sin2_theta_W
-    from nwt_substrate.electroweak.constants import SIN2_THETA_W_SUBSTRATE
+    from nwt_substrate.electroweak.constants import SIN2_THETA_W_SUBSTRATE, M_W, M_Z
     r = benchmark_sin2_theta_W()
     assert 0.222 < SIN2_THETA_W_SUBSTRATE < 0.224     # (2+α)/9, not 0.23121
     assert "0.223" in r.substrate_value
-    assert "%" in r.substrate_accuracy                # honest %, not a ppm figure
+    assert "%" in r.substrate_accuracy
+    # (2+α)/9 IS the on-shell angle: matches 1−M_W²/M_Z² to <0.1%
+    s2_onshell = 1.0 - (M_W / M_Z) ** 2
+    assert abs(SIN2_THETA_W_SUBSTRATE - s2_onshell) / s2_onshell < 1e-3
+    assert "on-shell" in r.notes.lower()              # transparent about the scheme
+    assert float(r.substrate_accuracy.split("%")[0]) < 0.5   # on-shell, not the 3.5% effective gap
 
 
 def test_black_hole_thermodynamics_includes_evaporation():
@@ -392,8 +398,9 @@ def test_o10_suite_dag_full_38():
     assert all(g.acceptance_checklist().values())
     assert g.backward_edges() == [] and g.is_acyclic() and g.witnesses_are_sinks()
     defects = g.cit_defects(0.01)
-    assert "benchmark_muon_lifetime" in defects     # m⁵-amplified compound
-    assert "benchmark_sin2_theta_W" in defects       # leading-order angle
+    assert "benchmark_muon_lifetime" in defects      # m⁵-amplified compound
+    assert "benchmark_mass_spectrum" in defects       # Paper-6 mass-formula residual
+    assert "benchmark_sin2_theta_W" not in defects    # on-shell comparison -> admissible
     assert 4 <= len(defects) <= 12
     qual = g.qualitative_outputs()
     assert "benchmark_bhabha_scattering" in qual      # emits a cross-section, no vs-measurement

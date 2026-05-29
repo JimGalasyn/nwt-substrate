@@ -94,16 +94,18 @@ from typing import Iterable
 import numpy as np
 from scipy import integrate
 
+from ..isa.constants import DIM_OCTONION, N_LORENTZ_FROM_CL07
+
 
 # ---------------------------------------------------------------------------
 # Structural constants from the substrate algebra
 # ---------------------------------------------------------------------------
 
 # Tr_substrate[I_8] = 8 (verified by make_lorentz_gammas test suite).
-SUBSTRATE_TRACE_DIM = 8
+SUBSTRATE_TRACE_DIM = DIM_OCTONION          # = 8 = dim S_Spin(7)
 
 # Standard 4-component Dirac has Tr[I_4] = 4.
-DIRAC_TRACE_DIM = 4
+DIRAC_TRACE_DIM = N_LORENTZ_FROM_CL07       # = 4
 
 # 1 substrate spinor = 1 SU(2) doublet of 4-component Dirac fermions.
 # This identification makes the substrate Compton/eemumu/Moller amplitudes

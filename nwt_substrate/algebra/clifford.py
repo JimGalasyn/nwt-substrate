@@ -213,7 +213,8 @@ def pauli_decomposition_dims(T: np.ndarray) -> dict:
             raise RuntimeError(
                 f"Unexpected MIXED symmetry at rank {k}: {sym_type}"
             )
-    K8_EDGES = 28  # |E(K_8)| = 8 * 7 / 2
+    from ..isa.constants import N_EDGES_K8  # |E(K_8)| = 28 (lazy import; algebra idiom)
+    K8_EDGES = N_EDGES_K8
     return {
         'antisym': antisym,
         'sym': sym,

@@ -43,7 +43,9 @@ import math
 
 import numpy as np
 
-DEFAULT_LEVEL = 5  # so(7)-forced Chern-Simons level
+from ..isa.constants import H_V_SO7
+
+DEFAULT_LEVEL = H_V_SO7  # = 5; so(7)-forced Chern-Simons level k = h^v(so7)
 
 
 def _q(level: int) -> complex:

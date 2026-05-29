@@ -145,6 +145,12 @@ DEGREE_K7: int = 6
 """Degree of every vertex in K_7.
 Equal to N_VERTICES_K7 - 1 = 6."""
 
+N_TRIANGLES_K7: int = 35
+"""Number of triangles (3-vertex faces / 3-cliques) of the complete graph K_7.
+Equal to (N_VERTICES_K7 choose 3) = 7·6·5/6 = 35 (structural identity,
+asserted below). Used e.g. by the chemistry f-block stable-count rule
+(N_TRIANGLES_K7 - RANK_SO7 = 35 - 3 = 32)."""
+
 
 # ---------------------------------------------------------------------------
 # K_8 combinatorial constants (Paper 20 neutrino sector)
@@ -406,6 +412,10 @@ assert N_EDGES_K7 == DIM_ADJ_SPIN7, (
 
 assert N_EDGES_K7 == (N_VERTICES_K7 * (N_VERTICES_K7 - 1)) // 2, (
     f"K_7 edge count mismatch: {N_EDGES_K7} != C(7,2)"
+)
+
+assert N_TRIANGLES_K7 == math.comb(N_VERTICES_K7, 3), (
+    f"K_7 triangle count mismatch: {N_TRIANGLES_K7} != C(7,3)"
 )
 
 assert DIM_ADJ_SPIN7 == RANK_SO7 * DIM_V_SPIN7, (

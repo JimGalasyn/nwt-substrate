@@ -35,7 +35,7 @@ All values verified by tests in tests/test_lambda_cc.py.
 """
 from __future__ import annotations
 
-from nwt_substrate.isa.constants import ALPHA_SUBSTRATE, H_COXETER_SO7
+from nwt_substrate.isa.constants import ALPHA_SUBSTRATE, DIM_OCTONION, H_COXETER_SO7
 from nwt_substrate.isa import k7_wilson_amplitude
 
 __all__ = [
@@ -48,7 +48,7 @@ __all__ = [
 ]
 
 #: α-exponent of the Stage-7 vacuum-energy scale.
-LAMBDA_EXPONENT: int = 16
+LAMBDA_EXPONENT: int = 2 * DIM_OCTONION   # = 16 = 2 · dim(octonion)
 
 #: m_e/M_Pl from the K₇ Wilson amplitude (Paper 17, NNLO) — m_e derived from M_Pl.
 M_E_OVER_M_PL: float = k7_wilson_amplitude(ALPHA_SUBSTRATE, order="NNLO")

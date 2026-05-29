@@ -136,9 +136,13 @@ def d_constants() -> np.ndarray:
 # Casimirs and standard color factors
 # ---------------------------------------------------------------------------
 
-C_F = 4.0 / 3.0     # T^a T^a = C_F I_3 in fundamental
-C_A = 3.0           # f^acd f^bcd = C_A delta^ab in adjoint (= N_c)
-N_C = 3             # Number of colors
+from ..isa.constants import C_A_SU3, C_F_SU3, N_C_SU3
+
+# Single-sourced from the isa Casimir constants (asserted at import:
+# N_C_SU3 == RANK_SO7, C_F_SU3 == (N_C²-1)/(2 N_C)). Public names unchanged.
+C_F = C_F_SU3       # T^a T^a = C_F I_3 in fundamental (= 4/3)
+C_A = C_A_SU3       # f^acd f^bcd = C_A delta^ab in adjoint (= N_c = 3)
+N_C = N_C_SU3       # Number of colors (= 3)
 
 
 def fundamental_casimir() -> np.ndarray:

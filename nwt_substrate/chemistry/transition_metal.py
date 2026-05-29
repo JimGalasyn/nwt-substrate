@@ -64,6 +64,7 @@ from nwt_substrate.isa.constants import (
     K8_PARTITION,
     N_EDGES_K7,
     N_POS_ROOTS_SO7,
+    N_TRIANGLES_K7,
     N_VERTICES_K7,
     RANK_SO7,
 )
@@ -159,7 +160,7 @@ def electron_count_class(n_electrons: int) -> ElectronCountClass:
     for k, (ne, cls, _) in _D_BLOCK_LADDER.items():
         if n_electrons == ne:
             return cls
-    if n_electrons == 32:
+    if n_electrons == N_TRIANGLES_K7 - RANK_SO7:   # 35 - 3 = 32 (f-block)
         return ElectronCountClass.THIRTYTWO_E
     return ElectronCountClass.OTHER
 

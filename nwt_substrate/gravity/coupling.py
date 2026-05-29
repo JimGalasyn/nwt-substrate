@@ -123,7 +123,7 @@ def G_substrate_LO_natural() -> float:
 
     where m_e is in GeV.  Returns GeV⁻².
     """
-    return (8.0 / 7.0) ** 2 * ALPHA_QED ** 21 / M_E_GEV ** 2
+    return SPINOR_VECTOR_RATIO ** 2 * ALPHA_QED ** N_EDGES_K7 / M_E_GEV ** 2
 
 
 def G_substrate_NNLO_natural() -> float:
@@ -149,9 +149,7 @@ def G_substrate_SI() -> float:
     """
     M_Pl_pred_GeV = M_E_GEV / m_e_over_M_Pl_NNLO()
     # G_SI = ℏ c / M_Pl²  with M_Pl in energy units
-    M_Pl_pred_kg = M_Pl_pred_GeV * 1.78266192e-27 / 1e-9   # GeV → kg via E=mc²
-                                                            # 1 GeV/c² = 1.78e-27 kg
-    M_Pl_pred_kg = M_Pl_pred_GeV * 1.78266192e-27
+    M_Pl_pred_kg = M_Pl_pred_GeV * 1.78266192e-27   # 1 GeV/c² = 1.78266192e-27 kg
     return HBAR_J_S * C_LIGHT_M_S / M_Pl_pred_kg ** 2
 
 

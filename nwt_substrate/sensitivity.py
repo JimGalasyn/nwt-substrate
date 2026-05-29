@@ -20,6 +20,13 @@ move. The output is a dependency / robustness map:
 That distinction is the look-elsewhere control: an integer that moves many
 independent observables at once cannot be a per-observable tuning knob.
 
+Beyond the integers, a few **derived scalar knobs** (:data:`SCALAR_KNOBS` —
+chiefly α, the master coupling, and κ) are perturbed by a small *relative*
+amount.  Many benchmarks are α-anchored and so move under *no* integer; α is
+itself structural (= 1/(25π√3 + 1)), not a measured input, so perturbing it
+gives those benchmarks a genuine structural route rather than leaving them
+uncoupled.  α turns out to reach more benchmarks than any single integer.
+
 Mechanism note
 --------------
 The sweep works by briefly rewriting the *source* of ``isa/constants.py`` (so
@@ -37,10 +44,11 @@ Usage
     python -m nwt_substrate.sensitivity            # full sweep, pretty table
 
     import nwt_substrate.sensitivity as sens
-    report = sens.integer_sweep()
+    report = sens.integer_sweep()                  # integers + scalar knobs (α, κ)
     print(report)
     report.movers("DIM_S_SPIN7")                   # benchmarks moved by 8±1
-    report.inert_integers                          # integers that move nothing
+    report.movers("ALPHA_SUBSTRATE")               # benchmarks anchored on α
+    report.inert_integers                          # knobs that move nothing
 """
 from __future__ import annotations
 
@@ -57,6 +65,15 @@ CONSTANTS_PATH = _constants.__file__
 
 # leaf integer literal:  NAME: int = 7   (optional trailing comment)
 _LEAF_RE = re.compile(r"^([A-Z][A-Z0-9_]*): int = (\d+)\s*(?:#.*)?$", re.M)
+
+# Derived *scalar* knobs perturbed alongside the integers, by a small RELATIVE
+# amount (the integers move by ±1; a continuous constant has no natural ±1, so
+# the question is just "does this benchmark depend on it at all").  α is the
+# master coupling — the load-bearing root of the constants DAG — so many
+# benchmarks couple only through it and never move under any integer.  Perturbing
+# α gives those benchmarks a structural route.  α is itself structural (= 1/(25π√3
+# + 1), built from the integers 25 and 3 = RANK_SO7), not a measured input.
+SCALAR_KNOBS: dict[str, float] = {"ALPHA_SUBSTRATE": 1e-3, "KAPPA_MACKEN": 1e-3}
 
 
 # ---------------------------------------------------------------------------
@@ -129,6 +146,38 @@ def _patched_source(orig: str, name: str, new_value: int) -> str:
     if n != 1:
         raise ValueError(f"could not uniquely patch {name!r} in {CONSTANTS_PATH}")
     return patched
+
+
+def _patched_scalar_source(orig: str, name: str, eps: float) -> str:
+    """Multiply the RHS of a ``NAME: <type> = <expr>`` definition by ``(1 + eps)``
+    — a relative perturbation of a derived scalar constant.  Handles a
+    parenthesised RHS that spans several lines (e.g. κ) by consuming lines until
+    the brackets balance; wrapping the whole RHS in parens keeps it valid.
+    Refuses an inline ``#`` comment on the definition (none on the knobs we use)
+    so it can't accidentally comment out the multiplier."""
+    head = re.compile(rf"^({re.escape(name)}\s*:[^=\n]*=\s*)(.*)$")
+    lines = orig.splitlines(keepends=True)
+
+    def balanced(text: str) -> bool:
+        depth = 0
+        for ch in text:
+            depth += (ch in "([{") - (ch in ")]}")
+        return depth <= 0
+
+    for i, line in enumerate(lines):
+        m = head.match(line)
+        if not m:
+            continue
+        rhs, j = [m.group(2).rstrip("\n")], i
+        while not balanced("".join(rhs)):
+            j += 1
+            rhs.append(lines[j].rstrip("\n"))
+        expr = " ".join(part.strip() for part in rhs)        # collapse (safe inside parens)
+        if "#" in expr:
+            raise ValueError(f"scalar knob {name!r} has an inline comment; not patchable")
+        block = f"{m.group(1)}({expr}) * (1.0 + ({eps!r}))\n"
+        return "".join(lines[:i]) + block + "".join(lines[j + 1:])
+    raise ValueError(f"could not find scalar definition {name!r} in {CONSTANTS_PATH}")
 
 
 # ---------------------------------------------------------------------------
@@ -248,16 +297,32 @@ class SensitivityReport:
 # The sweep
 # ---------------------------------------------------------------------------
 
+def _diff_entry(value, pert: dict, baseline: dict) -> dict:
+    """Build one per-perturbation record: which benchmarks moved vs baseline, or
+    a crash marker if the perturbed ISA failed to import / parse."""
+    if "__IMPORT_FAILED__" in pert or "__PARSE_FAILED__" in pert:
+        return {"value": value, "status": "crash",
+                "detail": next(iter(pert.values())), "moved": []}
+    moved = sorted(k for k in baseline if pert.get(k) != baseline.get(k))
+    return {"value": value, "status": "ok", "moved": moved}
+
+
 def integer_sweep(integers: list[str] | None = None,
+                  scalars: dict[str, float] | None = None,
                   deltas: tuple[int, ...] = (+1, -1)) -> SensitivityReport:
-    """Perturb each leaf ISA integer by ``deltas`` and map which predictions move.
+    """Perturb each structural ISA knob and map which predictions move.
 
     Parameters
     ----------
     integers
-        Names to perturb (default: all leaf ``NAME: int = V`` constants).
+        Leaf ``NAME: int = V`` constants to perturb by ``deltas`` (default: all).
+    scalars
+        Derived scalar constants to perturb by a small *relative* amount,
+        ``{NAME: eps}``.  Default: :data:`SCALAR_KNOBS` (chiefly α) on a full
+        sweep, and none when an explicit ``integers`` list is given (so a scoped
+        sweep stays scoped).  Each scalar is perturbed by ``±eps``.
     deltas
-        Perturbations to apply to each integer (default ±1).
+        Integer perturbations (default ±1).
 
     The ``isa/constants.py`` source is temporarily rewritten per perturbation
     and always restored. Requires a writable (editable / dev) install.
@@ -271,10 +336,19 @@ def integer_sweep(integers: list[str] | None = None,
     orig = open(CONSTANTS_PATH, encoding="utf-8").read()
     all_leaves = {m.group(1): int(m.group(2)) for m in _LEAF_RE.finditer(orig)}
     targets = integers if integers is not None else list(all_leaves)
+    if scalars is None:
+        scalars = dict(SCALAR_KNOBS) if integers is None else {}
 
     baseline = _run_child()
     if "__IMPORT_FAILED__" in baseline:
         raise RuntimeError(f"baseline import failed: {baseline['__IMPORT_FAILED__']}")
+
+    def _probe(patched: str):
+        try:
+            open(CONSTANTS_PATH, "w", encoding="utf-8").write(patched)
+            return _run_child()
+        finally:
+            open(CONSTANTS_PATH, "w", encoding="utf-8").write(orig)
 
     report = SensitivityReport(benchmarks=sorted(baseline), baseline=baseline)
     try:
@@ -284,22 +358,14 @@ def integer_sweep(integers: list[str] | None = None,
             val = all_leaves[name]
             report.per_integer[name] = {}
             for delta in deltas:
-                try:
-                    open(CONSTANTS_PATH, "w", encoding="utf-8").write(
-                        _patched_source(orig, name, val + delta))
-                    pert = _run_child()
-                finally:
-                    open(CONSTANTS_PATH, "w", encoding="utf-8").write(orig)
-                if "__IMPORT_FAILED__" in pert or "__PARSE_FAILED__" in pert:
-                    report.per_integer[name][delta] = {
-                        "value": val, "status": "crash",
-                        "detail": next(iter(pert.values())), "moved": [],
-                    }
-                    continue
-                moved = sorted(k for k in baseline if pert.get(k) != baseline.get(k))
-                report.per_integer[name][delta] = {
-                    "value": val, "status": "ok", "moved": moved,
-                }
+                pert = _probe(_patched_source(orig, name, val + delta))
+                report.per_integer[name][delta] = _diff_entry(val, pert, baseline)
+        for name, eps in scalars.items():
+            report.per_integer[name] = {}
+            for signed in (eps, -eps):
+                pert = _probe(_patched_scalar_source(orig, name, signed))
+                report.per_integer[name][signed] = _diff_entry(
+                    f"×(1{signed:+g})", pert, baseline)
     finally:
         open(CONSTANTS_PATH, "w", encoding="utf-8").write(orig)
     return report

@@ -33,6 +33,40 @@ def test_patched_source_rejects_unknown_name():
         sens._patched_source(orig, "NOT_A_CONSTANT", 1)
 
 
+def test_patched_scalar_source_single_and_multiline():
+    """The scalar-knob patch multiplies a derived constant's RHS by (1+eps) and
+    stays valid Python — for a single-line def (α) and a parenthesised def that
+    spans several lines (κ), which the balanced-paren scan collapses safely."""
+    import ast
+    orig = open(sens.CONSTANTS_PATH, encoding="utf-8").read()
+    for name in ("ALPHA_SUBSTRATE", "KAPPA_MACKEN"):
+        patched = sens._patched_scalar_source(orig, name, 1e-3)
+        ast.parse(patched)                            # valid Python
+        assert f"{name}: float = (" in patched        # RHS wrapped in parens
+        assert "(1.0 + (0.001))" in patched           # times (1 + eps)
+        assert patched != orig
+    with pytest.raises(ValueError):
+        sens._patched_scalar_source(orig, "NOT_A_SCALAR", 1e-3)
+
+
+@pytest.mark.skipif(not os.access(sens.CONSTANTS_PATH, os.W_OK),
+                    reason="sensitivity sweep needs a writable (editable) install")
+def test_scalar_knob_alpha_couples_qed_observables():
+    """The α scalar knob closes the coverage gap for α-anchored benchmarks that
+    no integer moves: perturbing α moves pure-QED observables (electron anomaly)
+    and the now-isa-anchored α-derivation benchmark, and the source is restored."""
+    before = open(sens.CONSTANTS_PATH, encoding="utf-8").read()
+    try:
+        rep = sens.integer_sweep(integers=[], scalars={"ALPHA_SUBSTRATE": 1e-3})
+    finally:
+        after = open(sens.CONSTANTS_PATH, encoding="utf-8").read()
+    assert after == before
+    movers = rep.movers("ALPHA_SUBSTRATE")
+    assert "benchmark_electron_anomaly" in movers
+    assert "benchmark_alpha_derivation" in movers     # sourced from isa now, not 25π√3+1 literal
+    assert "ALPHA_SUBSTRATE" not in rep.inert_integers
+
+
 # ---- integration: one-integer sweep, then verify the source is restored ----
 
 @pytest.mark.skipif(not os.access(sens.CONSTANTS_PATH, os.W_OK),

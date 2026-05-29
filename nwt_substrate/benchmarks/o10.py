@@ -487,7 +487,7 @@ def build_suite_dag(report=None) -> DerivationDAG:
             g.link("ISA", name)
     if report is not None:
         for integer in report.per_integer:
-            g.add(integer, Stage.STRUCTURAL, note="isa leaf integer")
+            g.add(integer, Stage.STRUCTURAL, note="isa structural knob (integer or derived scalar)")
             for bench in report.movers(integer):
                 if bench in g.nodes:
                     g.link(integer, bench)
@@ -508,7 +508,8 @@ def _redundancy_lines(g: DerivationDAG, list_all: bool = True,
              "single points of failure):",
              f"  {len(rr)} {label}: {len(resilient)} resilient (≥2 independent routes), "
              f"{len(fragile)} single-route (one SPOF), "
-             f"{len(unswept)} not reached by the sweep (0 routes — coverage gap, not fragility)"]
+             f"{len(unswept)} with no detected structural route (0 routes — exact-combinatorial "
+             f"output, measured-input-anchored, or a bare-literal isa-anchoring item; not fragility)"]
     for r in sorted(resilient if list_all else [], key=lambda r: (-r["routes"], r["target"])):
         spof = ", ".join(r["spof"]) if r["spof"] else "—"
         lines.append(f"  [resilient]  {r['target']:26s} {r['routes']} route(s)   SPOF: {spof}")

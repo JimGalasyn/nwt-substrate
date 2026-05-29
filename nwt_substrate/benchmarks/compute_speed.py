@@ -53,7 +53,7 @@ class BenchmarkResult:
 def benchmark_alpha_derivation() -> BenchmarkResult:
     """1/α = 25π√3 + 1  (substrate substrate-DNA integer 25 formula)."""
     t0 = time.perf_counter_ns()
-    alpha_inv = 25 * math.pi * math.sqrt(3) + 1
+    alpha_inv = 1.0 / ALPHA_SUBSTRATE          # sourced from isa (= 25π√3 + 1), not re-encoded as a literal
     elapsed_us = (time.perf_counter_ns() - t0) / 1e3
 
     return BenchmarkResult(

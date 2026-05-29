@@ -139,16 +139,20 @@ Added in response to the d12rg review round (L. Leighton, M. Wende):
   commutative-diagram identities (= isa import-time asserts, e.g. `21=C(7,2)=3·7`),
   and a cit readout with defect edges **marked** (not repaired). With
   `--sensitivity`, the `STRUCTURAL→OUTPUT` edges are the *computed* coupling, so
-  the DAG's load ranking equals the sweep's. Add **`--redundancy`** for M.
-  Wende's leave-one-route-out layer: how many *independent* routes converge on
-  each answer, the single points of failure, and node **criticality** (outputs
-  ungrounded if a node is removed) vs **load** (outputs reached). It separates
-  the two — `DIM_S_SPIN7` (=8) is highest-*load* (14 benchmarks) but the sole
-  route for only one, whereas the dual Coxeter number `H_V_SO7` (=5) is the
-  irreplaceable sole route for three.
+  the DAG's load ranking equals the sweep's (the sweep also perturbs the derived
+  scalar α and κ, so α-anchored benchmarks couple to their root). Add
+  **`--redundancy`** for M. Wende's leave-one-route-out layer: how many
+  *independent* routes converge on each answer, the single points of failure,
+  and node **criticality** (outputs ungrounded if a node is removed) vs **load**
+  (outputs reached). It separates the two — α is the master root (load 19, sole
+  route for 6 pure-α observables like the electron anomaly), while `DIM_S_SPIN7`
+  (=8) is high-*load* (14 benchmarks) but, now that α backs up most of them, the
+  sole route for only one (redundancy 13).
 - **`python -m nwt_substrate.sensitivity --criticality`** — M. Wende's
-  structural-criticality layer: which ISA integers carry the most load
-  (`DIM_S_SPIN7` moves 14 of 38) and which observables co-move.
+  structural-criticality layer: which structural knobs carry the most load. The
+  sweep perturbs the ISA integers *and* the derived scalars α and κ; α (the
+  master coupling) reaches 19 of 38 benchmarks — more than any integer
+  (`DIM_S_SPIN7` moves 14) — and the gravity/cosmology benchmarks co-move.
 
 ## Methodology
 

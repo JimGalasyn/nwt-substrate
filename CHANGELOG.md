@@ -6,7 +6,22 @@ The format follows [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/
 
 ## [Unreleased]
 
-(Nothing yet for v0.4.0. Add entries here as work lands.)
+### Benchmarks — correction layers (follow-up to P. Kaboth's v0.3.0 report)
+
+Pasquale Kaboth flagged the two largest benchmark deviations (Z-boson width, muon lifetime) as places where "additional coupling or correction layers may be required." Both are now resolved — and the diagnosis differs between them:
+
+- **Z-boson width** was pure LO (2.93% low). Hadronic (N_c = 3) partial widths now carry the standard massless-quark QCD radiative correction `R_QCD = 1 + a + 1.409 a² − 12.77 a³` (`a = α_s/π`), via new `electroweak.decays.qcd_correction_factor()`. Γ_Z: **2.4223 → 2.4874 GeV (2.93% → 0.31% of PDG)**; BR(Z→ℓℓ) shifts from 3.443% toward PDG 3.366%. Leptonic and invisible widths are unchanged.
+- **Muon lifetime** (was 9.94%) is the **m⁵ amplification of the Paper-6 m_μ residual** (m_μ is −1.97%; τ ∝ m_μ⁵ → ≈ 5× → ~9.8%), *not* a missing weak layer. `benchmark_muon_decay_rate` — the weak-sector closure, isolated from the mass formula with PDG m_μ — gains the standard phase-space `f(x)` + 1-loop QED radiative correction layer: **0.45% (tree) → 0.007%**. `benchmark_muon_lifetime` is re-labeled the *compound* probe and its deviation correctly attributed to the mass formula, cross-referencing the weak-closure benchmark. Both corrections are parameter-free (α is substrate-predicted).
+- Pasquale's second point — sensitivity of predictions to small changes in the structural integers — is answered by the v0.3.1 ISA sensitivity sweep (`python -m nwt_substrate.sensitivity`).
+
+### Self-consistency audit (library-internal, value-preserving)
+
+A full audit of the library against the canonical v0.3.1 `isa/constants.py`:
+
+- **Fixed**: `dark_sector.wimp_98gev` docstring σ_SI tier table (now matches the module's own formula and tests — only the α⁴ tier survives LZ-2024); `string.is_trefoil` no longer returns True for the unknot T(2,1)/(1,2); `gravity.healing_length` ξ_cosmo docstring (≈100 kpc, was an inconsistent 30); `particles.stability_ratio` docstring (22 catalogued particles; removed a ρ-meson example absent from the catalog); pruned 26 stale ghost exports from `electroweak.__all__` (meson decay constants live in `particles.decay_constants` since v0.3.1); `amplitudes.vertices.G_WEAK` single-sourced from `electroweak.G_W` (was 0.6536 vs canonical 0.6495); a dead `M_Pl` assignment in `gravity.coupling`.
+- **Changed**: the neutrino-sector NNLO Wilson bracket unified on the canonical *additive* `(1 + α/7 + (21/8)α²)` form (was multiplicative, α²-coefficient 3); two `gravity.einstein` docstrings likewise.
+- **Added**: `isa.N_TRIANGLES_K7 = C(7,3) = 35` (import-time asserted), closing an orphan structural integer the chemistry f-block rule depended on. Routed ~a dozen bare structural literals through `isa` (SU(3) Casimirs, QED-loop trace dims, `clifford` K8 edges, `colored_jones` level, cosmology Λ-exponent, gravity G prefactor, qft colour/gluon counts, CKM 7³/√7). De-duplicated `K7_CORRECTION_KCAL_PER_RING_SET`, `STEANE_LZ`, and `G_F`.
+- **Fixed**: a latent `amplitudes ↔ electroweak ↔ qcd` circular import (a module-level cross-package import made function-local, matching the existing `algebra.su3`/`dirac` idiom).
 
 ## [0.3.1] - 2026-05-28
 

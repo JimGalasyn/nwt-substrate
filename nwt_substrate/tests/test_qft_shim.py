@@ -117,6 +117,28 @@ def test_yang_mills_su_n_has_3_and_4_gauge_vertices():
     assert any("4-gauge" in n for n in vnames)
 
 
+def test_yang_mills_beta_0_recognises_generic_su_n():
+    """beta_0() must recognise the bare "SU(N)" tag from yang_mills(N), not
+    just the named "SU(3)_color" QCD theory, using β_0 = 11·N/3 − 2·n_f/3.
+
+    Regression: yang_mills(N).beta_0(...) previously fell through to None
+    because only the literal "SU(3)_color" tag was matched."""
+    from nwt_substrate.amplitudes import vacuum_polarization as vp
+    # SU(3) + 6 quarks reproduces the QCD value exactly.
+    assert qft.yang_mills(3).beta_0(n_f_dirac=6) == pytest.approx(7.0, abs=1e-12)
+    assert (qft.yang_mills(3).beta_0(n_f_dirac=6)
+            == qft.qcd.beta_0(n_f_dirac=6))
+    # No n_f → pure glue (n_f = 0) for a bare Yang-Mills theory with no matter.
+    assert qft.yang_mills(3).beta_0() == pytest.approx(11.0, abs=1e-12)
+    assert qft.yang_mills(2).beta_0() == pytest.approx(22.0 / 3.0, abs=1e-12)
+    # General N matches the structural vacuum_polarization formula.
+    for N, n_f in [(2, 0), (3, 6), (5, 2)]:
+        assert qft.yang_mills(N).beta_0(n_f_dirac=n_f) == pytest.approx(
+            vp.qcd_beta_0(n_f_dirac=n_f, N_c=N), abs=1e-12)
+    # Non-gauge theories still return None.
+    assert qft.klein_gordon().beta_0() is None
+
+
 # ---------------------------------------------------------------------------
 # Lagrangian composition
 # ---------------------------------------------------------------------------

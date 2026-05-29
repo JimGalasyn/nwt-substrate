@@ -36,7 +36,7 @@ qft.qcd.beta_0(n_f_dirac=0)       # → 11.0   = 11·C_A/3, pure glue
 
 `β_0(QED) = (2/3)·b_QED` with `b_QED = Σ_f N_c Q²` over the 9 charged SM Dirac fermions `= 8 = DIM_OCTONION`, giving `16/3`. `β_0(QCD) = (11·C_A − 4·T_F·n_f)/3 = 11 − 2·n_f/3` for `SU(3)`. The sign tells the story: QED's `+16/3` is screening (Landau pole), QCD's `+7` (for `n_f=6`) is anti-screening (asymptotic freedom).
 
-> **Note on `yang_mills(N).beta_0(...)`:** `Lagrangian.beta_0()` only recognises the two named gauge theories `U(1)_em` and `SU(3)_color`. A generic `qft.yang_mills(N=3)` has gauge symmetry `"SU(3)"` (no `_color` tag), so `qft.yang_mills(N=3).beta_0(n_f_dirac=6)` returns **`None`**. To get the SU(3) + 6-quark value `7.0`, call `qft.qcd.beta_0(n_f_dirac=6)`.
+`Lagrangian.beta_0()` also recognises any bare non-Abelian `SU(N)` tag from `yang_mills(N)`, applying the same `11·N/3 − 2·n_f/3` structure. So `qft.yang_mills(N=3).beta_0(n_f_dirac=6)` → **`7.0`** (identical to `qft.qcd.beta_0(n_f_dirac=6)`); with no `n_f` it defaults to pure glue (`n_f = 0`): `qft.yang_mills(N=3).beta_0()` → `11.0`, `qft.yang_mills(N=2).beta_0()` → `22/3`.
 
 ### How do I compose Lagrangians?
 
@@ -79,7 +79,8 @@ Accepts aliases: `e`/`electron`, `mu`/`muon`/`μ`, `tau`/`τ`, `u`/`up`, `d`/`do
 | `qft.qcd.beta_0(n_f_dirac=6)` | `11 − 2·6/3` | **7.0** |
 | `qft.qcd.beta_0(n_f_dirac=5)` | `11 − 2·5/3` | **23/3 = 7.6667…** |
 | `qft.qcd.beta_0(n_f_dirac=0)` | `11·C_A/3`, `C_A = 3` (pure glue) | **11.0** |
-| `qft.yang_mills(N=3).beta_0(n_f_dirac=6)` | gauge tag `"SU(3)"` not recognised | **`None`** (use `qft.qcd`) |
+| `qft.yang_mills(N=3).beta_0(n_f_dirac=6)` | `11·N/3 − 2·n_f/3`, `N=3` | **7.0** |
+| `qft.yang_mills(N=2).beta_0()` | `11·N/3`, `N=2` (pure glue) | **22/3 = 7.3333…** |
 | QED charged-fermion count | 3 leptons + 6 quarks | **9** Dirac fermions, 9 QED vertices |
 | QCD field content | 6 quarks + 1 gluon + 1 FP ghost | **8** fields, vertices: qqg ×6, 3-gluon, 4-gluon, ghost-gluon |
 | `len((qed + qcd).fields)` | concatenation | **18** fields, **18** interactions |
@@ -146,7 +147,7 @@ Every field exposes a `.substrate_primitive` property and a readable `__str__`.
 | `Lagrangian.feynman_rules()` | dict `{'propagators': {...}, 'vertices': {...}}` → substrate primitives |
 | `Lagrangian.substrate_view()` | multi-line description of underlying substrate algebra |
 | `Lagrangian.fields_summary()` | pretty-print field list |
-| `Lagrangian.beta_0(n_f_dirac=None)` | 1-loop β₀ for `U(1)_em` / `SU(3)_color`; `None` otherwise |
+| `Lagrangian.beta_0(n_f_dirac=None)` | 1-loop β₀ for `U(1)_em`, `SU(3)_color`, or any `SU(N)` factor (`11·N/3 − 2·n_f/3`); `None` otherwise |
 | `L1 + L2` | combine — concatenate fields/interactions, union gauge tags |
 | `InteractionTerm(name, fields, expression, coupling, substrate_vertex_fn)` | one vertex, pointing at a substrate vertex factor |
 
@@ -224,8 +225,9 @@ qft.qcd.beta_0(n_f_dirac=0)   # → 11.0     pure glue (11·C_A/3, C_A=3)
 qft.qcd.beta_0(n_f_dirac=5)   # → 7.666... = 23/3
 qft.qcd.beta_0(n_f_dirac=6)   # → 7.0
 
-# Generic Yang-Mills is not auto-recognised by beta_0 (gauge tag "SU(3)" ≠ "SU(3)_color")
-qft.yang_mills(N=3).beta_0(n_f_dirac=6)       # → None  (use qft.qcd for the value)
+# Generic Yang-Mills SU(N) is recognised too (11·N/3 − 2·n_f/3)
+qft.yang_mills(N=3).beta_0(n_f_dirac=6)       # → 7.0
+qft.yang_mills(N=2).beta_0()                  # → 7.333... = 22/3  (pure glue)
 ```
 
 ### Compose the Standard-Model matter Lagrangian

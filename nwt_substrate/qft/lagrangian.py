@@ -169,8 +169,15 @@ class Lagrangian:
         1-loop β-function coefficient if this is a known gauge theory.
         Delegates to nwt_substrate.amplitudes.vacuum_polarization.
 
+        Recognises U(1)_em (QED), SU(3)_color (QCD), and any generic
+        non-Abelian ``SU(N)`` tag emitted by :func:`yang_mills`. For a
+        non-Abelian SU(N) factor, β_0 = (11/3) N − (2/3) n_f, with n_f
+        defaulting to 6 for QCD (its quark content) and to 0 (pure glue)
+        for a bare Yang-Mills SU(N) that carries no matter.
+
         Returns None if not a recognised gauge theory.
         """
+        import re
         from ..amplitudes import vacuum_polarization as vp
         if "U(1)_em" in self.gauge_symmetries and n_f_dirac is None:
             species = vp.standard_qed_species()
@@ -178,4 +185,11 @@ class Lagrangian:
         if "SU(3)_color" in self.gauge_symmetries:
             n_f = 6 if n_f_dirac is None else n_f_dirac
             return vp.qcd_beta_0(n_f_dirac=n_f, N_c=3)
+        # Generic non-Abelian SU(N), e.g. the bare "SU(N)" tag from yang_mills(N).
+        for sym in self.gauge_symmetries:
+            m = re.fullmatch(r"SU\((\d+)\)", sym)
+            if m:
+                N_c = int(m.group(1))
+                n_f = 0 if n_f_dirac is None else n_f_dirac
+                return vp.qcd_beta_0(n_f_dirac=n_f, N_c=N_c)
         return None

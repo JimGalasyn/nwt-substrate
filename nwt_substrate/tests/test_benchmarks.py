@@ -358,3 +358,23 @@ def test_standalone_predictions_are_genuine_and_separated():
     # transparency: sin²θ_W is genuinely a few-percent LO angle, not sub-1%
     dev_sw = abs(pred["sin2_theta_W"] - ref["sin2_theta_W"]) / ref["sin2_theta_W"]
     assert 0.02 < dev_sw < 0.04
+
+
+def test_o10_dag_cit_readout():
+    """O10 DAG: structural invariants hold; cit marks sin²θ_W as the one defect
+    edge (not repaired); α is the load-bearing root; identities commute."""
+    from nwt_substrate.benchmarks import o10
+    g = o10.build_constants_dag()
+    # O10 structural invariants all hold
+    assert all(g.acceptance_checklist().values())
+    assert g.backward_edges() == [] and g.is_acyclic() and g.witnesses_are_sinks()
+    # cit: exactly sin²θ_W is the marked defect at 1% (a leading-order angle)
+    assert g.cit_defects(tol=0.01) == ["sin2_theta_W"]
+    # α (and its closed form) is the load-bearing root — reaches all 5 outputs
+    load = dict(g.load_ranking())
+    assert load["α"] == 5
+    assert load["α"] >= max(v for k, v in load.items() if k not in ("α", "form:25π√3+1"))
+    # the commutative-diagram identities (21, 8) actually commute
+    assert all(r["commutes"] for r in g.commutative_checks())
+    # Horn-clause frontier of a witness lists its structural premises
+    assert "N_VERTICES_K7" in g.horn_frontier("wit:cabibbo_lambda")

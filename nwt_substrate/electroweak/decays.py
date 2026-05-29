@@ -26,8 +26,7 @@ def qcd_correction_factor() -> float:
 
     The standard Z-physics correction (PDG EW review): ~+3.9% on each quark
     channel, ~+2.6% on the Z total width.  Returns 1.0 for leptons (no colour).
-    The substrate-predicted α_s = p⁴α = 16α ≈ 0.1168 (Paper 1) gives the same
-    factor to <0.1%; we use the canonical qcd.constants value here.
+    α_s is the canonical PDG-anchored value from qcd.constants.
     """
     # Function-local import: qcd/__init__ imports amplitudes, and amplitudes
     # imports electroweak — a module-level import here would close an

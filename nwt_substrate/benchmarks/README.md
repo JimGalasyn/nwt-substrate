@@ -139,7 +139,13 @@ Added in response to the d12rg review round (L. Leighton, M. Wende):
   commutative-diagram identities (= isa import-time asserts, e.g. `21=C(7,2)=3·7`),
   and a cit readout with defect edges **marked** (not repaired). With
   `--sensitivity`, the `STRUCTURAL→OUTPUT` edges are the *computed* coupling, so
-  the DAG's load ranking equals the sweep's.
+  the DAG's load ranking equals the sweep's. Add **`--redundancy`** for M.
+  Wende's leave-one-route-out layer: how many *independent* routes converge on
+  each answer, the single points of failure, and node **criticality** (outputs
+  ungrounded if a node is removed) vs **load** (outputs reached). It separates
+  the two — `DIM_S_SPIN7` (=8) is highest-*load* (14 benchmarks) but the sole
+  route for only one, whereas the dual Coxeter number `H_V_SO7` (=5) is the
+  irreplaceable sole route for three.
 - **`python -m nwt_substrate.sensitivity --criticality`** — M. Wende's
   structural-criticality layer: which ISA integers carry the most load
   (`DIM_S_SPIN7` moves 14 of 38) and which observables co-move.

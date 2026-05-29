@@ -26,7 +26,12 @@ O10 rules enforced here:
 
 ``python -m nwt_substrate.benchmarks.o10`` prints the acceptance checklist, the
 cit readout (with any defect edges marked), the structural-load ranking, and the
-commutative-diagram checks.
+commutative-diagram checks.  Add ``--redundancy`` for M. Wende's
+derivation-route-redundancy readout: how many *independent* routes converge on
+each answer, the single points of failure that survive removal, and node
+*criticality* (outputs ungrounded if a node is removed) beside *load* (outputs
+reached) — the leave-one-route-out dual of the load ranking.  ``--suite
+--sensitivity --redundancy`` runs it over the 38-benchmark coupling graph.
 """
 
 from __future__ import annotations
@@ -197,6 +202,154 @@ class DerivationDAG:
                          "commutes": (len({round(v, 9) for v in vals}) == 1) if vals else True})
         return rows
 
+    # ---- derivation-route redundancy (M. Wende's "how many independent routes
+    #      converge, and what survives if one is removed?") ----
+
+    def _or_node(self, name: str, parents: list[str]) -> bool:
+        """Whether ``name`` grounds as an OR of its parents (alternative routes)
+        rather than an AND (a conjunction of premises).  Two cases are OR:
+          * a ``commutative`` identity — its parents are independent routes to
+            one value that must merely agree (21 = C(7,2) = 3·7);
+          * an OUTPUT fed *only* by structural integers — the sensitivity DAG's
+            influence fan-in, where each integer independently moves the
+            benchmark (removing one does not unground it).
+        Everything else is an AND: a closed form needs every premise."""
+        nd = self.nodes[name]
+        if nd.commutative:
+            return True
+        return (nd.stage == Stage.OUTPUT and bool(parents)
+                and all(self.nodes[p].stage == Stage.STRUCTURAL for p in parents))
+
+    def _grounded(self, exclude: frozenset[str] = frozenset()) -> set[str]:
+        """Least-fixpoint set of nodes still *derivable from the structural
+        axioms* once ``exclude`` is removed.  A STRUCTURAL leaf is an axiom; an
+        OR node (see ``_or_node``) needs any parent; every other node needs all
+        parents.  Removing one premise of a conjunction ungrounds it; removing
+        one route of an OR node does not — which is what makes a "single point of
+        failure" well-defined."""
+        grounded: set[str] = set()
+        changed = True
+        while changed:
+            changed = False
+            for n, nd in self.nodes.items():
+                if n in grounded or n in exclude:
+                    continue
+                ps = [p for p in self._parents(n)]
+                if not ps:
+                    ok = nd.stage == Stage.STRUCTURAL                  # axiom
+                elif self._or_node(n, ps):
+                    ok = any(p in grounded for p in ps)                # OR — alt routes
+                else:
+                    ok = all(p in grounded for p in ps)                # AND — conjunction
+                if ok:
+                    grounded.add(n)
+                    changed = True
+        return grounded
+
+    def is_grounded(self, node: str, exclude: frozenset[str] = frozenset()) -> bool:
+        return node in self._grounded(exclude)
+
+    def cut_nodes(self, target: str) -> list[str]:
+        """Single points of failure for ``target``: internal/structural nodes
+        whose removal leaves ``target`` underivable from the axioms.  A node on
+        only some of several independent routes is *not* a cut node — the others
+        still ground the target."""
+        if not self.is_grounded(target):
+            return []
+        return sorted(v for v, nd in self.nodes.items()
+                      if v != target
+                      and nd.stage not in (Stage.OUTPUT, Stage.WITNESS)
+                      and not self.is_grounded(target, frozenset({v})))
+
+    @staticmethod
+    def _max_flow(cap: dict, adj: dict, s, t) -> int:
+        """Edmonds-Karp max flow (unit-ish; graphs here are tiny)."""
+        from collections import deque
+        flow = 0
+        while True:
+            parent = {s: s}
+            q = deque([s])
+            while q:
+                u = q.popleft()
+                if u == t:
+                    break
+                for w in adj.get(u, ()):
+                    if w not in parent and cap.get((u, w), 0) > 0:
+                        parent[w] = u
+                        q.append(w)
+            if t not in parent:
+                return flow
+            b, v = 1 << 30, t
+            while v != s:
+                b, v = min(b, cap[(parent[v], v)]), parent[v]
+            v = t
+            while v != s:
+                u = parent[v]
+                cap[(u, v)] -= b
+                cap[(v, u)] = cap.get((v, u), 0) + b
+                v = u
+            flow += b
+
+    def independent_routes(self, target: str) -> int:
+        """Internally node-disjoint derivation routes reaching ``target`` from
+        the structural ground (Menger: = the min node-cut, via unit-node-capacity
+        max flow).  Conjunctive premises that funnel through a single closed form
+        count as ONE route; genuinely alternative routes — a value reached two
+        disjoint ways (a commuting identity) or a benchmark moved by several
+        independent integers — count as many.  Routes ≥ 2 is the redundancy."""
+        INF = 1 << 30
+        SRC = ("<src>", "o")
+        cap: dict[tuple, int] = {}
+        adj: dict[tuple, set] = {}
+
+        def edge(u, v, c):
+            cap[(u, v)] = cap.get((u, v), 0) + c
+            adj.setdefault(u, set()).add(v)
+            adj.setdefault(v, set()).add(u)
+            cap.setdefault((v, u), 0)
+
+        for n, nd in self.nodes.items():
+            edge((n, "i"), (n, "o"), INF if n == target else 1)   # unit node capacity
+            if nd.stage == Stage.STRUCTURAL:
+                edge(SRC, (n, "i"), INF)                          # ground feeds each axiom
+        for s, d in self.edges:
+            edge((s, "o"), (d, "i"), INF)
+        return self._max_flow(cap, adj, SRC, (target, "i"))
+
+    def route_redundancy(self, targets: list[str] | None = None) -> list[dict]:
+        """Per target (OUTPUT nodes + commuting identities by default):
+        independent route count, single points of failure, and resilience
+        (routes ≥ 2)."""
+        if targets is None:
+            targets = [n for n, nd in self.nodes.items()
+                       if nd.stage == Stage.OUTPUT or nd.commutative]
+        return [{"target": t, "routes": self.independent_routes(t),
+                 "spof": self.cut_nodes(t), "resilient": self.independent_routes(t) >= 2}
+                for t in sorted(targets)]
+
+    def criticality_ranking(self) -> list[dict]:
+        """Internal/structural nodes ranked by *criticality* — the number of
+        OUTPUTs that become ungrounded if the node is removed — beside their
+        *load* (# OUTPUTs reached, as in ``load_ranking``).  ``load − critical``
+        is the redundancy: a high-load node that is rarely a sole route is well
+        backed up; a node whose criticality equals its load is irreplaceable.
+        This is the leave-one-route-out dual of ``load_ranking``."""
+        outs = [n for n, nd in self.nodes.items()
+                if nd.stage == Stage.OUTPUT and self.is_grounded(n)]
+        crit: dict[str, int] = {}
+        for o in outs:
+            for v in self.cut_nodes(o):
+                crit[v] = crit.get(v, 0) + 1
+        rows = []
+        for v, nd in self.nodes.items():
+            if nd.stage not in (Stage.STRUCTURAL, Stage.SYMBOLIC, Stage.EVALUATOR):
+                continue
+            load, c = len(self.reachable_outputs(v)), crit.get(v, 0)
+            if load or c:
+                rows.append({"node": v, "load": load, "critical": c,
+                             "redundancy": load - c})
+        return sorted(rows, key=lambda r: (-r["critical"], -r["load"], r["node"]))
+
     def acceptance_checklist(self) -> dict[str, bool]:
         """The O10 structural invariants (all must hold for an admissible DAG).
         cit *content* is reported separately by cit_readout/cit_defects, because
@@ -341,7 +494,39 @@ def build_suite_dag(report=None) -> DerivationDAG:
     return g
 
 
-def _main_suite(use_sensitivity: bool = False) -> int:
+def _redundancy_lines(g: DerivationDAG, list_all: bool = True,
+                      label: str = "targets") -> list[str]:
+    """The M. Wende derivation-route-redundancy readout: per-target independent
+    route count + single points of failure, then node criticality vs load.  For
+    the suite (``list_all=False``) only the fragile single-route targets are
+    enumerated; the constants DAG lists every target."""
+    rr = g.route_redundancy()
+    resilient = [r for r in rr if r["routes"] >= 2]
+    fragile = [r for r in rr if r["routes"] == 1]      # exactly one structural route
+    unswept = [r for r in rr if r["routes"] == 0]      # no structural route in this DAG
+    lines = ["", "Derivation-route redundancy (M. Wende — independent routes + "
+             "single points of failure):",
+             f"  {len(rr)} {label}: {len(resilient)} resilient (≥2 independent routes), "
+             f"{len(fragile)} single-route (one SPOF), "
+             f"{len(unswept)} not reached by the sweep (0 routes — coverage gap, not fragility)"]
+    for r in sorted(resilient if list_all else [], key=lambda r: (-r["routes"], r["target"])):
+        spof = ", ".join(r["spof"]) if r["spof"] else "—"
+        lines.append(f"  [resilient]  {r['target']:26s} {r['routes']} route(s)   SPOF: {spof}")
+    for r in sorted(fragile, key=lambda r: r["target"]):
+        lines.append(f"  [SPOF     ]  {r['target']:26s} 1 route    SPOF(s): "
+                     f"{', '.join(r['spof']) or '—'}")
+    if unswept and not list_all:
+        names = ", ".join(r["target"].replace("benchmark_", "") for r in unswept)
+        lines.append(f"  [unswept  ]  {len(unswept)}: {names}")
+    lines += ["", "Node criticality vs load (ungrounded-if-removed | reached | redundancy "
+              "= load−critical):"]
+    for r in g.criticality_ranking()[:12]:
+        lines.append(f"  {r['node']:26s} critical {r['critical']:>2}   load {r['load']:>2}"
+                     f"   redundancy {r['redundancy']:>2}")
+    return lines
+
+
+def _main_suite(use_sensitivity: bool = False, show_redundancy: bool = False) -> int:
     report = None
     if use_sensitivity:
         from ..sensitivity import integer_sweep
@@ -367,6 +552,12 @@ def _main_suite(use_sensitivity: bool = False) -> int:
     else:
         lines += ["", "(add --sensitivity for the real structural->benchmark coupling "
                   "edges + load ranking; slow — the sweep patches isa per integer.)"]
+    if show_redundancy:
+        if report is None:
+            lines += ["", "(add --sensitivity for route redundancy — with the single ISA "
+                      "hub every benchmark is trivially one route.)"]
+        else:
+            lines += _redundancy_lines(g, list_all=False, label="benchmarks")
     print("\n".join(lines))
     return 0
 
@@ -375,7 +566,8 @@ def main(argv: list[str] | None = None) -> int:
     import sys
     argv = sys.argv[1:] if argv is None else argv
     if "--suite" in argv:
-        return _main_suite(use_sensitivity="--sensitivity" in argv)
+        return _main_suite(use_sensitivity="--sensitivity" in argv,
+                           show_redundancy="--redundancy" in argv)
     g = build_constants_dag()
     lines = [f"O10 DAG cit-readout — {len(g.nodes)} nodes, {len(g.edges)} edges", ""]
 
@@ -401,6 +593,9 @@ def main(argv: list[str] | None = None) -> int:
     for r in g.commutative_checks():
         lines.append(f"  [{'commutes' if r['commutes'] else 'BREAKS'}]  {r['node']}"
                      f"  via {r['parents']}  = {r['values']}")
+
+    if "--redundancy" in (argv or []):
+        lines += _redundancy_lines(g)
 
     print("\n".join(lines))
     return 0

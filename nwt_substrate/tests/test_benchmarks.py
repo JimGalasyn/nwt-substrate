@@ -428,3 +428,57 @@ def test_o10_suite_dag_couples_to_sensitivity_report():
     load = dict(g.load_ranking())
     assert load["H_V_SO7"] == 2 and load["RANK_SO7"] == 1
     assert all(g.acceptance_checklist().values())
+
+
+def test_o10_route_redundancy_constants():
+    """M. Wende's redundancy readout on the constants DAG: the structural
+    identities (21, 8) are the only resilient targets (≥2 independent routes, no
+    single point of failure); every prediction is a single conjunctive route
+    whose SPOFs include α and its closed form; α is critical for all 5 outputs
+    (criticality == load, redundancy 0 — an irreplaceable root)."""
+    from nwt_substrate.benchmarks import o10
+    g = o10.build_constants_dag()
+    rr = {r["target"]: r for r in g.route_redundancy()}
+    # the two over-determined identities are reached two disjoint ways
+    assert rr["id:21"]["routes"] == 2 and rr["id:21"]["spof"] == [] and rr["id:21"]["resilient"]
+    assert rr["id:8"]["routes"] == 2
+    # every prediction is one route; α and the prediction's own form are SPOFs
+    assert rr["sin2_theta_W"]["routes"] == 1
+    assert "α" in rr["sin2_theta_W"]["spof"]
+    assert "sym:sin2_theta_W" in rr["sin2_theta_W"]["spof"]
+    # α is irreplaceable for all five predictions
+    crit = {r["node"]: r for r in g.criticality_ranking()}
+    assert crit["α"]["critical"] == 5 == crit["α"]["load"] and crit["α"]["redundancy"] == 0
+
+
+def test_o10_route_redundancy_load_vs_criticality():
+    """With a sensitivity report, route redundancy distinguishes load from
+    criticality: a benchmark moved by two integers is resilient (no SPOF), one
+    moved by a single integer has that integer as its SPOF, and a high-load
+    integer that is rarely a sole route carries high redundancy (load ≠ critical
+    — exactly the leave-one-route-out distinction M. Wende asked for)."""
+    from nwt_substrate.benchmarks import o10
+    from nwt_substrate.sensitivity import SensitivityReport
+    rep = SensitivityReport(
+        benchmarks=["benchmark_fermi_constant", "benchmark_z_boson_width"],
+        baseline={},
+        per_integer={
+            "DIM_S_SPIN7": {1: {"status": "ok", "moved":
+                ["benchmark_fermi_constant", "benchmark_z_boson_width"]}},
+            "RANK_SO7": {1: {"status": "ok", "moved": ["benchmark_z_boson_width"]}},
+        },
+    )
+    g = o10.build_suite_dag(report=rep)
+    rr = {r["target"]: r for r in g.route_redundancy()}
+    # moved by two integers -> two node-disjoint routes, resilient, no SPOF
+    assert rr["benchmark_z_boson_width"]["routes"] == 2
+    assert rr["benchmark_z_boson_width"]["spof"] == [] and rr["benchmark_z_boson_width"]["resilient"]
+    # moved by a single integer -> that integer is the single point of failure
+    assert rr["benchmark_fermi_constant"]["routes"] == 1
+    assert rr["benchmark_fermi_constant"]["spof"] == ["DIM_S_SPIN7"]
+    # load vs criticality: DIM_S_SPIN7 reaches 2 but is sole route for only 1
+    crit = {r["node"]: r for r in g.criticality_ranking()}
+    assert crit["DIM_S_SPIN7"]["load"] == 2 and crit["DIM_S_SPIN7"]["critical"] == 1
+    assert crit["DIM_S_SPIN7"]["redundancy"] == 1
+    # RANK_SO7 only moves the resilient benchmark, so it is never a sole route
+    assert crit["RANK_SO7"]["critical"] == 0

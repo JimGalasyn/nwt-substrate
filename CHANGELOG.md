@@ -8,6 +8,25 @@ The format follows [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/
 
 (Nothing yet for v0.4.0. Add entries here as work lands.)
 
+## [0.3.1] - 2026-05-28
+
+[Full narrative release notes](docs/releases/v0.3.1.md). Concept DOI [10.5281/zenodo.20012027](https://doi.org/10.5281/zenodo.20012027); version DOI minted on release.
+
+Prompted by the first independent reproduction of the v0.3.0 benchmark suite (P. Kaboth, d12rg). This release adds a sensitivity-analysis tool and — in building it — found and fixed two predictions that were reporting measured inputs or overstated accuracies. A total-transparency patch.
+
+### Added
+- `nwt_substrate.sensitivity`: **ISA structural-integer sensitivity sweep**. `integer_sweep()` perturbs each leaf `NAME: int = V` constant in `isa/constants.py` by ±1 in a fresh `python -O` subprocess (`-O` strips the import-time structural asserts), recomputes all 38 benchmarks, and reports which predictions move — the robustness / look-elsewhere map. `python -m nwt_substrate.sensitivity` prints the table; `SensitivityReport` exposes `.movers()`, `.inert_integers`, `.never_moved`, `.coupling()`. Transiently source-patches `isa/constants.py` and always restores it (writable / editable install required).
+- Per-shim reference docs for the final 10 shims — `qed`, `qcd`, `qft`, `neutrino`, `atomic`, `dark_sector`, `chemistry`, `topology`, `heron`, `qpu` — completing the v0.3.0 "remaining documentation" item. Every shim now has an API reference page; the `docs/index.md` status table is all "written".
+
+### Changed
+- `electroweak/substrate_gf.py`, `electroweak/substrate_ckm.py`: prediction formulas now **import their structural integers from `isa`** instead of re-encoding them as bare literals (`25 → H_V_SO7**2`, `625 → H_V_SO7**4`; `N_VERTICES_K7` and `DIM_ADJ_SPIN7` imported). Value-preserving. Predictions coupled to the ISA in the sensitivity sweep rose **17/38 → 21/38**; `benchmark_fermi_constant`, `benchmark_higgs_vev`, and `benchmark_full_ckm` are now load-bearing under integer perturbation.
+
+### Fixed
+- **`benchmark_sin2_theta_W` now reports the honest substrate prediction** `sin²θ_W = (2 + α)/(DIM_OCTONION + 1) = (2 + α)/9 = 0.22303` at its true **~3.5 %** residual vs PDG 0.23122. Earlier versions reported the hardcoded **measured** effective angle (`SIN2_THETA_W = 0.23121`, ~43 ppm) as if it were the prediction. The measured angle is retained — now explicitly labeled — as the Z-pole coupling **input** (Z observables unchanged). New `SIN2_THETA_W_SUBSTRATE`. The overstated accuracy claim is corrected across `README.md`, `llms.txt`, `llms-full.txt`, `docs/index.md`, `docs/FAQ.md`, `docs/shims/electroweak.md`, and `benchmarks/README.md`.
+- `docs/shims/electroweak.md` Z-width row corrected to `Γ_Z = 2.4223 GeV` (2.9 %), not the previously-claimed `2.4979 GeV` (0.1 %) — surfaced by the same reproduction.
+- `qft.Lagrangian.beta_0()` now recognises a generic `SU(N)` Yang-Mills gauge tag (previously returned `None` for `yang_mills(N)`); `yang_mills(3).beta_0(n_f_dirac=6) = 7.0`.
+- `neutrino` docstring example masses updated to the current NuFIT/PDG Δm²₃₁ anchor (m₃ 53.00 → 52.25 meV, m_N3 218.8 → 215.7 MeV).
+
 ## [0.3.0] - 2026-05-28
 
 [Full narrative release notes](docs/releases/v0.3.0.md). Version DOI [10.5281/zenodo.20435950](https://doi.org/10.5281/zenodo.20435950), concept DOI [10.5281/zenodo.20012027](https://doi.org/10.5281/zenodo.20012027).

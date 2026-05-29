@@ -338,3 +338,23 @@ def test_total_substrate_time_under_one_second():
     total_us = sum(r.substrate_time_us for r in results)
     # Generous bound: should be way under 1 sec even on a slow CI box.
     assert total_us < 1_000_000, f"benchmarks took {total_us} us, expected < 1 sec"
+
+
+def test_standalone_predictions_are_genuine_and_separated():
+    """predict.py emits derived-only dimensionless predictions (Luke Leighton's
+    derivation-separation protocol): predictions() takes no input of any kind,
+    and each lands near the quarantined measured reference."""
+    from nwt_substrate.benchmarks import predict
+    pred = predict.predictions()                      # no args — standalone derivation
+    ref = predict.REFERENCE
+    assert set(pred) == set(ref)
+    # 4 of 5 land within 1%; sin²θ_W is the documented leading-order angle
+    # (~3.5%, on-shell vs effective) — kept so the diff shows a real deviation.
+    tol = {"sin2_theta_W": 0.04}
+    for k in pred:
+        dev = abs(pred[k] - ref[k]) / ref[k]
+        assert dev < tol.get(k, 0.01), f"{k}: {pred[k]} vs {ref[k]} ({dev:.1%})"
+    assert abs(pred["inv_alpha"] - 137.036) < 0.01
+    # transparency: sin²θ_W is genuinely a few-percent LO angle, not sub-1%
+    dev_sw = abs(pred["sin2_theta_W"] - ref["sin2_theta_W"]) / ref["sin2_theta_W"]
+    assert 0.02 < dev_sw < 0.04

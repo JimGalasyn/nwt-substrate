@@ -22,6 +22,18 @@ Marcel Wende observed that *sensitivity* (how strongly an observable responds) i
 - `comovement(min_shared)` — benchmark pairs that move *together* under the same integers, ranked by shared count: correlated structural dependencies, even where the individual shifts are modest.
 - `criticality_summary()` and a `python -m nwt_substrate.sensitivity --criticality` flag that prints both layers on top of the raw counts.
 
+### Benchmarks — derivation-separation predictor (L. Leighton's protocol)
+
+`nwt_substrate.benchmarks.predict` — a standalone emitter of *dimensionless* substrate predictions (1/α, sin²θ_W, Cabibbo λ, η_B, m_e/M_Pl) that takes **no input of any kind**: α is the substrate closed form `1/(25π√3+1)` and every value is a pure function of the K_7/Spin(7) integers. Measured reference values are quarantined in `REFERENCE` and never read by `predictions()`. The two streams are emitted separately and compared *outside* the derivation:
+
+```
+python -m nwt_substrate.benchmarks.predict            > predicted.txt
+python -m nwt_substrate.benchmarks.predict --reference > measured.txt
+diff -u predicted.txt measured.txt
+```
+
+This enforces the prediction/measurement boundary structurally rather than by convention — a measured value cannot leak into a prediction, which is the class of bug the v0.3.1 sin²θ_W fix corrected. (The diff also makes plain that sin²θ_W is a ~3.5% leading-order angle, not a sub-1% result.) Implements the standalone-output rung of L. Leighton's O10 "Ladder Derivation Protocol" (DAG cit-readout specialization): the proof-order edges `analytic proof → symbolic parent → evaluator → standalone output → witness` are one-way, and per O10's constants rule the witness layer is CODATA-2018 / PDG (post-SI2019 *defined* constants excluded even as witnesses).
+
 ### Self-consistency audit (library-internal, value-preserving)
 
 A full audit of the library against the canonical v0.3.1 `isa/constants.py`:

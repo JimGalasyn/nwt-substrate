@@ -10,7 +10,7 @@ The format follows [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/
 
 ## [0.4.0] - 2026-05-29
 
-[Full narrative release notes](docs/releases/v0.4.0.md). Concept DOI [10.5281/zenodo.20012027](https://doi.org/10.5281/zenodo.20012027) (resolves to latest); version DOI minted on release.
+[Full narrative release notes](docs/releases/v0.4.0.md). Version DOI [10.5281/zenodo.20448443](https://doi.org/10.5281/zenodo.20448443); concept DOI [10.5281/zenodo.20012027](https://doi.org/10.5281/zenodo.20012027) (resolves to latest).
 
 This release responds to the first independent reviews of the v0.3.0 benchmark suite (P. Kaboth, M. Wende, L. Leighton, on d12rg) and runs a full self-consistency audit of the library. It adds physically-motivated correction layers where benchmarks were leading-order, a structural-criticality layer on the sensitivity sweep, and an O10 derivation-separation predictor + DAG cit-readout — while a library-wide audit anchors every structural integer on `isa` and fixes a handful of internal issues. Value-preserving throughout; full suite green.
 

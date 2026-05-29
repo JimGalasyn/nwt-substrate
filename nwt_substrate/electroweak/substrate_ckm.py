@@ -202,7 +202,7 @@ def jarlskog_coefficient() -> float:
     substrate substitutions λ² = 7α, A² = 9/14, |ρ̄+iη̄| = √(21α)
     into J = A² λ⁶ |ρ̄+iη̄| sin δ and collecting α^(7/2).
     """
-    return (9.0 * 343.0 * 3.0 * math.sqrt(7.0)) / 28.0
+    return (9.0 * N_VERTICES_K7**3 * 3.0 * math.sqrt(N_VERTICES_K7)) / 28.0
 
 
 # ============================================================

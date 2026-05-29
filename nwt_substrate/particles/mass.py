@@ -45,7 +45,7 @@ def paper6_mass_ratio(p: int, q: int, m_int: int, nq: int) -> float | None:
     if b is None or b <= 0.0:
         return None
     pq2 = p * p + q * q
-    w_knot = pq2 / 5.0
+    w_knot = pq2 / 5.0   # 5 = electron p²+q² (2²+1²) normalization, NOT H_V_SO7
     w_ring = (b / BETA_E) * (np.log(8.0 * b) / LN8_BE)
     if nq <= 1:
         w_link = 1.0

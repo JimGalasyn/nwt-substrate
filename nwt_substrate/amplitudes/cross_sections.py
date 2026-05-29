@@ -182,7 +182,8 @@ def gamma_1to2(M_sq: float, M_parent: float,
 
 
 # Standard reference:  muon decay rate
-G_F = 1.1663787e-5   # Fermi constant, GeV^-2
+# Single-sourced from the canonical electroweak home (was a duplicate literal).
+from ..electroweak.constants import G_F_GEV as G_F   # Fermi constant, GeV^-2
 
 
 def gamma_muon_decay_textbook(m_mu: float = 0.10566) -> float:

@@ -11,7 +11,7 @@ bridges UV and IR.
 The 10⁴⁵ hierarchy puzzle: M_Pl² / m_e² ≈ 10⁴⁵.  In NWT this is
 
     M_Pl² / m_e²  =  (m_e/M_Pl)⁻²
-                  =  α⁻²¹ × (8/7)⁻² × (1 + α/7 + 3α²)⁻²
+                  =  α⁻²¹ × (8/7)⁻² × (1 + α/7 + (21/8)α²)⁻²
 
 The α⁻²¹ alone is α⁻²¹ ≈ 137²¹ ≈ 1.51 × 10⁴⁵, with the bracket factors
 slightly trimming to match observation.  The K_7 amplitude (21 edges with
@@ -54,7 +54,7 @@ def M_Pl_over_m_e_squared_substrate() -> float:
     """
     Substrate prediction for M_Pl² / m_e²:
 
-        M_Pl²/m_e² = α⁻²¹ × (8/7)⁻² × (1 + α/7 + 3α²)⁻²
+        M_Pl²/m_e² = α⁻²¹ × (8/7)⁻² × (1 + α/7 + (21/8)α²)⁻²
 
     Reproduces the macroscopic-to-microscopic hierarchy from K_7 Wilson
     amplitude alone, no separate hierarchy parameter.

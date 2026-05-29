@@ -59,6 +59,7 @@ from nwt_substrate.isa.constants import (
     N_VERTICES_K7,
     N_VERTICES_K8,
     NLO_VERTEX_COEFFICIENT,
+    NNLO_BRACKET_COEFFICIENT,
     RANK_SO7,
 )
 from nwt_substrate.gravity.constants import M_PLANCK_GEV
@@ -107,8 +108,10 @@ def wilson_mass_eV(
         Fine structure constant; defaults to ``ALPHA_NWT`` from
         ``isa.constants``.
     order : {"LO", "NLO", "NNLO"}
-        Wilson-amplitude expansion order. NLO adds ``(1 + α/7)``;
-        NNLO adds ``(1 + 3α²)``.
+        Wilson-amplitude expansion order, using the canonical *additive*
+        bracket ``(1 + (1/7)α + (21/8)α²)`` shared with isa.k7_wilson_amplitude,
+        gravity, and Paper 17. NLO keeps the ``(1/7)α`` term; NNLO adds the
+        ``(21/8)α²`` term.
 
     Returns
     -------
@@ -122,10 +125,17 @@ def wilson_mass_eV(
     alpha_power = alpha ** (N_e / 2.0)
     mass_LO_natural = prefactor * alpha_power
 
-    nlo = 1.0 if order == "LO" else (1.0 + alpha * NLO_VERTEX_COEFFICIENT)
-    nnlo = 1.0 if order != "NNLO" else (1.0 + 3.0 * alpha * alpha)
+    # Canonical *additive* Wilson bracket (1 + NLO·α + NNLO·α²), matching
+    # isa.k7_wilson_amplitude / gravity / Paper 17. Previously a multiplicative
+    # (1+NLO·α)(1+3α²) form whose α² coefficient (3) diverged from the canonical
+    # NNLO_BRACKET_COEFFICIENT = 21/8.
+    bracket = 1.0
+    if order in ("NLO", "NNLO"):
+        bracket += NLO_VERTEX_COEFFICIENT * alpha
+    if order == "NNLO":
+        bracket += NNLO_BRACKET_COEFFICIENT * alpha * alpha
 
-    return mass_LO_natural * nlo * nnlo * _M_PLANCK_eV
+    return mass_LO_natural * bracket * _M_PLANCK_eV
 
 
 # ---------------------------------------------------------------------------

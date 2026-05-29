@@ -17,8 +17,10 @@ substrate-predicted active mass ``m_1`` to ``m_2`` and ``m_3``.
 
 Predictions exposed:
 
-- :func:`active_masses`: ``(m_1, m_2, m_3) ≈ (14.84, 17.16, 53.00) meV``
-- :func:`sterile_masses`: ``(m_N1, m_N2, m_N3) ≈ (61.3, 70.8, 218.8) MeV``
+- :func:`active_masses`: ``(m_1, m_2, m_3) ≈ (14.84, 17.16, 52.25) meV``
+  (``m_2``, ``m_3`` from the NuFIT/PDG Δm² anchors ``Δm²_21 = 7.41e-5``,
+  ``Δm²_31 = 2.51e-3 eV²``; ``Σ m_ν ≈ 84.3 meV``)
+- :func:`sterile_masses`: ``(m_N1, m_N2, m_N3) ≈ (61.3, 70.8, 215.7) MeV``
 - :func:`sterile_active_mixing_sq`: ``|U_α4|² ≈ α^(9/2) ≈ 2.4×10⁻¹⁰``
 - :func:`pmns_angles_leading_order`: tri-bi-maximal +
   ``θ_13 = arcsin(√(3α))``
@@ -30,8 +32,8 @@ Quick start::
 
     import nwt_substrate.neutrino as nu
 
-    nu.active_masses()                       # (1.484e-2, 1.716e-2, 5.300e-2) eV
-    nu.sterile_masses()                      # ≈ (6.13e7, 7.08e7, 2.19e8) eV
+    nu.active_masses()                       # (1.484e-2, 1.716e-2, 5.225e-2) eV
+    nu.sterile_masses()                      # ≈ (6.13e7, 7.08e7, 2.157e8) eV
     nu.sterile_active_mixing_sq()            # ≈ 2.4e-10
     nu.pmns_angles_leading_order()           # PMNSAngles(θ_12, θ_23, θ_13)
     nu.delta_cp_winding()                    # -2π/3

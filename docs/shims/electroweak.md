@@ -238,6 +238,6 @@ for name in FORM_FACTORS:
 
 - [`particles`](particles.md) — including `particles.decay_constants` (`f_π`, `f_K`, vector + B_c)
 - [`isa`](../../nwt_substrate/isa/README.md) — substrate constants
-- [`benchmarks`](../../nwt_substrate/benchmarks/README.md) — `benchmark_higgs_vev`, `benchmark_sin2_theta_w`, `benchmark_G_F`, `benchmark_cabibbo_angle`, `benchmark_ckm_matrix`, `benchmark_Z_width`
-- [`qed`](../../nwt_substrate/qed/) — α closure + Schwinger 1-loop
+- [`benchmarks`](../../nwt_substrate/benchmarks/README.md) — `benchmark_higgs_vev`, `benchmark_sin2_theta_W`, `benchmark_fermi_constant`, `benchmark_ckm_cabibbo`, `benchmark_full_ckm`, `benchmark_z_boson_width`
+- [`qed`](qed.md) — α closure + Schwinger 1-loop
 - [`docs/FAQ.md`](../FAQ.md) — atomic Q&A summaries

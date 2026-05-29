@@ -70,11 +70,12 @@ Per-shim documentation pages follow a consistent shape: TL;DR, common questions,
 | [`particles`](shims/particles.md) | 80-entry mass spectrum, decay constants, charge/stability | written |
 | [`electroweak`](shims/electroweak.md) | Higgs VEV, sin²θ_W, G_F, Z widths, CKM, form factors | written |
 | [`cosmology`](shims/cosmology.md) | η_B, Ω_b/Ω_c, Λ, CMB anisotropy axes | written |
-| `neutrino` | K_8 extension: 3 active + 3 sterile + PMNS + δ_CP | pending |
-| `qed`, `qcd` | R-ratio, DIS structure functions, exotic states | pending |
-| `chemistry` | Aromaticity, NICS sign, C_60 vibrational modes | pending |
-| `atomic` | Hydrogen chain (Bohr, Lyman α, 21 cm, Lamb) | pending |
-| `dark_sector` | 98 GeV WIMP, LZ-2024 constraints, Higgs portal | pending |
+| [`neutrino`](shims/neutrino.md) | K_8 extension: 3 active + 3 sterile + PMNS + δ_CP | written |
+| [`qed`](shims/qed.md) | Compton, e⁺e⁻→μ⁺μ⁻, Møller, Bhabha; α running; a_e; Feynman diagrams | written |
+| [`qcd`](shims/qcd.md) | SU(3) color algebra, α_s running, qq̄/qq/gg processes, confinement, exotic states | written |
+| [`chemistry`](shims/chemistry.md) | Aromaticity, NICS sign, C_60 vibrational modes | written |
+| [`atomic`](shims/atomic.md) | Hydrogen chain (Bohr, Lyman α, 21 cm, Lamb) | written |
+| [`dark_sector`](shims/dark_sector.md) | 98 GeV WIMP, LZ-2024 constraints, Higgs portal | written |
 
 ### Infrastructure shims
 
@@ -82,10 +83,10 @@ Per-shim documentation pages follow a consistent shape: TL;DR, common questions,
 |---|---|---|
 | `isa` | Substrate constants + K_7 algebra (single source of truth) | [`README`](../nwt_substrate/isa/README.md) |
 | `benchmarks` | 38 substrate-vs-experiment benchmarks | [`README`](../nwt_substrate/benchmarks/README.md) |
-| `heron` | qiskit-runtime adapter for IBM Heron, exp11 sidereal program | pending |
-| `qpu` | Vendor-neutral QPU adapter (IBM, Braket, simulator) | pending |
-| `topology` | K_7 Heffter embedding, colored Jones, torus knots | pending |
-| `qft` | NWT Lagrangian, continuum field theory (Paper 16) | pending |
+| `heron` | qiskit-runtime adapter for IBM Heron, exp11 sidereal program | [written](shims/heron.md) |
+| `qpu` | Vendor-neutral QPU adapter (IBM, Braket, simulator) | [written](shims/qpu.md) |
+| `topology` | K_7 Heffter embedding, colored Jones, torus knots | [written](shims/topology.md) |
+| `qft` | NWT Lagrangian, continuum field theory (Paper 16) | [written](shims/qft.md) |
 
 ## Headline predictions
 

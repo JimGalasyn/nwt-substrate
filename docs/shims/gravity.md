@@ -224,5 +224,5 @@ If any of these change in `nwt_substrate.isa.constants`, the substrate identity 
 
 - [`isa`](../../nwt_substrate/isa/README.md) — `8/7`, `21`, `7`, `21/8` substrate constants
 - [`cosmology`](cosmology.md) — Λ, η_B, Ω_b/Ω_c (cosmological observables)
-- [`benchmarks`](../../nwt_substrate/benchmarks/README.md) — `benchmark_newtons_G`, `benchmark_black_holes`, `benchmark_cosmogenesis`
+- [`benchmarks`](../../nwt_substrate/benchmarks/README.md) — `benchmark_gravitational_constant`, `benchmark_black_hole_thermodynamics`, `benchmark_cosmogenesis`
 - [`docs/FAQ.md`](../FAQ.md) — atomic Q&A summaries

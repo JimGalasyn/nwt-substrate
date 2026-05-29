@@ -233,6 +233,6 @@ If any of these change in `nwt_substrate.isa.constants`, the substrate identity 
 
 - [`gravity`](gravity.md) — Newton's G, NHEK geometry (cosmogenic background), Thorne spin equilibrium
 - [`isa`](../../nwt_substrate/isa/README.md) — substrate constants (`RANK_SO7`, `H_V_SO7`, `H_COXETER_SO7`, `N_VERTICES_K7`)
-- [`heron`](../../nwt_substrate/heron/) — Experiment 11 sidereal A/B/C probe (F1 falsifier hardware test)
+- [`heron`](heron.md) — Experiment 11 sidereal A/B/C probe (F1 falsifier hardware test)
 - [`benchmarks`](../../nwt_substrate/benchmarks/README.md) — `benchmark_eta_B`, `benchmark_omega_b_c`, `benchmark_lambda_cc`
 - [`docs/FAQ.md`](../FAQ.md) — atomic Q&A summaries

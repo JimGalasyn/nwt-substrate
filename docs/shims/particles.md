@@ -211,7 +211,7 @@ assert all_k7_walks_are_passive_or_BPS()
 ## See also
 
 - [`electroweak`](electroweak.md) — Higgs VEV, sin²θ_W, G_F, Z widths, CKM, form factors
-- [`neutrino`](../../nwt_substrate/neutrino/) — K_8 extension: 3 active + 3 sterile + PMNS
+- [`neutrino`](neutrino.md) — K_8 extension: 3 active + 3 sterile + PMNS
 - [`isa`](../../nwt_substrate/isa/README.md) — substrate constants (7, 21, 8, 3, …)
-- [`benchmarks`](../../nwt_substrate/benchmarks/README.md) — `benchmark_particle_compendium`, `benchmark_decay_constants`, `benchmark_vector_meson_decay`
+- [`benchmarks`](../../nwt_substrate/benchmarks/README.md) — `benchmark_composite_particles`, `benchmark_mass_spectrum`, `benchmark_decay_constants`, `benchmark_vector_meson_decay`
 - [`docs/FAQ.md`](../FAQ.md) — atomic Q&A summaries

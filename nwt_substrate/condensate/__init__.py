@@ -23,6 +23,11 @@ from nwt_substrate.condensate.abelian_higgs import (
     healing_length,
     line_tension_BPS,
 )
+from nwt_substrate.condensate.vortex_profile import (
+    BPSVortexProfile,
+    bps_rhs,
+    solve_bps_vortex,
+)
 from nwt_substrate.condensate.walks import (
     edge_to_orbit,
     bfs_shortest_walks,
@@ -53,6 +58,8 @@ __all__ = [
     # abelian_higgs
     "AbelianHiggsParams", "bogoliubov_dispersion",
     "sound_speed", "healing_length", "line_tension_BPS",
+    # vortex_profile
+    "BPSVortexProfile", "bps_rhs", "solve_bps_vortex",
     # walks
     "edge_to_orbit", "bfs_shortest_walks", "closed_walk_winding",
     "walk_arc_length_unit_torus", "walk_signed_step_distribution",

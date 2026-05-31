@@ -147,3 +147,49 @@ def test_save_to_writes_file(tmp_path):
     assert out.exists() and out.stat().st_size > 0
     import matplotlib.pyplot as plt
     plt.close(fig)
+
+
+# ---------------------------------------------------------------------------
+# Knot-curve primitives
+# ---------------------------------------------------------------------------
+
+def test_torus_knot_curve_shape_and_closure():
+    """Open curve has n_points; closed repeats the first point."""
+    c = dg.torus_knot_curve(2, 3, n_points=400)
+    assert c.shape == (400, 3)
+    cc = dg.torus_knot_curve(2, 3, n_points=400, closed=True)
+    assert cc.shape == (401, 3)
+    assert np.allclose(cc[0], cc[-1])
+
+
+def test_torus_knot_curve_lies_on_torus():
+    """Every sample satisfies (sqrt(x^2+y^2) - R)^2 + z^2 = r^2."""
+    R, r = dg.DEFAULT_R_MAJOR, dg.DEFAULT_R_MINOR
+    c = dg.torus_knot_curve(2, 5, R=R, r=r, n_points=500)
+    resid = (np.hypot(c[:, 0], c[:, 1]) - R) ** 2 + c[:, 2] ** 2 - r ** 2
+    assert np.abs(resid).max() < 1e-9
+
+
+def test_hopf_link_curves_two_components():
+    """Two equal-size rings whose centres are about one major radius apart."""
+    A, B = dg.hopf_link_curves(n_points=300)
+    assert A.shape == B.shape == (300, 3)
+    assert np.linalg.norm(A.mean(0) - B.mean(0)) > 0.5 * dg.DEFAULT_R_MAJOR
+
+
+def test_draw_torus_knot_uses_curve(monkeypatch):
+    """draw_torus_knot is built on torus_knot_curve."""
+    import matplotlib.pyplot as plt
+    calls = {}
+    real = dg.torus_knot_curve
+
+    def spy(*a, **k):
+        calls["hit"] = True
+        return real(*a, **k)
+
+    monkeypatch.setattr(dg, "torus_knot_curve", spy)
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection="3d")
+    dg.draw_torus_knot(ax, 2, 3)
+    assert calls.get("hit")
+    plt.close(fig)

@@ -18,10 +18,17 @@ import numpy as np
 
 from ..algebra.dirac import make_gamma5
 from ..electroweak.constants import G_W
+from ..isa import ALPHA_SUBSTRATE
 
 
-# Default electric charge (sign convention: e- has charge -e, so vertex is -i e gamma^mu)
-ELECTRIC_CHARGE = 0.30282212  # e = sqrt(4 pi alpha) at low energy, dimensionless
+# Default electric charge (sign convention: e- has charge -e, so vertex is -i e gamma^mu).
+# e = sqrt(4 pi alpha) from the substrate's *derived* alpha = 1/(25 pi sqrt3 + 1), NOT the
+# measured CODATA value: this is the coupling that enters every QED matrix element (e**4 in
+# eemumu/moller/bhabha/compton), so closing it on the derived alpha is what lets those cross
+# sections depend on the substrate coupling at all.  Sourcing the booklet value here was a
+# measured-input leak that left the QED benchmarks single-sector ("hidden SPOFs" in the
+# route-diversity readout) — only the dimensional integers (8, 4) reached them.
+ELECTRIC_CHARGE = float(np.sqrt(4.0 * np.pi * ALPHA_SUBSTRATE))  # = 0.302823, dimensionless
 # Weak coupling: single-sourced from the canonical Z-pole value g_W in
 # electroweak.constants (g_W^2 = g_Z^2 cos^2 theta_W, G_F-derived). Was 0.6536.
 G_WEAK = G_W

@@ -9,7 +9,11 @@ import nwt_substrate.qed as qed
 # ---------- Constants ----------
 
 def test_alpha_thomson():
-    assert abs(qed.alpha - 1.0 / 137.035999084) < 1e-15
+    # qed.alpha is the substrate's *derived* Thomson-limit coupling
+    # (1/(25π√3+1) ≈ 1/137.0350), not the measured CODATA booklet value.
+    from nwt_substrate.isa import ALPHA_SUBSTRATE
+    assert qed.alpha == float(ALPHA_SUBSTRATE)
+    assert abs(qed.alpha - 1.0 / 137.035999084) < 1e-5   # ~7.6 ppm from CODATA
 
 
 def test_lepton_masses():

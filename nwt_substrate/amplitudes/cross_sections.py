@@ -29,6 +29,13 @@ from typing import Callable
 import numpy as np
 from scipy.integrate import quad
 
+from ..isa import ALPHA_SUBSTRATE
+
+# Default coupling for the textbook closed forms: the substrate's *derived* alpha,
+# so they agree with the substrate-|M|^2 cross sections (whose e descends from the
+# same ALPHA_SUBSTRATE via vertices.ELECTRIC_CHARGE) rather than the CODATA booklet.
+_ALPHA_SUBSTRATE = float(ALPHA_SUBSTRATE)
+
 
 def cm_momentum(s: float, m1: float, m2: float) -> float:
     """
@@ -126,7 +133,7 @@ def sigma_compton_lab(M_sq_at_theta: Callable[[float], tuple],
     return integral * 2.0 * np.pi / (64.0 * np.pi ** 2 * m_target ** 2)
 
 
-def thomson_cross_section(m_target: float, alpha: float = 7.2973525693e-3) -> float:
+def thomson_cross_section(m_target: float, alpha: float = _ALPHA_SUBSTRATE) -> float:
     """
     Thomson cross-section (low-energy Compton limit):
 
@@ -143,7 +150,7 @@ def thomson_cross_section(m_target: float, alpha: float = 7.2973525693e-3) -> fl
 # ----------------------------------------------------------------------------
 
 def sigma_eemumu_high_energy(s: float,
-                             alpha: float = 7.2973525693e-3) -> float:
+                             alpha: float = _ALPHA_SUBSTRATE) -> float:
     """
     Textbook  sigma(e+e- -> mu+mu-)  in massless / high-energy limit:
 

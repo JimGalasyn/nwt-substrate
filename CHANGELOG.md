@@ -6,6 +6,10 @@ The format follows [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/
 
 ## [Unreleased]
 
+### Fixed
+
+- **QED cross sections now close on the *derived* α (route-diversity follow-up).** The v0.4.2 diversity readout flagged five leptonic benchmarks (bhabha, Møller, Compton, e⁺e⁻→μ⁺μ⁻, muon-decay-rate) as single-sector "hidden SPOFs" — graph-2-route but collapsing to one effective route. Root cause: a measured-input leak. The QED vertex coupling `amplitudes.vertices.ELECTRIC_CHARGE` (and the textbook closed forms in `amplitudes.cross_sections`, plus the `qed.constants.alpha` shim) hardcoded the **CODATA** `e = √(4πα)` / `α = 1/137.035999084`, so the substrate's *derived* α never reached the matrix elements (`e⁴`) — only the dimensional integers `8`/`4` did, and those co-move (one Cl(0,7) descent → one sector). All three now source α from `isa.ALPHA_SUBSTRATE` (= 1/(25π√3+1), 7.6 ppm from CODATA → ≤15 ppm on σ, value-preserving). **Effect:** the four pure-QED cross sections now move under α → raw 3, **effective 2** routes (α is an independent sector from the dimensional one), so they're genuinely resilient *and* threshold-robust; hidden SPOFs drop **5 → 1**. (`muon_decay_rate` — a weak-sector closure with its own local α literal — is left as a separate follow-up.) This is the same derived-not-measured discipline o10/predict enforce; the diversity metric doubled as a measured-input-contamination detector.
+
 ## [0.4.2] - 2026-05-31
 
 [Full narrative release notes](docs/releases/v0.4.2.md). Version DOI [10.5281/zenodo.20476222](https://doi.org/10.5281/zenodo.20476222); concept DOI [10.5281/zenodo.20012027](https://doi.org/10.5281/zenodo.20012027) (resolves to latest).

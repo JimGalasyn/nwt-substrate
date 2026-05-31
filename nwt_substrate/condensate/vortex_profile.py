@@ -171,7 +171,7 @@ def solve_bps_vortex(
 # units and the internal coefficient kc = kappa / sqrt(2):
 #
 #     f'' + f'/rho - (n - a)^2 f / rho^2 + kc^2 (1 - f^2) f = 0       (scalar)
-#     a'' - a'/rho - f^2 (n - a)                            = 0       (gauge)
+#     a'' - a'/rho + f^2 (n - a)                            = 0       (gauge)
 #
 # (m_s = sqrt(2) kc = kappa, m_v = 1 here, so kappa = m_s/m_v = lambda/xi.)
 # kappa = 1 is the BPS self-dual point (m_s = m_v) and reduces to the

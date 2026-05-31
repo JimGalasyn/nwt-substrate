@@ -130,3 +130,30 @@ def test_gl_solver_is_cached():
     a = solve_gl_vortex(kappa=1.3, n=1)
     b = solve_gl_vortex(kappa=1.3, n=1)
     assert a is b
+
+
+def test_gl_supercurrent_at_explicit_radii():
+    """supercurrent(r=...) evaluates the screening current off-grid (0 at the
+    core, decaying in the bulk) — covers the non-None branch."""
+    gl = solve_gl_vortex(kappa=1.2, n=1)
+    r = np.array([0.0, 1.0, 3.0, 1e6])
+    J = gl.supercurrent(r)
+    assert J.shape == r.shape
+    assert J[0] == pytest.approx(0.0, abs=1e-6)    # f^2 -> 0 at the core
+    assert J[-1] == pytest.approx(0.0, abs=1e-6)   # (n - a) -> 0 in the bulk
+    assert J[1] > 0 and J[2] > 0                    # nonzero sheath in between
+
+
+def test_gl_rhs_gauge_equation_sign():
+    """gl_vortex_rhs returns a'' = a'/rho - f^2(n-a), i.e. the homogeneous gauge
+    equation is a'' - a'/rho + f^2(n-a) = 0 (the documented + sign on the source
+    term, not -).  Pins the sign the PR review caught in the comment block."""
+    from nwt_substrate.condensate import gl_vortex_rhs
+    rho = np.array([2.0])
+    y = np.array([[0.5], [0.1], [0.3], [0.2]])      # f, f', a, a'
+    out = gl_vortex_rhs(rho, y, kappa=1.5, n=1)
+    f, fp, a, ap, n = 0.5, 0.1, 0.3, 0.2, 1
+    assert out[3, 0] == pytest.approx(ap / 2.0 - f**2 * (n - a))     # a'' = a'/rho - f^2(n-a)
+    assert out[3, 0] != pytest.approx(ap / 2.0 + f**2 * (n - a))     # NOT the wrong sign
+    kc = 1.5 / np.sqrt(2.0)                          # scalar-eq sign too
+    assert out[1, 0] == pytest.approx(-fp / 2.0 + (n - a) ** 2 * f / 4.0 - kc**2 * (1 - f**2) * f)

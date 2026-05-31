@@ -36,6 +36,9 @@ appends M. Wende's derivation-*diversity* layer: route count is multiplicity,
 not independence, so it clusters the integers into structural sectors by shared
 perturbation response and re-counts *effective* routes per sector — surfacing
 benchmarks whose graph-independent routes collapse into one (hidden SPOFs).
+Add ``--priority`` for M. Wende's *prioritization* layer: the directional dual of
+the diagnostics, ranking the open items by closure gained per unit effort (and
+triaging the sweep-unreachable benchmarks whose effort is unknown until read).
 """
 
 from __future__ import annotations
@@ -566,7 +569,94 @@ def _redundancy_lines(g: DerivationDAG, list_all: bool = True,
     return lines
 
 
-def _main_suite(use_sensitivity: bool = False, show_redundancy: bool = False) -> int:
+# Benchmarks confirmed by code inspection to derive a quantity from a *measured*
+# literal (a real tier-1 fix, not a guess) — the muon-decay rate still reaches for
+# a local CODATA-alpha constant, the residue of the v0.4.2 QED alpha-fix.
+_VERIFIED_LEAKS = frozenset({"benchmark_muon_decay_rate"})
+
+
+def closure_priority(g: DerivationDAG, report) -> dict:
+    """M. Wende's prioritization layer (d12rg) — rank the open items by closure
+    gained per unit effort, the directional dual of the diagnostic layers.
+
+    Each benchmark scores a closure weight: 0.0 ungrounded (no structural route),
+    0.5 single effective sector (a hidden SPOF), 1.0 with >= 2 independent sectors
+    — minus 0.5 if it is a marked defect edge (derived, but wrong).  Open items
+    split into two queues:
+
+      * ``items``  — effort is *known* (a hidden SPOF, a defect edge, a verified
+        measured-input leak), ranked by ``roi = gain / effort``;
+      * ``triage`` — benchmarks the sweep's leaf-integer perturbations cannot
+        reach at all, so the effort is *unknown* until a code read tells a cheap
+        measured-input leak (the alpha-fix pattern) from a real derivation gap.
+        Ranked by *potential* closure; resolving each is itself the leverage.
+
+    Effort tiers are a declared heuristic keyed to category (1 mechanical /
+    2 known-layer / 4 research), the one place judgement enters.  Needs a sweep
+    ``report`` (the diversity signatures come from it)."""
+    defects = set(g.cit_defects(0.01))
+    qual = set(g.qualitative_outputs())
+    div = {r["benchmark"]: r for r in report.route_diversity()}
+    items, triage, total = [], [], 0.0
+    outs = [n for n, nd in g.nodes.items() if nd.stage == Stage.OUTPUT]
+    for b in outs:
+        raw = sum(1 for i in report.per_integer if b in report.movers(i))
+        eff = div[b]["effective"] if b in div else 0
+        is_defect = b in defects
+        base = 0.0 if raw == 0 else (0.5 if eff <= 1 else 1.0)
+        total += max(0.0, base - (0.5 if is_defect else 0.0))
+        name = b.replace("benchmark_", "")
+        if raw == 0:                                   # sweep cannot reach it
+            triage.append({"benchmark": name, "defect": is_defect,
+                           "potential": round(0.5 + (0.5 if is_defect else 0.0), 2)})
+            continue
+        if eff <= 1:                                   # single-sector hidden SPOF
+            if b in _VERIFIED_LEAKS:
+                gain, effort, cat = 0.5, 1, "hidden SPOF — verified measured-input leak (route via isa)"
+            elif is_defect:
+                gain, effort, cat = 1.0, 2, "hidden SPOF + defect (route + correction layer)"
+            else:
+                gain, effort, cat = 0.5, 2, "hidden SPOF (wire an independent route)"
+        elif is_defect:                                # resilient but wrong
+            gain, effort, cat = 0.5, 2, "defect edge (add a known correction layer)"
+        else:
+            continue                                   # resilient + admissible: nothing to do
+        items.append({"benchmark": name, "category": cat, "gain": round(gain, 2),
+                      "effort": effort, "roi": round(gain / effort, 3)})
+    items.sort(key=lambda r: (-r["roi"], -r["gain"], r["benchmark"]))
+    triage.sort(key=lambda r: (-r["potential"], r["benchmark"]))
+    return {"items": items, "triage": triage,
+            "closure": round(total, 1), "ceiling": len(outs)}
+
+
+def _priority_lines(g: DerivationDAG, report) -> list[str]:
+    """The closure-priority readout: current closure + the effort-known ROI
+    ranking + the triage queue + the directional "do first" line."""
+    res = closure_priority(g, report)
+    pct = res["closure"] / res["ceiling"] * 100 if res["ceiling"] else 0.0
+    lines = ["", "Closure priority (M. Wende — closure gained per unit effort; "
+             "the directional dual of the diagnostic layers):",
+             f"  structural closure now: {res['closure']} / {res['ceiling']} "
+             f"({pct:.0f}% derived-and-resilient)",
+             f"  [A] effort-known ({len(res['items'])}) — ROI = gain / effort "
+             f"(tiers: 1 mechanical, 2 known-layer, 4 research):"]
+    for rank, it in enumerate(res["items"], 1):
+        lines.append(f"    {rank:>2}  ROI {it['roi']:.2f}  +{it['gain']:.1f}/eff{it['effort']}  "
+                     f"{it['benchmark']:24s} {it['category']}")
+    lines.append(f"  [B] triage ({len(res['triage'])}) — high *potential* closure, effort unknown: "
+                 f"sweep can't reach these, so each is a leak (cheap) or a gap (dear) until read:")
+    for t in res["triage"]:
+        lines.append(f"      +{t['potential']:.1f}  {t['benchmark']}"
+                     f"{'  [+defect]' if t['defect'] else ''}")
+    t1 = [i for i in res["items"] if i["effort"] == 1]
+    if t1:
+        lines.append(f"  → do first (verified tier-1): {', '.join(i['benchmark'] for i in t1)} "
+                     f"(+{sum(i['gain'] for i in t1):.1f} closure, mechanical cost)")
+    return lines
+
+
+def _main_suite(use_sensitivity: bool = False, show_redundancy: bool = False,
+                show_priority: bool = False) -> int:
     report = None
     if use_sensitivity:
         from ..sensitivity import integer_sweep
@@ -598,6 +688,12 @@ def _main_suite(use_sensitivity: bool = False, show_redundancy: bool = False) ->
                       "hub every benchmark is trivially one route.)"]
         else:
             lines += _redundancy_lines(g, list_all=False, label="benchmarks", report=report)
+    if show_priority:
+        if report is None:
+            lines += ["", "(add --sensitivity for closure-priority — it ranks the open "
+                      "items by closure-per-effort, which needs the sweep's coupling.)"]
+        else:
+            lines += _priority_lines(g, report)
     print("\n".join(lines))
     return 0
 
@@ -607,7 +703,8 @@ def main(argv: list[str] | None = None) -> int:
     argv = sys.argv[1:] if argv is None else argv
     if "--suite" in argv:
         return _main_suite(use_sensitivity="--sensitivity" in argv,
-                           show_redundancy="--redundancy" in argv)
+                           show_redundancy="--redundancy" in argv,
+                           show_priority="--priority" in argv)
     g = build_constants_dag()
     lines = [f"O10 DAG cit-readout — {len(g.nodes)} nodes, {len(g.edges)} edges", ""]
 

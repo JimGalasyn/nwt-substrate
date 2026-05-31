@@ -482,3 +482,40 @@ def test_o10_route_redundancy_load_vs_criticality():
     assert crit["DIM_S_SPIN7"]["redundancy"] == 1
     # RANK_SO7 only moves the resilient benchmark, so it is never a sole route
     assert crit["RANK_SO7"]["critical"] == 0
+
+
+def test_o10_closure_priority_ranks_by_roi():
+    """M. Wende's prioritization layer: each benchmark scores closure (0 / 0.5 /
+    1.0), and open items rank by ROI = gain / effort.  A verified measured-input
+    leak is tier-1 (mechanical), a plain hidden SPOF tier-2; a benchmark the
+    sweep can't reach goes to the triage queue (effort unknown)."""
+    from nwt_substrate.benchmarks import o10
+    from nwt_substrate.sensitivity import SensitivityReport
+    g = o10.DerivationDAG()
+    for nm in ("benchmark_A", "benchmark_B", "benchmark_muon_decay_rate", "benchmark_C"):
+        g.add(nm, o10.Stage.OUTPUT, dev=0.0, kind="exact")    # admissible (not defect/qualitative)
+    rep = SensitivityReport(
+        benchmarks=["benchmark_A", "benchmark_B", "benchmark_C",
+                    "benchmark_D", "benchmark_muon_decay_rate"],
+        baseline={},
+        per_integer={
+            # X and Y overlap only on A (Jaccard 1/3 < 0.5) -> two distinct sectors
+            "intX": {1: {"status": "ok", "moved": ["benchmark_A", "benchmark_B"]}},
+            "intY": {1: {"status": "ok", "moved": ["benchmark_A", "benchmark_D"]}},
+            "intM": {1: {"status": "ok", "moved": ["benchmark_muon_decay_rate"]}},
+        },
+    )
+    res = o10.closure_priority(g, rep)
+    # closure: A resilient (1.0) + B spof (0.5) + muon spof (0.5) + C ungrounded (0.0)
+    assert res["closure"] == 2.0 and res["ceiling"] == 4
+    items = {it["benchmark"]: it for it in res["items"]}
+    # the verified leak ranks first — tier-1 mechanical, ROI 0.5
+    assert res["items"][0]["benchmark"] == "muon_decay_rate"
+    assert items["muon_decay_rate"]["effort"] == 1 and items["muon_decay_rate"]["roi"] == 0.5
+    # a plain hidden SPOF is tier-2 (ROI 0.25)
+    assert items["B"]["effort"] == 2 and items["B"]["roi"] == 0.25
+    # the resilient benchmark has nothing to do -> absent from both queues
+    assert "A" not in items and all(t["benchmark"] != "A" for t in res["triage"])
+    # the sweep-unreachable benchmark goes to triage with +0.5 potential
+    triage = {t["benchmark"]: t for t in res["triage"]}
+    assert triage["C"]["potential"] == 0.5 and not triage["C"]["defect"]

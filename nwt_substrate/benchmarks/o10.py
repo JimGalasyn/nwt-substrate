@@ -31,7 +31,11 @@ derivation-route-redundancy readout: how many *independent* routes converge on
 each answer, the single points of failure that survive removal, and node
 *criticality* (outputs ungrounded if a node is removed) beside *load* (outputs
 reached) — the leave-one-route-out dual of the load ranking.  ``--suite
---sensitivity --redundancy`` runs it over the 38-benchmark coupling graph.
+--sensitivity --redundancy`` runs it over the 38-benchmark coupling graph, and
+appends M. Wende's derivation-*diversity* layer: route count is multiplicity,
+not independence, so it clusters the integers into structural sectors by shared
+perturbation response and re-counts *effective* routes per sector — surfacing
+benchmarks whose graph-independent routes collapse into one (hidden SPOFs).
 """
 
 from __future__ import annotations
@@ -494,12 +498,45 @@ def build_suite_dag(report=None) -> DerivationDAG:
     return g
 
 
+def _diversity_lines(report, threshold: float = 0.5) -> list[str]:
+    """M. Wende's derivation-*diversity* readout (d12rg v0.4.1 follow-up):
+    route count is multiplicity; this is independence.  Cluster the load-bearing
+    integers into structural sectors by shared perturbation response, then flag
+    benchmarks whose graph-independent routes collapse into one sector — routes
+    that look redundant but fail to the same perturbation.  Needs the sweep."""
+    div = report.route_diversity(threshold)
+    sectors = report.integer_sectors(threshold)
+    n_int = sum(len(s) for s in sectors)
+    collapsed = [r for r in div if r["collapsed"] > 0]
+    hidden_spof = [r for r in collapsed if r["effective"] == 1]
+    lines = ["", "Derivation diversity (M. Wende — route independence beyond route "
+             f"count; sectors = integers sharing a perturbation response, Jaccard ≥ {threshold}):",
+             f"  {len(sectors)} structural sector(s) among {n_int} load-bearing integers; "
+             f"{len(collapsed)} benchmark(s) lose routes to shared response "
+             f"({len(hidden_spof)} collapse to a hidden single sector)"]
+    multi = [s for s in sectors if len(s) > 1]
+    if multi:
+        lines.append("  sectors that merge multiple integers (one effective route each):")
+        for s in multi:
+            lines.append(f"    {{{', '.join(s)}}}")
+    for r in sorted(collapsed, key=lambda r: (r["effective"], -r["raw"], r["benchmark"])):
+        tag = "hidden SPOF" if r["effective"] == 1 else "diversity<routes"
+        names = " | ".join("+".join(g) for g in r["sectors"])
+        lines.append(f"  [{tag:16s}]  {r['benchmark'].replace('benchmark_', ''):24s} "
+                     f"raw {r['raw']} -> {r['effective']} effective   sectors: {names}")
+    if not collapsed:
+        lines.append("  (every multi-route benchmark draws on genuinely distinct sectors — "
+                     "route count == route independence)")
+    return lines
+
+
 def _redundancy_lines(g: DerivationDAG, list_all: bool = True,
-                      label: str = "targets") -> list[str]:
+                      label: str = "targets", report=None) -> list[str]:
     """The M. Wende derivation-route-redundancy readout: per-target independent
     route count + single points of failure, then node criticality vs load.  For
     the suite (``list_all=False``) only the fragile single-route targets are
-    enumerated; the constants DAG lists every target."""
+    enumerated; the constants DAG lists every target.  When a sweep ``report`` is
+    supplied, the derivation-*diversity* layer (route independence) is appended."""
     rr = g.route_redundancy()
     resilient = [r for r in rr if r["routes"] >= 2]
     fragile = [r for r in rr if r["routes"] == 1]      # exactly one structural route
@@ -524,6 +561,8 @@ def _redundancy_lines(g: DerivationDAG, list_all: bool = True,
     for r in g.criticality_ranking()[:12]:
         lines.append(f"  {r['node']:26s} critical {r['critical']:>2}   load {r['load']:>2}"
                      f"   redundancy {r['redundancy']:>2}")
+    if report is not None:
+        lines += _diversity_lines(report)
     return lines
 
 
@@ -558,7 +597,7 @@ def _main_suite(use_sensitivity: bool = False, show_redundancy: bool = False) ->
             lines += ["", "(add --sensitivity for route redundancy — with the single ISA "
                       "hub every benchmark is trivially one route.)"]
         else:
-            lines += _redundancy_lines(g, list_all=False, label="benchmarks")
+            lines += _redundancy_lines(g, list_all=False, label="benchmarks", report=report)
     print("\n".join(lines))
     return 0
 

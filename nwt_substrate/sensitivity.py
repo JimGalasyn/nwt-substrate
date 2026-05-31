@@ -252,6 +252,87 @@ class SensitivityReport:
         pairs = [(k, n) for k, n in pair_counts.items() if n >= min_shared]
         return sorted(pairs, key=lambda kv: (-kv[1], kv[0]))
 
+    # ------------------------------------------------------------------
+    # Derivation-diversity layer (M. Wende, d12rg v0.4.1 thread):
+    # route *multiplicity* (o10's node-disjoint count) is not route
+    # *independence*.  Two routes can be graph-theoretically distinct yet
+    # collapse under the SAME perturbation — "three routes that all fail under
+    # the same perturbation may be less robust than two routes from different
+    # sectors."  The sweep already holds the evidence: each integer's
+    # mover-set is its empirical perturbation-response signature.  Integers
+    # with (near-)identical signatures occupy one structural sector, so a
+    # benchmark fed by several of them has fewer *effective* routes than its
+    # raw coupling count suggests.
+    # ------------------------------------------------------------------
+
+    def integer_similarity(self, a: str, b: str) -> float:
+        """Jaccard overlap of two integers' mover-sets — the empirical
+        "correlated perturbation response" Marcel asks for, at the binary
+        granularity the sweep records (an entry stores *which* benchmarks moved,
+        not signed magnitudes).  1.0 = the two integers move exactly the same
+        observables (one sector, redundant routes); 0.0 = disjoint responses
+        (genuinely different sectors).  Two integers that move nothing are
+        vacuously dissimilar (0.0) — an inert knob is no one's route."""
+        ma, mb = set(self.movers(a)), set(self.movers(b))
+        if not ma or not mb:
+            return 0.0
+        return len(ma & mb) / len(ma | mb)
+
+    def integer_sectors(self, threshold: float = 0.5) -> list[list[str]]:
+        """Cluster the load-bearing integers into structural *sectors* by
+        single-linkage on ``integer_similarity ≥ threshold``: integers whose
+        perturbation responses overlap enough are treated as the same route.
+        Returns sorted clusters (each a sorted name list); inert integers are
+        omitted.  Raising ``threshold`` splits sectors finer (only near-identical
+        responses merge); lowering it merges aggressively.  These sectors are the
+        unit of *independent* derivation route used by :meth:`route_diversity`."""
+        active = sorted(i for i in self.per_integer if self.movers(i))
+        parent = {i: i for i in active}
+
+        def find(x: str) -> str:
+            while parent[x] != x:
+                parent[x] = parent[parent[x]]
+                x = parent[x]
+            return x
+
+        for i in range(len(active)):
+            for j in range(i + 1, len(active)):
+                a, b = active[i], active[j]
+                if self.integer_similarity(a, b) >= threshold:
+                    parent[find(a)] = find(b)
+        clusters: dict[str, list[str]] = {}
+        for i in active:
+            clusters.setdefault(find(i), []).append(i)
+        return sorted((sorted(c) for c in clusters.values()),
+                      key=lambda c: (-len(c), c[0]))
+
+    def route_diversity(self, threshold: float = 0.5) -> list[dict]:
+        """Per benchmark: ``raw`` routes (distinct integers that move it, =
+        o10's node-disjoint count) vs ``effective`` routes (distinct structural
+        *sectors* those integers fall into).  ``effective < raw`` is Marcel's
+        false-redundancy: routes that look independent but share a perturbation
+        response.  ``effective == 1`` with ``raw ≥ 2`` is a hidden single point
+        of failure — graph-redundant, structurally not.  ``sectors`` lists the
+        clustered movers; benchmarks moved by no integer are omitted."""
+        sectors = self.integer_sectors(threshold)
+        sector_of = {i: k for k, c in enumerate(sectors) for i in c}
+        rows = []
+        for b in self.benchmarks:
+            movers = [i for i in self.per_integer if b in self.movers(i)]
+            if not movers:
+                continue
+            groups: dict[int, list[str]] = {}
+            for i in movers:
+                groups.setdefault(sector_of[i], []).append(i)
+            rows.append({
+                "benchmark": b,
+                "raw": len(movers),
+                "effective": len(groups),
+                "collapsed": len(movers) - len(groups),
+                "sectors": [sorted(g) for g in groups.values()],
+            })
+        return sorted(rows, key=lambda r: (r["effective"], -r["raw"], r["benchmark"]))
+
     def criticality_summary(self, top: int = 8) -> str:
         """Structural-criticality view: load ranking + correlated benchmark
         clusters, layered on top of the raw sensitivity counts."""

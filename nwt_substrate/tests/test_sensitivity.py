@@ -114,6 +114,46 @@ def test_structural_load_and_comovement():
     assert "Structural-load ranking" in r.criticality_summary()
 
 
+def test_route_diversity_collapses_co_moving_routes():
+    """M. Wende derivation-diversity: two integers with identical mover-sets are
+    one structural sector, so a benchmark fed by both has 2 raw routes but 1
+    *effective* route — a hidden single point of failure.  A genuinely distinct
+    third route (disjoint response) keeps its own sector."""
+    r = sens.SensitivityReport(
+        benchmarks=["a", "b", "c", "d"],
+        baseline={},
+        per_integer={
+            # P and Q are perturbation-identical (move exactly {a,b}) -> one sector
+            "P": {1: {"status": "ok", "moved": ["a", "b"], "value": 7}},
+            "Q": {1: {"status": "ok", "moved": ["a", "b"], "value": 8}},
+            # R moves a disjoint set -> its own sector; gives 'a' a real 2nd route
+            "R": {1: {"status": "ok", "moved": ["a", "c"], "value": 3}},
+            "Z": {1: {"status": "ok", "moved": [], "value": 5}},   # inert: no sector
+        },
+    )
+    assert r.integer_similarity("P", "Q") == 1.0          # identical response
+    assert r.integer_similarity("P", "R") == 1 / 3        # share only 'a' of {a,b,c}
+    assert r.integer_similarity("P", "Z") == 0.0          # inert is no one's route
+
+    sectors = r.integer_sectors(threshold=0.5)
+    assert ["P", "Q"] in sectors                          # merged
+    assert ["R"] in sectors                               # distinct sector
+    assert not any("Z" in s for s in sectors)             # inert omitted
+
+    div = {row["benchmark"]: row for row in r.route_diversity(threshold=0.5)}
+    # 'a' moved by P,Q,R -> raw 3, but P&Q share a sector -> 2 effective
+    assert div["a"]["raw"] == 3 and div["a"]["effective"] == 2
+    assert div["a"]["collapsed"] == 1
+    # 'b' moved only by the co-moving P,Q -> raw 2 but 1 effective: hidden SPOF
+    assert div["b"]["raw"] == 2 and div["b"]["effective"] == 1
+    # 'c' moved only by R -> a lone genuine route, no collapse
+    assert div["c"]["raw"] == 1 and div["c"]["effective"] == 1
+    assert "d" not in div                                 # moved by nothing -> omitted
+
+    # threshold 1.0 still merges the perturbation-identical pair (exact identity)
+    assert ["P", "Q"] in r.integer_sectors(threshold=1.0)
+
+
 @pytest.mark.skipif(not os.access(sens.CONSTANTS_PATH, os.W_OK),
                     reason="sensitivity sweep needs a writable (editable) install")
 def test_gf_refactor_couples_fermi_to_h_v():

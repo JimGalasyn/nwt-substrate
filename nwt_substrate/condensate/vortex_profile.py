@@ -8,14 +8,24 @@ first-order Bogomolny equations (in units where the healing length xi = 1):
     f'(rho) = (n - a) f / rho
     a'(rho) = rho (1 - f^2) / 2
 
-with boundary conditions f(0) = 0, f(inf) = 1, a(0) = 0, a(inf) = n.  The
-system has a single shooting parameter ``c1 = f'(0+)``; we fix it by requiring
-f(rho_max) = 1.  For n = 1 the converged slope is c1 ~ 0.6033, and the scalar
-approaches the bulk as 1 - f ~ K0(sqrt(2) rho) (de Vega & Schaposnik 1976).
+with boundary conditions f(0) = 0, f(inf) = 1, a(0) = 0, a(inf) = n.  Near the
+core the scalar rises as ``f ~ c1 rho^n``; the single shooting parameter is that
+leading coefficient ``c1`` (which equals f'(0+) only for n = 1, where it
+converges to ~0.6033), fixed by requiring f(rho_max) = 1.  At the BPS point the
+scalar and gauge masses coincide (m_s = m_v = 1/xi), so the scalar approaches the
+bulk exponentially at rate 1/xi: 1 - f ~ K0(rho) in these units (Nielsen &
+Olesen 1973; Bogomolny 1976).
 
 This is the exact profile that the abelian-Higgs scalar takes across a vortex
 core; bend it along a carrier-knot curve and you have the field configuration
 of an NWT particle (see :mod:`nwt_substrate.portraits`).
+
+Only the unit vortex (n = 1) is solved here.  The first-order shooting is
+stiff: for n >= 2 the trajectory overshoots and diverges past f = 1 before
+reaching ``rho_max``, so a higher winding would need a relaxation / collocation
+boundary-value solver (e.g. ``scipy.integrate.solve_bvp``).  The equations and
+the small-rho initial condition below are written for general n so that
+extension is a localised change.
 
 References: Bogomolny (1976); Nielsen & Olesen (1973); Paper 16 (L_2 BPS
 sector); Paper 6 (mass scale = line tension).
@@ -43,8 +53,8 @@ def bps_rhs(rho: float, y, n: int = 1):
 
 
 def _shoot(c1: float, rho_start: float, rho_end: float, n: int) -> float:
-    """Integrate from rho_start with slope c1; return f(rho_end) - 1."""
-    y0 = [c1 * rho_start, rho_start**2 / 4.0]
+    """Integrate from rho_start with f ~ c1 rho^n; return f(rho_end) - 1."""
+    y0 = [c1 * rho_start**n, rho_start**2 / 4.0]
     sol = solve_ivp(
         bps_rhs, [rho_start, rho_end], y0, args=(n,),
         method="RK45", rtol=1e-11, atol=1e-13, max_step=0.02,
@@ -67,7 +77,7 @@ class BPSVortexProfile:
     a : np.ndarray
         Gauge profile; rises from 0 to the winding n.
     c1 : float
-        Converged small-rho slope f'(0+).
+        Leading small-rho coefficient (f ~ c1 rho^n); equals f'(0+) for n = 1.
     n : int
         Vortex winding number.
     """
@@ -91,31 +101,29 @@ class BPSVortexProfile:
 @lru_cache(maxsize=16)
 def _solve_cached(n: int, rho_max: float, n_points: int) -> BPSVortexProfile:
     rho_start = 1e-4
-    # Bracket the shooting parameter, then refine with brentq.
-    c1_lo, c1_hi = 0.3, 2.5
-    r_lo = _shoot(c1_lo, rho_start, rho_max, n)
-    r_hi = _shoot(c1_hi, rho_start, rho_max, n)
-    if r_lo * r_hi > 0:
-        # Widen the scan to find a sign change.
-        grid = np.linspace(0.2, 4.0, 60)
-        vals = [_shoot(c, rho_start, rho_max, n) for c in grid]
-        sign_change = None
-        for i in range(len(grid) - 1):
-            if vals[i] * vals[i + 1] < 0:
-                sign_change = (grid[i], grid[i + 1])
-                break
-        if sign_change is None:
-            raise RuntimeError(
-                f"Could not bracket BPS shooting parameter for n={n}."
-            )
-        c1_lo, c1_hi = sign_change
+    # The leading coefficient c1 (f ~ c1 rho^n) shrinks with n, so scan from a
+    # low floor for the single sign change of the shooting residual (negative
+    # = undershoot, large positive = overshoot), then refine with brentq.
+    grid = np.linspace(0.01, 3.0, 150)
+    vals = [_shoot(c, rho_start, rho_max, n) for c in grid]
+    sign_change = None
+    for i in range(len(grid) - 1):
+        if vals[i] * vals[i + 1] < 0:
+            sign_change = (grid[i], grid[i + 1])
+            break
+    if sign_change is None:
+        raise RuntimeError(
+            f"Could not bracket BPS shooting parameter for n={n} in "
+            f"c1 in [0.01, 3.0]."
+        )
     c1 = brentq(
-        _shoot, c1_lo, c1_hi, args=(rho_start, rho_max, n),
+        _shoot, sign_change[0], sign_change[1], args=(rho_start, rho_max, n),
         xtol=1e-10, rtol=1e-10,
     )
     rho_grid = np.linspace(rho_start, rho_max, n_points)
     sol = solve_ivp(
-        bps_rhs, [rho_start, rho_max], [c1 * rho_start, rho_start**2 / 4.0],
+        bps_rhs, [rho_start, rho_max],
+        [c1 * rho_start**n, rho_start**2 / 4.0],
         args=(n,), t_eval=rho_grid, method="RK45",
         rtol=1e-12, atol=1e-14, max_step=0.01,
     )
@@ -125,12 +133,15 @@ def _solve_cached(n: int, rho_max: float, n_points: int) -> BPSVortexProfile:
 def solve_bps_vortex(
     n: int = 1, rho_max: float = 15.0, n_points: int = 3000,
 ) -> BPSVortexProfile:
-    """Solve the BPS vortex of winding ``n`` (results are cached).
+    """Solve the BPS unit vortex (results are cached).
 
     Parameters
     ----------
     n : int
-        Vortex winding number (>= 1).
+        Vortex winding number.  Only ``n = 1`` is currently supported: the
+        first-order shooting is numerically unstable for higher windings
+        (the trajectory blows up past f = 1 before ``rho_max``), which needs a
+        stiff boundary-value solver rather than shooting — see the module note.
     rho_max : float
         Outer radius of the integration domain, in healing lengths.
     n_points : int
@@ -138,4 +149,10 @@ def solve_bps_vortex(
     """
     if n < 1:
         raise ValueError("BPS vortex winding n must be >= 1.")
+    if n != 1:
+        raise NotImplementedError(
+            "Only the unit vortex (n=1) is currently solved; multi-winding "
+            "BPS profiles need a stiff BVP solver (shooting is unstable for "
+            "n>=2) and are future work."
+        )
     return _solve_cached(int(n), float(rho_max), int(n_points))

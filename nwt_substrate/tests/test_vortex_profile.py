@@ -22,6 +22,24 @@ def test_boundary_conditions():
     assert pr.a[-1] == pytest.approx(1.0, abs=2e-3)
 
 
+@pytest.mark.parametrize("n", [2, 3])
+def test_higher_winding_not_supported(n):
+    """Multi-winding is documented as unsupported and raises cleanly
+    (shooting is unstable for n>=2; needs a stiff BVP solver)."""
+    with pytest.raises(NotImplementedError):
+        solve_bps_vortex(n=n)
+
+
+def test_scalar_decays_at_unit_bps_rate():
+    """At BPS m_s = m_v = 1/xi, so 1 - f decays at rate ~1 (not sqrt(2))."""
+    import numpy as np
+    pr = solve_bps_vortex(n=1, rho_max=25.0, n_points=6000)
+    m = (pr.rho > 4) & (pr.rho < 8) & (pr.f < 0.9999) & (pr.f > 0)
+    # log(1-f) + 0.5 log(rho) has slope -rate for 1-f ~ K0(rate*rho)
+    rate = -np.polyfit(pr.rho[m], np.log(1 - pr.f[m]) + 0.5 * np.log(pr.rho[m]), 1)[0]
+    assert rate == pytest.approx(1.0, abs=0.05)
+
+
 def test_scalar_is_monotone_increasing():
     """f rises essentially monotonically from core to bulk."""
     pr = solve_bps_vortex(n=1)

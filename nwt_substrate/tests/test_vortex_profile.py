@@ -1,9 +1,14 @@
-"""Tests for nwt_substrate.condensate.vortex_profile (BPS vortex)."""
+"""Tests for nwt_substrate.condensate.vortex_profile (BPS + general GL vortex)."""
 
 import numpy as np
 import pytest
 
-from nwt_substrate.condensate import solve_bps_vortex, BPSVortexProfile
+from nwt_substrate.condensate import (
+    solve_bps_vortex,
+    BPSVortexProfile,
+    solve_gl_vortex,
+    GLVortexProfile,
+)
 
 
 def test_n1_converges_to_known_slope():
@@ -68,3 +73,60 @@ def test_solver_is_cached():
 def test_invalid_winding_rejected():
     with pytest.raises(ValueError):
         solve_bps_vortex(n=0)
+
+
+# ---------------------------------------------------------------------------
+# General gauged Ginzburg-Landau vortex (any kappa = lambda/xi)
+# ---------------------------------------------------------------------------
+def test_gl_kappa1_reproduces_bps():
+    """At the BPS self-dual point (kappa=1, m_s=m_v) the second-order GL
+    solution must coincide with the first-order BPS profile."""
+    bps = solve_bps_vortex(n=1)
+    gl = solve_gl_vortex(kappa=1.0, n=1)
+    assert isinstance(gl, GLVortexProfile)
+    mask = (bps.rho > 0.2) & (bps.rho < 8.0)
+    f_gl = gl.f_at(bps.rho[mask])
+    a_gl = gl.a_at(bps.rho[mask])
+    assert np.max(np.abs(f_gl - bps.f[mask])) < 5e-3
+    assert np.max(np.abs(a_gl - bps.a[mask])) < 5e-3
+
+
+def test_gl_boundary_conditions():
+    """f: 0 -> 1, a: 0 -> n for a type-II vortex."""
+    gl = solve_gl_vortex(kappa=1.5, n=1)
+    assert gl.f[0] == pytest.approx(0.0, abs=2e-3)
+    assert gl.f[-1] == pytest.approx(1.0, abs=2e-3)
+    assert gl.a[0] == pytest.approx(0.0, abs=2e-3)
+    assert gl.a[-1] == pytest.approx(1.0, abs=3e-3)
+
+
+@pytest.mark.parametrize("n", [2, 3])
+def test_gl_solves_higher_winding(n):
+    """The collocation solver handles n>=2 (where BPS shooting is unstable)."""
+    gl = solve_gl_vortex(kappa=1.0, n=n)
+    assert gl.f[-1] == pytest.approx(1.0, abs=3e-3)
+    assert gl.a[-1] == pytest.approx(float(n), abs=5e-3)
+
+
+def test_gl_supercurrent_sheath_moves_outward_with_kappa():
+    """The screening-current sheath f^2(n-a)/rho sits near the core at BPS and
+    migrates outward as kappa increases into the type-II regime."""
+    peaks = {}
+    for kappa in (1.0, 1.5, 2.0):
+        gl = solve_gl_vortex(kappa=kappa, n=1)
+        J = gl.supercurrent()
+        peaks[kappa] = gl.rho[np.argmax(np.clip(J, 0, None))]
+    assert peaks[1.0] < peaks[1.5] < peaks[2.0]
+
+
+def test_gl_invalid_params_rejected():
+    with pytest.raises(ValueError):
+        solve_gl_vortex(kappa=0.0)
+    with pytest.raises(ValueError):
+        solve_gl_vortex(kappa=1.0, n=0)
+
+
+def test_gl_solver_is_cached():
+    a = solve_gl_vortex(kappa=1.3, n=1)
+    b = solve_gl_vortex(kappa=1.3, n=1)
+    assert a is b

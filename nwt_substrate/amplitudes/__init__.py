@@ -51,6 +51,8 @@ from .cross_sections import (
     dsigma_dOmega_cm,
     sigma_compton_lab,
     thomson_cross_section,
+    mott_cross_section,
+    elastic_form_factor_cross_section,
     sigma_eemumu_high_energy,
     gev_inv_sq_to_mb,
     gev_inv_sq_to_pb,

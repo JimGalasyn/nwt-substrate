@@ -20,9 +20,12 @@ from nwt_substrate.em.fields import (
     deposit_sources,
     multipole_moments,
     trace_field_lines,
+    form_factor,
+    mean_square_radius,
 )
 
 __all__ = [
     "grid", "electric_field", "magnetic_field", "divergence", "curl",
     "maxwell_eh", "deposit_sources", "multipole_moments", "trace_field_lines",
+    "form_factor", "mean_square_radius",
 ]

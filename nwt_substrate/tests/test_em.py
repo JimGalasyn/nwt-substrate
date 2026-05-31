@@ -129,6 +129,50 @@ def test_current_ring_has_axial_magnetic_dipole():
 # ---------------------------------------------------------------------------
 # Field-line tracing
 # ---------------------------------------------------------------------------
+def test_form_factor_of_gaussian():
+    """|F(q)| of a Gaussian charge density is itself a Gaussian; F(0)=1 and the
+    low-q slope recovers ⟨r²⟩ (F ≈ 1 − ⟨r²⟩ q²/6)."""
+    g, dx, (X, Y, Z), rho = _point_charge(Q=1.0, N=64, L=20.0, width=1.2)
+    q, F = em.form_factor(rho, dx, bc="open", nbins=40, qmax=2.0)
+    assert F[0] == pytest.approx(1.0, abs=0.02)        # normalised to F(0)=1
+    assert np.all(np.diff(F) <= 1e-6)                  # monotonically decreasing
+    # low-q slope: F ≈ 1 − ⟨r²⟩ q²/6 ; for width-1.2 Gaussian ⟨r²⟩ = 3·1.2²
+    lo = q < 0.6
+    slope = np.polyfit(q[lo] ** 2, F[lo], 1)[0]
+    r2 = -6 * slope
+    assert r2 == pytest.approx(3 * 1.2 ** 2, rel=0.25)
+
+
+def test_open_form_factor_cleaner_than_periodic():
+    g, dx, (X, Y, Z), rho = _point_charge(Q=1.0, N=64, L=20.0, width=1.0)
+    qo, Fo = em.form_factor(rho, dx, bc="open", nbins=40, qmax=2.0)
+    qp, Fp = em.form_factor(rho, dx, bc="periodic", nbins=40, qmax=2.0)
+    assert Fo[0] == pytest.approx(1.0, abs=0.02) and Fp[0] == pytest.approx(1.0, abs=0.05)
+    # open is monotone; periodic carries image ripples
+    assert np.all(np.diff(Fo) <= 1e-6)
+
+
+def test_mean_square_radius_neutral_can_be_negative():
+    g, dx, (X, Y, Z) = em.grid(48, 16.0)
+    core = np.exp(-(X**2 + Y**2 + Z**2) / (2 * 0.8**2))
+    skin = np.exp(-(X**2 + Y**2 + Z**2) / (2 * 2.0**2))
+    core /= core.sum(); skin /= skin.sum()
+    rho = core - skin                                  # net zero, neg charge outside
+    assert abs(rho.sum()) < 1e-10
+    assert em.mean_square_radius(rho, (X, Y, Z), dx) < 0     # ⟨r²⟩ < 0
+
+
+def test_form_factor_suppresses_scattering():
+    from nwt_substrate.amplitudes.cross_sections import (
+        mott_cross_section, elastic_form_factor_cross_section)
+    theta = np.linspace(0.3, 3.0, 30); E = 1.0
+    F = lambda q2: 1.0 / (1 + q2 / 0.71) ** 2           # dipole form factor
+    mott = mott_cross_section(theta, E)
+    ext = elastic_form_factor_cross_section(theta, E, F)
+    assert np.all(ext <= mott + 1e-12)                 # |F|²≤1 suppresses
+    assert ext[-1] / mott[-1] < ext[0] / mott[0]       # more suppression at large angle
+
+
 def test_trace_field_lines_runs():
     g, dx, (X, Y, Z), rho = _point_charge()
     E = em.electric_field(rho, dx)

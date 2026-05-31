@@ -202,3 +202,34 @@ def gamma_muon_decay_textbook(m_mu: float = 0.10566) -> float:
     Lifetime: tau = 1/Gamma.  m_mu = 0.10566 GeV gives tau ~ 2.2 us.
     """
     return (G_F ** 2) * (m_mu ** 5) / (192.0 * np.pi ** 3)
+
+
+# ---------------------------------------------------------------------------
+# Elastic scattering off an extended charge: Mott + form factor
+# ---------------------------------------------------------------------------
+def mott_cross_section(theta, E, alpha: float = _ALPHA_SUBSTRATE, Z: int = 1):
+    """Relativistic point-charge (Mott) differential cross section dσ/dΩ:
+
+        dσ/dΩ = (Zα)² cos²(θ/2) / (4 E² sin⁴(θ/2))
+
+    in natural units (ħ=c=1); ``theta`` in radians, ``E`` the beam energy.
+    The angular factor is what an extended target's form factor modulates.
+    """
+    s2 = np.sin(theta / 2.0) ** 2
+    return (Z * alpha) ** 2 * (1.0 - s2) / (4.0 * E ** 2 * s2 ** 2)
+
+
+def elastic_form_factor_cross_section(theta, E, form_factor: Callable[[float], float],
+                                      alpha: float = _ALPHA_SUBSTRATE, Z: int = 1):
+    """Elastic cross section off an extended charge distribution:
+
+        dσ/dΩ = (dσ/dΩ)_Mott · |F(q²)|²,   q² = 4 E² sin²(θ/2)   (relativistic)
+
+    ``form_factor`` is a callable ``F(q²)`` (e.g. wrapping the carrier form
+    factor from :func:`nwt_substrate.em.form_factor`); ``F(0)=1`` recovers the
+    point-charge Mott result.  This is how extended structure (a finite charge
+    radius) suppresses large-angle scattering — the Hofstadter measurement.
+    """
+    q2 = 4.0 * E ** 2 * np.sin(theta / 2.0) ** 2
+    F = np.asarray([form_factor(qq) for qq in np.atleast_1d(q2)])
+    return mott_cross_section(theta, E, alpha, Z) * F ** 2

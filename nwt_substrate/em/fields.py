@@ -28,6 +28,7 @@ import numpy as np
 __all__ = [
     "grid", "electric_field", "magnetic_field", "divergence", "curl",
     "maxwell_eh", "deposit_sources", "multipole_moments", "trace_field_lines",
+    "form_factor", "mean_square_radius",
 ]
 
 
@@ -119,7 +120,8 @@ def curl(F, dx):
             np.real(np.fft.ifftn(1j * (KX * Fy - KY * Fx)))]
 
 
-def maxwell_eh(rho, j, dx, *, eh_xi=0.0, n_iter=6, eps0=1.0, mu0=1.0, bc="periodic"):
+def maxwell_eh(rho, j, dx, *, eh_xi=0.0, n_iter=6, tol=1e-5, eps0=1.0, mu0=1.0,
+               bc="periodic"):
     """Static Maxwell fields with the optional Euler–Heisenberg nonlinear
     vacuum correction.
 
@@ -136,7 +138,12 @@ def maxwell_eh(rho, j, dx, *, eh_xi=0.0, n_iter=6, eps0=1.0, mu0=1.0, bc="period
         at the Compton scale (negligible); boost it to probe the strong-field
         regime.  ``eh_xi = 0`` returns the exact linear Maxwell fields.
     n_iter : int
-        Fixed-point iterations (ignored when ``eh_xi == 0``).
+        Max fixed-point iterations (ignored when ``eh_xi == 0``).
+    tol : float
+        Convergence tolerance on the relative change in E between iterations;
+        the loop stops early once below it.  If ``n_iter`` is exhausted without
+        converging (e.g. ``eh_xi`` pushed into the non-convergent strong-field
+        regime), a ``RuntimeWarning`` is issued.
 
     Returns
     -------
@@ -146,16 +153,27 @@ def maxwell_eh(rho, j, dx, *, eh_xi=0.0, n_iter=6, eps0=1.0, mu0=1.0, bc="period
     B = magnetic_field(j, dx, mu0, bc=bc)
     if eh_xi == 0.0:
         return E, B
+    converged = False
     for _ in range(n_iter):
         inv = sum(c * c for c in E) - sum(c * c for c in B)        # E²−B²
         EdotB = sum(e * b for e, b in zip(E, B))
         P = [4 * eh_xi * inv * E[i] + 14 * eh_xi * EdotB * B[i] for i in range(3)]
         M = [4 * eh_xi * inv * B[i] - 14 * eh_xi * EdotB * E[i] for i in range(3)]
         rho_eff = rho - divergence(P, dx)
-        cM = curl(M, dx)
-        j_eff = [j[i] + cM[i] for i in range(3)]
-        E = electric_field(rho_eff, dx, eps0, bc=bc)
+        j_eff = [j[i] + c for i, c in enumerate(curl(M, dx))]
+        E_new = electric_field(rho_eff, dx, eps0, bc=bc)
         B = magnetic_field(j_eff, dx, mu0, bc=bc)
+        num = sum(np.sum((En - Eo) ** 2) for En, Eo in zip(E_new, E))
+        den = sum(np.sum(En ** 2) for En in E_new) + 1e-30
+        E = E_new
+        if np.sqrt(num / den) < tol:
+            converged = True
+            break
+    if not converged:
+        import warnings
+        warnings.warn("maxwell_eh did not converge within n_iter; the EH "
+                      "fixed point may be in the non-convergent (strong-field) "
+                      "regime — increase n_iter or reduce eh_xi.", RuntimeWarning)
     return E, B
 
 
@@ -237,3 +255,49 @@ def trace_field_lines(field, g, seeds, *, n_steps=400, ds=0.15, both_ways=True):
             if len(pts) > 3:
                 lines.append(np.array(pts))
     return lines
+
+
+def mean_square_radius(rho, XYZ, dx):
+    """⟨r²⟩ of a charge density: ∫r²ρ dV / ∫ρ dV (signed; negative is allowed for
+    a net-neutral distribution with negative charge at larger r, e.g. the
+    neutron).  ``sqrt`` it for the rms charge radius of a net-charged body."""
+    X, Y, Z = XYZ
+    tot = rho.sum()
+    return float((( X**2 + Y**2 + Z**2) * rho).sum() / tot) if tot != 0 else \
+        float(((X**2 + Y**2 + Z**2) * rho).sum() * dx**3)
+
+
+def form_factor(rho, dx, *, bc="open", pad=2, nbins=60, qmax=None):
+    """Spherically-averaged elastic form factor |F(q)| of a charge density,
+    normalised to F(0) = 1.
+
+    The form factor is the Fourier transform of the charge distribution; it
+    enters elastic scattering as ``dσ/dΩ = (dσ/dΩ)_point · |F(q²)|²``, and its
+    low-q slope gives the charge radius (``F ≈ 1 − ⟨r²⟩ q²/6``).
+
+    bc : "open" zero-pads the density (isolated source — clean low-q, no
+         periodic-image contamination; recommended) or "periodic" (bare FFT).
+    pad : zero-padding factor for ``bc="open"`` (padded box = pad × the grid).
+    qmax : restrict the binned q range (in 1/length); ``None`` → full grid.
+
+    Returns ``(q, F)`` arrays (q in inverse length units of ``dx``).
+    """
+    N = rho.shape[0]
+    if bc == "open":
+        M = pad * N
+        rp = np.zeros((M, M, M)); rp[:N, :N, :N] = rho
+    else:
+        M, rp = N, rho
+    Fk = np.abs(np.fft.fftn(rp))
+    F = Fk / Fk.flat[0]                              # |FFT|, normalised to F(0)=1
+    k = 2 * np.pi * np.fft.fftfreq(M, d=dx)
+    KX, KY, KZ = np.meshgrid(k, k, k, indexing="ij")
+    K = np.sqrt(KX**2 + KY**2 + KZ**2)
+    hi = qmax if qmax is not None else K.max() * 0.6
+    edges = np.linspace(0, hi, nbins)
+    q, Fq = [], []
+    for i in range(len(edges) - 1):
+        m = (K >= edges[i]) & (K < edges[i + 1])
+        if m.sum() > 4:
+            q.append(K[m].mean()); Fq.append(F[m].mean())
+    return np.array(q), np.array(Fq)

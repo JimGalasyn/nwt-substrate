@@ -138,11 +138,14 @@ def test_eemumu_returns_pb_units():
 
 
 def test_muon_decay_rate_matches_pdg_lifetime():
-    """Sirlin muon-decay benchmark gives τ_μ within 1%."""
+    """Sirlin muon-decay benchmark is a *genuine* substrate closure: G_F and α are
+    both substrate-derived (no measured coupling — using the PDG G_F, itself
+    extracted from the muon lifetime, would be circular), landing ~0.011% from the
+    PDG lifetime rather than the circular 0.000% the measured-G_F version gave."""
     from nwt_substrate.benchmarks import benchmark_muon_decay_rate
     r = benchmark_muon_decay_rate()
-    pct_str = r.substrate_accuracy.split("%")[0]
-    assert float(pct_str) < 1.0
+    assert float(r.substrate_accuracy.split("%")[0]) < 0.05      # genuine, not circular-perfect
+    assert "substrate G_F" in r.substrate_accuracy and "substrate α" in r.substrate_accuracy
 
 
 def test_cosmogenesis_thorne_a_star():

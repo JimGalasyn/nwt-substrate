@@ -866,18 +866,25 @@ def benchmark_qed_eemumu() -> BenchmarkResult:
 
 
 def benchmark_muon_decay_rate() -> BenchmarkResult:
-    """Muon decay rate Γ(μ→eνν̄) — substrate weak-sector closure (G_F), with the
-    standard SM phase-space + 1-loop QED radiative correction layer."""
-    from nwt_substrate.qed.process import muon_decay
+    """Muon decay rate Γ(μ→eνν̄) — genuine substrate weak-sector closure: the
+    Fermi constant G_F and the coupling α are both substrate-derived (no measured
+    coupling), with the standard SM phase-space + 1-loop QED radiative layer."""
+    from nwt_substrate.electroweak import fermi_constant_substrate
+    from nwt_substrate.isa import ALPHA_SUBSTRATE
 
     t0 = time.perf_counter_ns()
-    gamma_tree = muon_decay.Gamma()               # GeV, tree-level Fermi (PDG m_μ)
+    # G_F from the substrate, NOT the PDG value (which is itself extracted from
+    # the muon lifetime — using it here would make this benchmark circular).
+    # m_μ, m_e are measured inputs by design: this isolates the weak vertex from
+    # the mass formula.  Tree rate Γ = G_F² m_μ⁵ / (192 π³).
+    M_E_GEV, M_MU_GEV = 0.51099895e-3, 0.1056583755
+    G_F_sub = fermi_constant_substrate()          # GeV⁻², substrate-derived
+    gamma_tree = G_F_sub ** 2 * M_MU_GEV ** 5 / (192.0 * math.pi ** 3)
     # Standard SM correction layer (Kinoshita–Sirlin), parameter-free:
     #   phase-space f(x), x=(m_e/m_μ)²;  1-loop QED δ=(α/2π)(25/4−π²) ≈ −0.0042.
-    M_E_GEV, M_MU_GEV = 0.51099895e-3, 0.1056583755
     x = (M_E_GEV / M_MU_GEV) ** 2
     f_phase_space = 1.0 - 8.0 * x + 8.0 * x ** 3 - x ** 4 - 12.0 * x ** 2 * math.log(x)
-    alpha = 1.0 / 137.035999084
+    alpha = float(ALPHA_SUBSTRATE)                 # substrate α, not the CODATA value
     delta_qed = (alpha / (2.0 * math.pi)) * (25.0 / 4.0 - math.pi ** 2)
     gamma = gamma_tree * f_phase_space * (1.0 + delta_qed)
     HBAR_GEV_S = 6.5821e-25
@@ -888,17 +895,19 @@ def benchmark_muon_decay_rate() -> BenchmarkResult:
     err_pct = abs(tau_us - PDG_TAU_MU_US) / PDG_TAU_MU_US * 100
 
     return BenchmarkResult(
-        name="Muon decay rate Γ(μ→eνν̄) — substrate G_F + SM correction layer",
+        name="Muon decay rate Γ(μ→eνν̄) — substrate G_F + α + SM correction layer",
         substrate_time_us=elapsed_us,
         substrate_value=f"Γ = {gamma:.4e} GeV, τ_μ = {tau_us:.4f} μs  vs PDG {PDG_TAU_MU_US:.4f} μs",
-        substrate_accuracy=f"{err_pct:.3f}% (PDG m_μ + substrate G_F + phase-space·QED)",
+        substrate_accuracy=f"{err_pct:.3f}% (substrate G_F + substrate α + PDG m_μ + phase-space·QED)",
         traditional_method="MuLan/FAST precision measurement",
         traditional_cost="dedicated experiment, ~1 ppm precision",
         speedup_factor_str="~10⁶× (closed-form Sirlin vs measurement)",
-        notes="Weak-decay closure, isolated from the mass formula (PDG m_μ). v0.3.0 "
-              "was tree-level (0.45%); added the standard phase-space f(x) + 1-loop QED "
-              "radiative correction (P. Kaboth's 'correction layer') → ~0.01%. Both "
-              "pieces are parameter-free (α is substrate-predicted).",
+        notes="Genuine weak-decay closure, isolated from the mass formula (PDG m_μ). "
+              "G_F is the substrate value (0.006% from PDG), NOT the measured G_F — using "
+              "the PDG G_F (extracted from the muon lifetime) would be circular. With the "
+              "standard phase-space f(x) + 1-loop QED radiative correction this lands at "
+              "~0.011%; both couplings (G_F, α) are substrate-predicted, zero measured "
+              "couplings in. (The earlier 0.000% used the circular measured G_F.)",
     )
 
 

@@ -46,6 +46,21 @@ def test_coulomb_falloff():
     assert 2.0 < ratio < 5.5
 
 
+def test_open_bc_cleaner_coulomb_falloff():
+    """Open (free-space) BCs give a cleaner 1/r² law than periodic, because
+    there's no neutralizing background / image-charge contamination."""
+    g, dx, (X, Y, Z), rho = _point_charge(Q=1.0, N=64, L=20.0)
+    Emag = {}
+    for bc in ("periodic", "open"):
+        Ex, Ey, Ez = em.electric_field(rho, dx, bc=bc)
+        Emag[bc] = np.sqrt(Ex**2 + Ey**2 + Ez**2)
+    r = np.sqrt(X**2 + Y**2 + Z**2)
+    m1 = (r > 2.5) & (r < 3.5); m2 = (r > 5.0) & (r < 6.0)
+    target = (5.5 / 3.0) ** 2          # ideal 1/r² ratio ≈ 3.36
+    err = {bc: abs(Emag[bc][m1].mean() / Emag[bc][m2].mean() - target) for bc in Emag}
+    assert err["open"] < err["periodic"]      # open is closer to true Coulomb
+
+
 def test_gauss_law():
     g, dx, XYZ, rho = _point_charge()
     E = em.electric_field(rho, dx)

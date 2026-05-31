@@ -46,25 +46,60 @@ def grid(N, L):
     return g, float(g[1] - g[0]), (X, Y, Z)
 
 
-def electric_field(rho, dx, eps0=1.0):
-    """E from a charge density via ∇²φ = −ρ/ε₀, E = −∇φ.  Returns ``[Ex, Ey, Ez]``."""
-    KX, KY, KZ, K2 = _k_grids(rho.shape[0], dx)
-    rho_k = np.fft.fftn(rho); rho_k[0, 0, 0] = 0.0
-    phi_k = rho_k / (eps0 * K2)
-    return [np.real(np.fft.ifftn(-1j * K * phi_k)) for K in (KX, KY, KZ)]
+def _poisson_periodic(src, dx):
+    """Solve ∇²u = −src on a periodic cell (FFT); the k=0 mode is dropped."""
+    _, _, _, K2 = _k_grids(src.shape[0], dx)
+    sk = np.fft.fftn(src); sk[0, 0, 0] = 0.0
+    return np.real(np.fft.ifftn(sk / K2))
 
 
-def magnetic_field(j, dx, mu0=1.0):
-    """B from a current density ``j=[jx,jy,jz]`` via ∇²A = −μ₀ j, B = ∇×A."""
-    KX, KY, KZ, K2 = _k_grids(j[0].shape[0], dx)
-    Ak = []
-    for jc in j:
-        jc_k = np.fft.fftn(jc); jc_k[0, 0, 0] = 0.0
-        Ak.append(jc_k * mu0 / K2)
-    Ax, Ay, Az = Ak
-    return [np.real(np.fft.ifftn(1j * (KY * Az - KZ * Ay))),
-            np.real(np.fft.ifftn(1j * (KZ * Ax - KX * Az))),
-            np.real(np.fft.ifftn(1j * (KX * Ay - KY * Ax)))]
+def _poisson_open(src, dx):
+    """Solve ∇²u = −src with open (free-space) BCs, via a zero-padded
+    convolution with the Green's function 1/(4π r) (Hockney's method).  No
+    periodic images, no neutralizing background — the isolated-source field."""
+    N = src.shape[0]; M = 2 * N
+    o = np.fft.fftfreq(M) * M                       # offsets [0..N-1, -N..-1]
+    OX, OY, OZ = np.meshgrid(o, o, o, indexing="ij")
+    r = dx * np.sqrt(OX**2 + OY**2 + OZ**2)
+    G = np.zeros((M, M, M)); nz = r > 0
+    G[nz] = 1.0 / (4 * np.pi * r[nz])
+    G[0, 0, 0] = 1.0 / (4 * np.pi * 0.4 * dx)       # regularized self-cell
+    sp = np.zeros((M, M, M)); sp[:N, :N, :N] = src
+    u = np.real(np.fft.ifftn(np.fft.fftn(sp) * np.fft.fftn(G))) * dx**3
+    return u[:N, :N, :N]
+
+
+def _grad(u, dx, bc):
+    if bc == "periodic":
+        KX, KY, KZ, _ = _k_grids(u.shape[0], dx)
+        uk = np.fft.fftn(u)
+        return [np.real(np.fft.ifftn(1j * K * uk)) for K in (KX, KY, KZ)]
+    d = np.gradient(u, dx)                           # open: finite-difference
+    return [d[0], d[1], d[2]]
+
+
+def electric_field(rho, dx, eps0=1.0, bc="periodic"):
+    """E from a charge density via ∇²φ = −ρ/ε₀, E = −∇φ.
+
+    bc : "periodic" (FFT, neutralizing background — fine near the source and
+         for Gauss-law checks) or "open" (free-space Green's function, no image
+         charges — clean Coulomb field lines at all latitudes).
+    Returns ``[Ex, Ey, Ez]``.
+    """
+    phi = (_poisson_open(rho / eps0, dx) if bc == "open"
+           else _poisson_periodic(rho / eps0, dx))
+    return [-g for g in _grad(phi, dx, bc)]
+
+
+def magnetic_field(j, dx, mu0=1.0, bc="periodic"):
+    """B from a current density ``j=[jx,jy,jz]`` via ∇²A = −μ₀ j, B = ∇×A.
+
+    bc : "periodic" or "open" (free-space, no image currents).
+    """
+    solve = _poisson_open if bc == "open" else _poisson_periodic
+    A = [mu0 * solve(jc, dx) for jc in j]
+    dAx, dAy, dAz = (_grad(Ac, dx, bc) for Ac in A)
+    return [dAz[1] - dAy[2], dAx[2] - dAz[0], dAy[0] - dAx[1]]
 
 
 def divergence(F, dx):
@@ -84,7 +119,7 @@ def curl(F, dx):
             np.real(np.fft.ifftn(1j * (KX * Fy - KY * Fx)))]
 
 
-def maxwell_eh(rho, j, dx, *, eh_xi=0.0, n_iter=6, eps0=1.0, mu0=1.0):
+def maxwell_eh(rho, j, dx, *, eh_xi=0.0, n_iter=6, eps0=1.0, mu0=1.0, bc="periodic"):
     """Static Maxwell fields with the optional Euler–Heisenberg nonlinear
     vacuum correction.
 
@@ -107,8 +142,8 @@ def maxwell_eh(rho, j, dx, *, eh_xi=0.0, n_iter=6, eps0=1.0, mu0=1.0):
     -------
     (E, B) : each ``[Fx, Fy, Fz]``.
     """
-    E = electric_field(rho, dx, eps0)
-    B = magnetic_field(j, dx, mu0)
+    E = electric_field(rho, dx, eps0, bc=bc)
+    B = magnetic_field(j, dx, mu0, bc=bc)
     if eh_xi == 0.0:
         return E, B
     for _ in range(n_iter):
@@ -119,8 +154,8 @@ def maxwell_eh(rho, j, dx, *, eh_xi=0.0, n_iter=6, eps0=1.0, mu0=1.0):
         rho_eff = rho - divergence(P, dx)
         cM = curl(M, dx)
         j_eff = [j[i] + cM[i] for i in range(3)]
-        E = electric_field(rho_eff, dx, eps0)
-        B = magnetic_field(j_eff, dx, mu0)
+        E = electric_field(rho_eff, dx, eps0, bc=bc)
+        B = magnetic_field(j_eff, dx, mu0, bc=bc)
     return E, B
 
 

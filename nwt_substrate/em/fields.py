@@ -258,13 +258,22 @@ def trace_field_lines(field, g, seeds, *, n_steps=400, ds=0.15, both_ways=True):
 
 
 def mean_square_radius(rho, XYZ, dx):
-    """⟨r²⟩ of a charge density: ∫r²ρ dV / ∫ρ dV (signed; negative is allowed for
-    a net-neutral distribution with negative charge at larger r, e.g. the
-    neutron).  ``sqrt`` it for the rms charge radius of a net-charged body."""
+    """⟨r²⟩ of a charge density (signed; negative is physical for a net-neutral
+    distribution with negative charge at larger r, e.g. the neutron).
+
+    For a **net-charged** body, returns the per-unit-charge ⟨r²⟩ = ∫r²ρ / ∫ρ
+    (``sqrt`` it for the rms charge radius).  For a **net-neutral** body
+    (|∫ρ| negligible vs ∫|ρ|), the per-charge ratio is ill-defined, so the bare
+    second moment ∫r²ρ dV is returned (the neutron-⟨r²⟩ convention).  The
+    neutral test is a tolerance relative to the charge scale, not ``!= 0`` —
+    a floating-point ``∫ρ ≈ 1e-17`` must not divide.
+    """
     X, Y, Z = XYZ
-    tot = rho.sum()
-    return float((( X**2 + Y**2 + Z**2) * rho).sum() / tot) if tot != 0 else \
-        float(((X**2 + Y**2 + Z**2) * rho).sum() * dx**3)
+    r2rho = ((X**2 + Y**2 + Z**2) * rho).sum()
+    Q, scale = rho.sum(), np.abs(rho).sum()
+    if abs(Q) <= 1e-9 * scale:                 # net-neutral → bare 2nd moment
+        return float(r2rho * dx**3)
+    return float(r2rho / Q)                     # net-charged → per-unit-charge ⟨r²⟩
 
 
 def form_factor(rho, dx, *, bc="open", pad=2, nbins=60, qmax=None):

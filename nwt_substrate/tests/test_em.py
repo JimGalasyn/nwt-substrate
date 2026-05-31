@@ -152,14 +152,26 @@ def test_open_form_factor_cleaner_than_periodic():
     assert np.all(np.diff(Fo) <= 1e-6)
 
 
-def test_mean_square_radius_neutral_can_be_negative():
+def test_mean_square_radius_neutral_is_finite_second_moment():
+    """Net-neutral ⟨r²⟩ must be the bare second moment ∫r²ρ dV (a finite,
+    physical value) — NOT a divide-by-(~0) blow-up.  Negative here because the
+    negative charge sits at larger r (the neutron's positive-interior/neg-skin)."""
     g, dx, (X, Y, Z) = em.grid(48, 16.0)
     core = np.exp(-(X**2 + Y**2 + Z**2) / (2 * 0.8**2))
     skin = np.exp(-(X**2 + Y**2 + Z**2) / (2 * 2.0**2))
     core /= core.sum(); skin /= skin.sum()
-    rho = core - skin                                  # net zero, neg charge outside
-    assert abs(rho.sum()) < 1e-10
-    assert em.mean_square_radius(rho, (X, Y, Z), dx) < 0     # ⟨r²⟩ < 0
+    rho = core - skin                                  # net ≈ 0 (FP residual ~1e-17)
+    assert 0 < abs(rho.sum()) < 1e-6                   # genuinely near-neutral, not exact
+    r2 = em.mean_square_radius(rho, (X, Y, Z), dx)
+    direct = float(((X**2 + Y**2 + Z**2) * rho).sum() * dx**3)   # the bare 2nd moment
+    assert r2 == pytest.approx(direct, rel=1e-9)       # returns the moment, not garbage
+    assert -3.0 < r2 < 0.0                             # finite & negative (physical scale)
+
+
+def test_mean_square_radius_charged_is_per_charge():
+    g, dx, (X, Y, Z), rho = _point_charge(Q=1.0, N=48, L=16.0, width=1.0)
+    # net-charged → ⟨r²⟩ = ∫r²ρ/∫ρ ; a width-1 Gaussian has ⟨r²⟩ = 3
+    assert em.mean_square_radius(rho, (X, Y, Z), dx) == pytest.approx(3.0, rel=0.1)
 
 
 def test_form_factor_suppresses_scattering():

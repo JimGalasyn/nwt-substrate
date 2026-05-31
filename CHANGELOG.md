@@ -6,6 +6,17 @@ The format follows [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/
 
 ## [Unreleased]
 
+## [0.4.2] - 2026-05-31
+
+[Full narrative release notes](docs/releases/v0.4.2.md). Concept DOI [10.5281/zenodo.20012027](https://doi.org/10.5281/zenodo.20012027) (resolves to latest); version DOI assigned on the GitHub release.
+
+This release answers M. Wende's follow-up on the d12rg benchmark thread — that route *multiplicity* is not route *independence* — and with it formally ships the derivation-route-redundancy layer first shared as v0.4.1 on the list, plus two scheme-correct benchmark-comparison fixes carried since v0.4.0. Value-preserving throughout; full suite green (1368 tests).
+
+### Added
+
+- **Derivation-route redundancy — independent routes + single points of failure (M. Wende).** `DerivationDAG` gains the leave-one-route-out dual of the load ranking: `independent_routes()` counts internally node-disjoint derivation routes to a target (Menger, via unit-node-capacity max flow — conjunctive premises funnelling through one closed form count as *one* route; a value reached two disjoint ways counts as many), `cut_nodes()` lists the single points of failure that survive removal, `route_redundancy()` reports both per target plus resilience (routes ≥ 2), and `criticality_ranking()` ranks nodes by *criticality* (outputs ungrounded if the node is removed) beside *load* (outputs reached), with `redundancy = load − critical`. Surfaced by `python -m nwt_substrate.benchmarks.o10 [--suite --sensitivity] --redundancy`. Key result: high reach is not high criticality — `DIM_S_SPIN7` carries the largest load (14 benchmarks) but α is the sole route for six pure-α observables.
+- **Derivation-*diversity* layer — route independence beyond route count (M. Wende follow-up).** Route multiplicity is not route independence: two graph-disjoint routes can collapse under the same perturbation. Each integer's mover-set (from the sensitivity sweep) is its empirical perturbation-response signature, so `SensitivityReport` now clusters the load-bearing integers into structural **sectors** by response overlap and re-counts routes per sector: `integer_similarity()` (Jaccard of two integers' mover-sets), `integer_sectors(threshold)` (single-linkage sectors), and `route_diversity(threshold)` (per benchmark: `raw` routes vs `effective` = distinct sectors; `effective < raw` is false redundancy, `effective == 1` with `raw ≥ 2` is a hidden single point of failure). `python -m nwt_substrate.benchmarks.o10 --suite --sensitivity --redundancy` appends the diversity readout. **Finding:** five QED/lepton benchmarks (`bhabha`, `moller`, `muon_decay_rate`, `qed_compton`, `qed_eemumu`) that the route count called 2-route "resilient" are single-sector — `DIM_S_SPIN7` and `N_LORENTZ_FROM_CL07` always co-move (Jaccard 0.53) — while `DIM_V_SPIN7 ≡ N_EDGES_K7` and the K8 trio are perturbation-identical (Jaccard 1.0) at every threshold. The five hidden SPOFs are threshold-contingent (the 0.53 spine merge appears at threshold ≤ 0.53); the geometry- and K8-sector collapses are threshold-robust.
+
 ### Fixed
 
 - **`benchmark_sin2_theta_W` — scheme-correct comparison.** The substrate prediction `(2+α)/9 ≈ 0.22303` is a leading-order (tree-level) angle, which *is* the **on-shell** `sin²θ_W ≡ 1 − M_W²/M_Z²` by definition — it matches the PDG on-shell value to **<0.1%** (0.009% at M_W=80.379). The benchmark had been comparing this on-shell prediction against the **effective/MS-bar** angle (0.23122), an apples-to-oranges scheme mismatch that read as a 3.5% deviation; the on-shell↔effective separation (+3.68% radiative running) *is* that gap. Now compared like-for-like against the on-shell value (computed from the PDG `M_W, M_Z` already in `constants.py` — not a hand-picked witness), it moves from a marked O10 defect edge to admissible. The prediction is unchanged; only the comparison scheme is corrected, and the notes keep the effective-angle running explicit as an open higher-order item.
@@ -203,7 +214,10 @@ See [`CITATION.cff`](CITATION.cff). For pinned-version reproducibility:
 
 Concept DOI (always-latest, version-agnostic): [`10.5281/zenodo.20012027`](https://doi.org/10.5281/zenodo.20012027).
 
-[Unreleased]: https://github.com/JimGalasyn/nwt-substrate/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/JimGalasyn/nwt-substrate/compare/v0.4.2...HEAD
+[0.4.2]: https://github.com/JimGalasyn/nwt-substrate/compare/v0.4.0...v0.4.2
+[0.4.0]: https://github.com/JimGalasyn/nwt-substrate/compare/v0.3.1...v0.4.0
+[0.3.1]: https://github.com/JimGalasyn/nwt-substrate/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/JimGalasyn/nwt-substrate/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/JimGalasyn/nwt-substrate/compare/v0.1.3...v0.2.0
 [0.1.3]: https://github.com/JimGalasyn/nwt-substrate/compare/v0.1.2...v0.1.3

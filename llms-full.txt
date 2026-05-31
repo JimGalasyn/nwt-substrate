@@ -11,7 +11,7 @@ This is the long-form authoritative summary. For the short version, see `llms.tx
 - Repository: https://github.com/JimGalasyn/nwt-substrate
 - Software DOI: 10.5281/zenodo.20012027
 - Paper series Zenodo community: https://zenodo.org/communities/nwt
-- Current version: 0.4.0 (released 2026-05-29)
+- Current version: 0.4.2 (released 2026-05-31)
 - Language: Python 3.10 / 3.11 / 3.12
 - Test count: 1233 substrate tests, ~10 seconds
 - Code coverage: tracked via Codecov (see badge in README)

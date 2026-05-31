@@ -8,7 +8,7 @@ The format follows [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/
 
 ## [0.4.2] - 2026-05-31
 
-[Full narrative release notes](docs/releases/v0.4.2.md). Concept DOI [10.5281/zenodo.20012027](https://doi.org/10.5281/zenodo.20012027) (resolves to latest); version DOI assigned on the GitHub release.
+[Full narrative release notes](docs/releases/v0.4.2.md). Version DOI [10.5281/zenodo.20476222](https://doi.org/10.5281/zenodo.20476222); concept DOI [10.5281/zenodo.20012027](https://doi.org/10.5281/zenodo.20012027) (resolves to latest).
 
 This release answers M. Wende's follow-up on the d12rg benchmark thread — that route *multiplicity* is not route *independence* — and with it formally ships the derivation-route-redundancy layer first shared as v0.4.1 on the list, plus two scheme-correct benchmark-comparison fixes carried since v0.4.0. Value-preserving throughout; full suite green (1368 tests).
 

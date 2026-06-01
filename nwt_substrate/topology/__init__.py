@@ -1,4 +1,4 @@
-"""Topology module: torus knots, K_7 graph state, Hopf links."""
+"""Topology module: torus knots, K_7 graph state, Hopf links, link invariants."""
 
 from .torus_knots import (
     knot_family,
@@ -24,6 +24,17 @@ from .colored_jones import (
     DEFAULT_LEVEL,
 )
 
+from .linking_invariants import (
+    gauss_linking_number,
+    linking_matrix,
+    link_deletion_test,
+    milnor_indeterminacy,
+    borromean_rings,
+    tetrahedral_rotations,
+    link_symmetry_permutations,
+    permutation_parity,
+)
+
 __all__ = [
     "knot_family",
     "seifert_genus",
@@ -40,4 +51,12 @@ __all__ = [
     "colored_jones",
     "colored_jones_qtrace",
     "DEFAULT_LEVEL",
+    "gauss_linking_number",
+    "linking_matrix",
+    "link_deletion_test",
+    "milnor_indeterminacy",
+    "borromean_rings",
+    "tetrahedral_rotations",
+    "link_symmetry_permutations",
+    "permutation_parity",
 ]

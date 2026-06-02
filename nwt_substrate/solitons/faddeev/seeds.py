@@ -14,7 +14,7 @@ Construction (charge Q_H = n*m):
 
   base map (inverse stereographic R^3 -> S^3), smooth angles
       phi1 = atan2(y, x)                      azimuthal, about the z-axis
-      phi2 = atan2(2 R z, r^2 - R^2)          meridional, around the core ring
+      phi2 = atan2(r^2 - R^2, 2 R z)          meridional, around the core ring
   rational (degree-(n, m)) map on the Hopf fibre, smooth because each amplitude
   vanishes where its phase is ill-defined (like z^k at z=0):
       Z1 = cos(lam) e^{i n phi1},   Z2 = sin(lam) e^{i m phi2}
@@ -48,7 +48,7 @@ def rational_hopfion(grid, R=3.5, w=None, n=1, m=1, center=(0.0, 0.0, 0.0)):
     rho = np.sqrt(x**2 + y**2)
     r2 = x**2 + y**2 + z**2
     phi1 = np.arctan2(y, x)
-    phi2 = np.arctan2(2.0 * R * z, r2 - R**2)        # oriented so Q_H = +n*m
+    phi2 = np.arctan2(r2 - R**2, 2.0 * R * z)        # oriented so Q_H = +n*m
     d = np.sqrt((rho - R) ** 2 + z**2)
     t = np.clip(d / w, 0.0, 1.0)
     s = t**3 * (10.0 - 15.0 * t + 6.0 * t**2)        # smootherstep (C^2)

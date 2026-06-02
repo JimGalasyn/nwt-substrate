@@ -37,8 +37,10 @@ def whitehead_hopf_charge(n1, n2, n3, grid):
     Bxh, Byh, Bzh = np.fft.fftn(Bx), np.fft.fftn(By), np.fft.fftn(Bz)
     inv = np.zeros_like(K2)
     np.divide(1.0, K2, out=inv, where=K2 > 0)       # skip the k=0 mode
-    Ax = np.real(np.fft.ifftn(-1j * (KY * Bzh - KZ * Byh) * inv))
-    Ay = np.real(np.fft.ifftn(-1j * (KZ * Bxh - KX * Bzh) * inv))
-    Az = np.real(np.fft.ifftn(-1j * (KX * Byh - KY * Bxh) * inv))
+    # A = +i (k x B)/k^2 solves curl A = +B under numpy's +ik derivative
+    # convention (a -1j here would solve curl A = -B and return -Q_H).
+    Ax = np.real(np.fft.ifftn(1j * (KY * Bzh - KZ * Byh) * inv))
+    Ay = np.real(np.fft.ifftn(1j * (KZ * Bxh - KX * Bzh) * inv))
+    Az = np.real(np.fft.ifftn(1j * (KX * Byh - KY * Bxh) * inv))
     H = np.sum(Ax * Bx + Ay * By + Az * Bz) * dx**3
     return float(H / (16.0 * np.pi**2))

@@ -92,9 +92,11 @@ gh release create vX.Y.Z \
   --notes-file docs/releases/vX.Y.Z.md
 ```
 
-Publishing the Release fires two workflows off the one event: Zenodo mints the
-version DOI, and `.github/workflows/publish-pypi.yml` builds + publishes the
-sdist/wheel to PyPI via **trusted publishing** (OIDC — no token). Confirm both:
+Publishing the Release drives two independent automations off the one event: the
+**Zenodo–GitHub integration** archives the repo and mints the version DOI (this is
+the Zenodo GitHub app, *not* an Actions workflow in this repo), and the
+**`publish-pypi.yml` Actions workflow** builds + publishes the sdist/wheel to PyPI
+via trusted publishing (OIDC — no token). Confirm both:
 
 ```bash
 gh run list --workflow publish-pypi.yml --limit 1   # build+publish green?

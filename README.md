@@ -30,7 +30,7 @@ intuition into closed-form quantitative predictions. The
 [paper series on Zenodo](https://zenodo.org/communities/nwt) is the
 derivation record; this library is the executable companion.
 
-**Since v0.2.0** (current release **v0.4.0**, 2026-05-29), the library ships a
+**Since v0.2.0** (current release **v0.5.0**, 2026-06-13), the library ships a
 **substrate Instruction Set Architecture** (`nwt_substrate.isa`) that
 makes the K_7 algebra load-bearing across every shim. ~25
 structural constants (`N_EDGES_K7 = 21`, `N_VERTICES_K7 = 7`,
@@ -84,7 +84,7 @@ All derived from the substrate algebra at zero free parameters
   Anti-numerology argument made empirically concrete:
   `from nwt_substrate.benchmarks import run_all; run_all()`.
   See [`nwt_substrate/benchmarks/README.md`](nwt_substrate/benchmarks/README.md).
-- **1233 substrate tests pass in ~10 seconds**, including 92
+- **1436 substrate tests pass in ~2 minutes**, including 92
   substrate-identity enforcement tests across seven K_7 shims plus
   31 K_8 neutrino-sector tests — the substrate algebra is enforced
   by the codebase, not merely described.
@@ -220,6 +220,35 @@ Heron K_7 quantum circuit, structurally verified:
 - **Walk-phase scattering** — substrate-algebraic Compton (matches
   Klein-Nishina to 1e-9), Møller / Bhabha, V-A muon decay matching
   Sargent rate, neutron decay with g_A = 1.27.
+- **Solitons** (`nwt_substrate.solitons`, v0.5 new) — Faddeev-Skyrme
+  (Hopf) soliton primitives: the CP¹ → S² map, the faithful Berg-Lüscher
+  area form, the field-theoretic Whitehead Hopf charge
+  `Q_H = (1/16π²)∫A·B`, a smooth in-basin rational-map hopfion seed, and
+  the forward-difference energy / virial diagnostics — the construct/measure
+  half of the L₃ Skyrme-Faddeev sector (Paper 16), and the first stable
+  lattice hopfion in the project (Q_H +0.998). The energy-minimising GPU
+  relaxers live in the separate `jax-solitons` engine, which validates
+  against these numpy primitives as its reference oracle.
+- **Classical EM + form factors** (`nwt_substrate.em`,
+  `nwt_substrate.amplitudes`, v0.5 new) — FFT-Poisson electric/magnetic
+  fields a carrier radiates from its charge / supercurrent density (periodic
+  or open BCs), the optional Euler-Heisenberg nonlinear-vacuum correction,
+  and the charge-density → form-factor → elastic-scattering chain
+  (`form_factor`, `mean_square_radius`, Mott + form-factor cross sections).
+- **Vortex profiles** (`condensate.solve_bps_vortex` / `solve_gl_vortex`,
+  v0.5 new) — the radial cross-section `f(ρ), a(ρ)` of the abelian-Higgs
+  vortex: the exact self-dual BPS profile (shooting) and the full gauged
+  Ginzburg-Landau profile at any `κ = λ/ξ` and winding `n` (BVP collocation,
+  stable for n ≥ 2), with a supercurrent-sheath helper.
+- **Linking invariants** (`topology.linking_invariants`, v0.5 new) — Gauss
+  linking number / matrix, Borromean-vs-anti-Borromean deletion test, Milnor
+  indeterminacy (the modulus of the triple linking invariant), and A₄ link
+  symmetry — the numeric backing for "binding = Hopf linking of carrier
+  knots" (Paper 20).
+- **Particle portraits** (`nwt_substrate.portraits`, v0.5 new) — renders each
+  particle from its actual field content: the BPS vortex profile bent along
+  the carrier-knot curve, with the abelian-Higgs phase composited as an
+  emission-absorption volume (`portrait(p, q)`, `gallery()`).
 - **Chemistry** (v0.2 new) — SMILES → substrate Hopf-pair aromaticity
   RE with K_7-toroidal correction; Clar sextets via maximum-independent-
   set; McKay-admissible coordinations; C_60 vibrational mode decomposition
@@ -334,7 +363,7 @@ enforced by it.
 
 ```bash
 pytest nwt_substrate/tests/ -q
-# 1233 passed in ~10s
+# 1436 passed in ~2 min
 ```
 
 For coverage:
@@ -422,14 +451,19 @@ https://zenodo.org/communities/nwt (collected DOIs).
 
 ## Status
 
-**v0.4.0 (released 2026-05-29)**: review-driven correction layers (Z-width QCD,
-muon-lifetime decomposition), the O10 derivation-separation predictor + DAG
-cit-readout, a sensitivity structural-criticality layer, and a full library
-self-consistency audit (every structural integer anchored on `isa`). Archived on
-Zenodo (version DOI `10.5281/zenodo.20448443`; concept DOI
-`10.5281/zenodo.20012027`, resolves to latest). The active-encoding architecture
-+ cross-architecture QPU interface + ISA layer landed in v0.2.0 (the version the
-Paper 21a/21b bundle cites).
+**v0.5.0 (2026-06-13)**: the field-theoretic construct/measure layer —
+Faddeev-Skyrme hopfions (`solitons.faddeev`), classical EM + form factors
+(`em`, `amplitudes`), gauged Ginzburg-Landau vortices at any κ
+(`condensate.solve_gl_vortex`), Gauss/Milnor link invariants
+(`topology.linking_invariants`), and the particle-portrait renderer
+(`portraits`); the energy-minimising relaxers live in the separate
+`jax-solitons` engine, for which these numpy primitives are the reference
+oracle. v0.4.x delivered the review-driven correction layers, the O10
+derivation-separation predictor + DAG cit-readout, and the
+route-redundancy/diversity audit (archived on Zenodo; concept DOI
+`10.5281/zenodo.20012027`, resolves to latest). The active-encoding
+architecture + cross-architecture QPU interface + ISA layer landed in v0.2.0
+(the version the Paper 21a/21b bundle cites).
 
 API surface is stable for particles, compositions, walk_phase, gauge
 shims, gravity, chemistry, diagrams, and the new ISA layer. Minor
@@ -463,8 +497,8 @@ all seven shims.
   format). Every user-visible change lands here.
 - **[`docs/releases/`](docs/releases/)** — narrative release notes
   per minor version. The latest is
-  [`v0.4.0`](docs/releases/v0.4.0.md) — review-driven correction layers, O10,
-  and the self-consistency audit.
+  [`v0.5.0`](docs/releases/v0.5.0.md) — the field-theoretic construct/measure
+  layer (solitons, EM, vortices, linking, portraits).
 
 ## License
 

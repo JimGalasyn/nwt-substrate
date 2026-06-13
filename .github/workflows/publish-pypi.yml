@@ -17,6 +17,11 @@ name: Publish to PyPI
 on:
   release:
     types: [published]
+  # Manual trigger to publish an ALREADY-tagged version (e.g. the first publish of
+  # the existing v0.5.0, whose Release predates this workflow). Run it against the
+  # tag so setuptools-scm derives the right version:
+  #   gh workflow run publish-pypi.yml --ref v0.5.0
+  workflow_dispatch:
 
 permissions:
   contents: read

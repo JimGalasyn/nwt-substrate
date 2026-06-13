@@ -32,6 +32,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
+from nwt_substrate.isa.constants import N_VERTICES_K7
 from nwt_substrate.condensate.sigma_orbits import SIGMA_ORBITS
 from nwt_substrate.condensate.orbit_winding import (
     edge_winding_class, HEFFTER_VERT_UV,
@@ -65,9 +66,17 @@ def bfs_shortest_walks(max_length: int = 25,
     final state = (start, 7p, 7q) for some integer (p, q).
 
     Returns: dict mapping (|p|, |q|) → walk (list of vertex indices).
+
+    Raises
+    ------
+    ValueError
+        If ``start`` is not a valid K_7 vertex index (0 … N_VERTICES_K7-1).
     """
+    if not 0 <= start < N_VERTICES_K7:
+        raise ValueError(
+            f"start vertex {start} not in range [0, {N_VERTICES_K7 - 1}]")
     edge_w = {(a, b): edge_winding_class(a, b)
-              for a in range(7) for b in range(7) if a != b}
+              for a in range(N_VERTICES_K7) for b in range(N_VERTICES_K7) if a != b}
     initial = (start, 0, 0)
     visited = {initial: (0, None)}
     queue = deque([initial])
@@ -77,7 +86,7 @@ def bfs_shortest_walks(max_length: int = 25,
         if depth >= max_length:
             continue
         v, m_u, m_v = state
-        for nxt in range(7):
+        for nxt in range(N_VERTICES_K7):
             if nxt == v:
                 continue
             dnu, dnv = edge_w[(v, nxt)]

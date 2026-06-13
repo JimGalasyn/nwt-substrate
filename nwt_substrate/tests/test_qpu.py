@@ -119,6 +119,12 @@ def test_fano_identity_for_codeword():
     assert decode.logical_z([0] * 7) == +1
 
 
+def test_fano_rejects_wrong_length():
+    """fano() guards the structural 7-bit contract (N_VERTICES_K7)."""
+    with pytest.raises(ValueError, match="data bits"):
+        decode.fano([0] * 6)
+
+
 # --------------------------------------------------------------- M2: preflight
 # IQM Garnet's real 20-qubit grid (0-indexed).
 _GARNET_EDGES = tuple(sorted({

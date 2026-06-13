@@ -74,7 +74,7 @@ photon = GaugeField(
 )
 
 
-def _build_qed():
+def _build_qed() -> Lagrangian:
     """L_QED = ψ̄ (i γ^μ D_μ − m) ψ − (1/4) F^{μν} F_{μν}, summed over
     charged fermions, with D_μ = ∂_μ + i e Q_f A_μ."""
 
@@ -129,7 +129,7 @@ ghost_qcd = FaddeevPopovGhost(
 )
 
 
-def _build_qcd():
+def _build_qcd() -> Lagrangian:
     """L_QCD = Σ_q ψ̄_q (i γ^μ D_μ − m_q) ψ_q
               − (1/4) G^{aμν} G^a_{μν}
               + L_FP (Faddeev-Popov ghosts)

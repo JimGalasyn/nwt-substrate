@@ -32,7 +32,7 @@ __all__ = [
 ]
 
 
-def _k_grids(N, dx):
+def _k_grids(N: int, dx: float) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     k = 2 * np.pi * np.fft.fftfreq(N, d=dx)
     KX, KY, KZ = np.meshgrid(k, k, k, indexing="ij")
     K2 = KX**2 + KY**2 + KZ**2
@@ -40,21 +40,21 @@ def _k_grids(N, dx):
     return KX, KY, KZ, K2
 
 
-def grid(N, L):
+def grid(N: int, L: float) -> tuple[np.ndarray, float, tuple[np.ndarray, np.ndarray, np.ndarray]]:
     """Return ``(g, dx, (X, Y, Z))`` for a cubic periodic grid of N points / side L."""
     g = np.linspace(-L / 2, L / 2, N, endpoint=False)
     X, Y, Z = np.meshgrid(g, g, g, indexing="ij")
     return g, float(g[1] - g[0]), (X, Y, Z)
 
 
-def _poisson_periodic(src, dx):
+def _poisson_periodic(src: np.ndarray, dx: float) -> np.ndarray:
     """Solve ∇²u = −src on a periodic cell (FFT); the k=0 mode is dropped."""
     _, _, _, K2 = _k_grids(src.shape[0], dx)
     sk = np.fft.fftn(src); sk[0, 0, 0] = 0.0
     return np.real(np.fft.ifftn(sk / K2))
 
 
-def _poisson_open(src, dx):
+def _poisson_open(src: np.ndarray, dx: float) -> np.ndarray:
     """Solve ∇²u = −src with open (free-space) BCs, via a zero-padded
     convolution with the Green's function 1/(4π r) (Hockney's method).  No
     periodic images, no neutralizing background — the isolated-source field."""
@@ -70,7 +70,7 @@ def _poisson_open(src, dx):
     return u[:N, :N, :N]
 
 
-def _grad(u, dx, bc):
+def _grad(u: np.ndarray, dx: float, bc: str) -> list[np.ndarray]:
     if bc == "periodic":
         KX, KY, KZ, _ = _k_grids(u.shape[0], dx)
         uk = np.fft.fftn(u)
@@ -79,7 +79,7 @@ def _grad(u, dx, bc):
     return [d[0], d[1], d[2]]
 
 
-def electric_field(rho, dx, eps0=1.0, bc="periodic"):
+def electric_field(rho: np.ndarray, dx: float, eps0: float = 1.0, bc: str = "periodic") -> list[np.ndarray]:
     """E from a charge density via ∇²φ = −ρ/ε₀, E = −∇φ.
 
     bc : "periodic" (FFT, neutralizing background — fine near the source and
@@ -92,7 +92,7 @@ def electric_field(rho, dx, eps0=1.0, bc="periodic"):
     return [-g for g in _grad(phi, dx, bc)]
 
 
-def magnetic_field(j, dx, mu0=1.0, bc="periodic"):
+def magnetic_field(j: list[np.ndarray], dx: float, mu0: float = 1.0, bc: str = "periodic") -> list[np.ndarray]:
     """B from a current density ``j=[jx,jy,jz]`` via ∇²A = −μ₀ j, B = ∇×A.
 
     bc : "periodic" or "open" (free-space, no image currents).
@@ -103,7 +103,7 @@ def magnetic_field(j, dx, mu0=1.0, bc="periodic"):
     return [dAz[1] - dAy[2], dAx[2] - dAz[0], dAy[0] - dAx[1]]
 
 
-def divergence(F, dx):
+def divergence(F: list[np.ndarray], dx: float) -> np.ndarray:
     """Spectral divergence of a vector field ``F=[Fx,Fy,Fz]``."""
     KX, KY, KZ, _ = _k_grids(F[0].shape[0], dx)
     return np.real(np.fft.ifftn(1j * (KX * np.fft.fftn(F[0])
@@ -111,7 +111,7 @@ def divergence(F, dx):
                                       + KZ * np.fft.fftn(F[2]))))
 
 
-def curl(F, dx):
+def curl(F: list[np.ndarray], dx: float) -> list[np.ndarray]:
     """Spectral curl of a vector field ``F=[Fx,Fy,Fz]``."""
     KX, KY, KZ, _ = _k_grids(F[0].shape[0], dx)
     Fx, Fy, Fz = (np.fft.fftn(c) for c in F)
@@ -157,6 +157,9 @@ def maxwell_eh(rho, j, dx, *, eh_xi=0.0, n_iter=6, tol=1e-5, eps0=1.0, mu0=1.0,
     for _ in range(n_iter):
         inv = sum(c * c for c in E) - sum(c * c for c in B)        # E²−B²
         EdotB = sum(e * b for e, b in zip(E, B))
+        # P = ∂L_EH/∂E, M = −∂L_EH/∂B for L_EH = ξ[(E²−B²)² + 7(E·B)²]:
+        # the 4 = 2·1 (diagonal term) and 14 = 2·7 (mixed term) are the chain-rule
+        # factors off the 1:7 invariant ratio documented in the function header.
         P = [4 * eh_xi * inv * E[i] + 14 * eh_xi * EdotB * B[i] for i in range(3)]
         M = [4 * eh_xi * inv * B[i] - 14 * eh_xi * EdotB * E[i] for i in range(3)]
         rho_eff = rho - divergence(P, dx)

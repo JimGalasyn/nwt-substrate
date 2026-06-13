@@ -24,7 +24,7 @@ class Item:
     predicted: tuple               # (x_fano, z_fano, logical_z)
 
 
-def build_specs(item: Item, scheme: str):
+def build_specs(item: Item, scheme: str) -> list[tuple[str, object]]:
     """Return [(tag, CircuitSpec), ...] for an item under a measurement scheme."""
     if scheme == "destructive":
         z, x = _spec.destructive_css(item.base_ops, item.label)
@@ -47,7 +47,7 @@ def choose_scheme(caps) -> str:
     return "destructive"
 
 
-def _verdict_for(item: Item, scheme: str, counts_by_tag: dict):
+def _verdict_for(item: Item, scheme: str, counts_by_tag: dict) -> _decode.Verdict:
     px, pz, plz = item.predicted
     if scheme == "destructive":
         x_dist, z_dist = _decode.destructive_dists(

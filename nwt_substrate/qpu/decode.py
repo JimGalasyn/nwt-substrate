@@ -12,11 +12,25 @@ from __future__ import annotations
 
 from collections import Counter
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
+from nwt_substrate.isa.constants import N_VERTICES_K7
 from .spec import STEANE_STAB, STEANE_LZ
+
+if TYPE_CHECKING:
+    from .adapters.base import Counts
 
 # Hamming(7,4) syndrome position -> Fano point (mirror of the legacy pipeline)
 QUBIT_TO_FANO = {0: "E3", 1: "E2", 2: "F1", 3: "E1", 4: "F2", 5: "F3", 6: "P"}
+
+# Little-endian place values of the 3 Hamming(7,4) parity bits: a syndrome
+# (s0, s1, s2) maps to the 1-based error position s0·1 + s1·2 + s2·4.
+_HAMMING_BIT_WEIGHTS = (1, 2, 4)
+
+
+def _syndrome_to_pos(syndrome_bits) -> int:
+    """Weighted sum of parity bits -> Hamming error position (0 = no error)."""
+    return sum(w * int(b) for w, b in zip(_HAMMING_BIT_WEIGHTS, syndrome_bits))
 
 
 def _bits(bitstring: str) -> list[int]:
@@ -25,9 +39,17 @@ def _bits(bitstring: str) -> list[int]:
 
 
 def fano(data_bits: list[int]) -> str:
-    """Map 7 data-qubit parities over the 3 stabilizer supports to a Fano point."""
-    s = [sum(data_bits[i] for i in STEANE_STAB[k]) % 2 for k in range(3)]
-    pos = s[0] + 2 * s[1] + 4 * s[2]
+    """Map 7 data-qubit parities over the 3 stabilizer supports to a Fano point.
+
+    Raises
+    ------
+    ValueError
+        If ``data_bits`` does not have exactly N_VERTICES_K7 (= 7) entries.
+    """
+    if len(data_bits) != N_VERTICES_K7:
+        raise ValueError(f"expected {N_VERTICES_K7} data bits, got {len(data_bits)}")
+    s = [sum(data_bits[i] for i in stab) % 2 for stab in STEANE_STAB]
+    pos = _syndrome_to_pos(s)
     return "I" if pos == 0 else QUBIT_TO_FANO[pos - 1]
 
 
@@ -36,7 +58,7 @@ def logical_z(data_bits: list[int]) -> int:
 
 
 # --------------------------------------------------------------- distributions
-def destructive_dists(z_counts: dict[str, int], x_counts: dict[str, int]):
+def destructive_dists(z_counts: dict[str, int], x_counts: dict[str, int]) -> tuple[Counter, Counter]:
     """From the two destructive-readout registers (each {bitstring: n}) return
     (x_dist over x_fano, z_dist over (z_fano, logical_z))."""
     x_dist: Counter = Counter()
@@ -49,16 +71,28 @@ def destructive_dists(z_counts: dict[str, int], x_counts: dict[str, int]):
     return x_dist, z_dist
 
 
-def ancilla_dist(counts) -> Counter:
+def ancilla_dist(counts: Counts) -> Counter:
     """From an ancilla-scheme Counts (registers c_syn[6], c_lz[7]) return a joint
-    distribution over ((x_fano, z_fano), logical_z)."""
+    distribution over ((x_fano, z_fano), logical_z).
+
+    Parameters
+    ----------
+    counts : Counts
+        Canonical Counts with ``c_syn`` (6 syndrome bits) and ``c_lz`` registers.
+
+    Returns
+    -------
+    Counter
+        Joint distribution over ((x_fano, z_fano), logical_z).
+    """
     i_syn = counts.register_order.index("c_syn")
     i_lz = counts.register_order.index("c_lz")
     dist: Counter = Counter()
+    n_parity = len(_HAMMING_BIT_WEIGHTS)   # X-syndrome bits, then Z-syndrome bits
     for key, n in counts.data.items():
         syn, lz = key[i_syn], _bits(key[i_lz])
-        xpos = int(syn[0]) + 2 * int(syn[1]) + 4 * int(syn[2])
-        zpos = int(syn[3]) + 2 * int(syn[4]) + 4 * int(syn[5])
+        xpos = _syndrome_to_pos(syn[:n_parity])
+        zpos = _syndrome_to_pos(syn[n_parity:2 * n_parity])
         xf = "I" if xpos == 0 else QUBIT_TO_FANO[xpos - 1]
         zf = "I" if zpos == 0 else QUBIT_TO_FANO[zpos - 1]
         dist[((xf, zf), logical_z(lz))] += n

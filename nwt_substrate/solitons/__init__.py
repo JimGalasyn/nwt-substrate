@@ -10,7 +10,8 @@ Umbrella for NWT's soliton sectors and their shared coordinate grid:
 
 The `faddeev` public API is re-exported here for convenience.  Everything is
 pure-numpy and rendering-free; the energy-minimising relaxers live in the
-separate JAX/GPU engine.
+separate `jax-solitons` JAX/GPU engine, which treats these primitives as its
+numpy reference oracle (cross-checked, not imported -- see `faddeev`).
 """
 from .grid import BoxGrid
 from .faddeev import (

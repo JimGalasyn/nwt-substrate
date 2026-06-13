@@ -4,8 +4,11 @@ Pure-numpy, rendering-free reference implementations of the CP^1 field map, the
 faithful (Berg-Luscher) area form, the geometric Whitehead Hopf charge, the
 rational-map hopfion initial condition, and the Faddeev energy / soliton-size
 diagnostics.  These are the forward, diagnostic half of the soliton work; the
-JAX/GPU energy-minimising relaxers live in the separate engine and import these
-as their reference (and test oracle).
+JAX/GPU energy-minimising relaxers live in the separate `jax-solitons` engine.
+That engine does NOT import this package; instead it is validated *against* these
+primitives as its reference oracle -- a live cross-engine equivalence test in
+jax-solitons installs this package and asserts its Faddeev energy and Whitehead
+Hopf charge agree with these implementations on an identical field.
 
 Quick start
 -----------

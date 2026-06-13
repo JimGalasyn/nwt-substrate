@@ -499,6 +499,9 @@ all seven shims.
   per minor version. The latest is
   [`v0.5.0`](docs/releases/v0.5.0.md) — the field-theoretic construct/measure
   layer (solitons, EM, vortices, linking, portraits).
+- **[`docs/RELEASING.md`](docs/RELEASING.md)** — the maintainer runbook for
+  cutting a tagged, Zenodo-archived release (prep PR → tag → GitHub Release →
+  DOI backfill).
 
 ## License
 

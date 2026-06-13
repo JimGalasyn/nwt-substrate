@@ -6,6 +6,10 @@ The format follows [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/
 
 ## [Unreleased]
 
+### Added
+
+- **`docs/RELEASING.md` — maintainer release runbook.** The end-to-end process for cutting a tagged, Zenodo-archived release (prep PR → annotated tag → GitHub Release → DOI backfill), capturing the non-obvious bits: the version is `setuptools-scm` tag-driven (only `CITATION.cff` is hand-bumped), `main` is ruleset-protected so every step is a PR (and CodeQL must pass), and Zenodo mints the DOI on a published GitHub *Release*, not a bare tag. Linked from `README.md` and `CONTRIBUTING.md`.
+
 ## [0.5.0] - 2026-06-13
 
 [Full narrative release notes](docs/releases/v0.5.0.md). Version DOI [10.5281/zenodo.20681690](https://doi.org/10.5281/zenodo.20681690); concept DOI [10.5281/zenodo.20012027](https://doi.org/10.5281/zenodo.20012027) (resolves to latest).

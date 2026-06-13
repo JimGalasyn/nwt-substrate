@@ -157,7 +157,7 @@ Code that supports a specific paper figure or experimental run lives in the `nul
 - **numpy-first.** Use einsum kernels over explicit loops where the substrate algebra is naturally tensorial. Add a torch backend if you need GPU.
 - **Match the existing code style.** Read a neighboring file before writing a new one.
 - **Update `llms.txt` and `llms-full.txt` when adding new headline predictions.** AI search engines lift answers from these files.
-- **Update `CHANGELOG.md`** under `[Unreleased]` for any user-visible change.
+- **Update `CHANGELOG.md`** under `[Unreleased]` for any user-visible change. (Maintainers: cutting a tagged release follows [`docs/RELEASING.md`](docs/RELEASING.md).)
 
 ## How to extend the library
 

@@ -8,7 +8,7 @@ The format follows [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/
 
 ## [0.5.0] - 2026-06-13
 
-[Full narrative release notes](docs/releases/v0.5.0.md). Version DOI: _backfilled after the GitHub release (Zenodo mints it on publish)_; concept DOI [10.5281/zenodo.20012027](https://doi.org/10.5281/zenodo.20012027) (resolves to latest).
+[Full narrative release notes](docs/releases/v0.5.0.md). Version DOI [10.5281/zenodo.20681690](https://doi.org/10.5281/zenodo.20681690); concept DOI [10.5281/zenodo.20012027](https://doi.org/10.5281/zenodo.20012027) (resolves to latest).
 
 This release ships the **field-theoretic construct/measure layer** of NWT — the forward, diagnostic half of the soliton and classical-field work, with the energy-minimising relaxers kept in the separate `jax-solitons` engine (a one-way relationship: these numpy primitives are the engine's reference oracle). New sectors: Faddeev-Skyrme (Hopf) solitons (`solitons.faddeev`), classical EM fields + form factors (`em`, `amplitudes`), gauged Ginzburg-Landau vortices at any κ (`condensate.solve_gl_vortex`), Gauss/Milnor link invariants (`topology.linking_invariants`), and the particle-portrait renderer (`portraits`); plus a closure-priority benchmark layer and two derived-not-measured fixes (muon decay rate, QED cross sections). Value-preserving throughout; full suite green (1436 tests).
 

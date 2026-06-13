@@ -1,0 +1,70 @@
+name: Publish to PyPI
+
+# Trusted publishing (OIDC) — no API token stored anywhere. Triggers on a
+# published GitHub Release, the SAME event that mints the Zenodo DOI, so PyPI and
+# Zenodo ship together from one Release. setuptools-scm derives the version from
+# the release tag, so the tag IS the version (no code bump).
+#
+# One-time setup on PyPI (project does not exist yet, so use a *pending*
+# publisher): pypi.org -> Account -> Publishing -> Add a pending publisher:
+#     PyPI Project Name: nwt-substrate
+#     Owner:             JimGalasyn
+#     Repository name:   nwt-substrate
+#     Workflow name:     publish-pypi.yml
+#     Environment name:  pypi
+# Then create the GitHub Release as usual (see docs/RELEASING.md).
+
+on:
+  release:
+    types: [published]
+  # Manual trigger to publish an ALREADY-tagged version (e.g. the first publish of
+  # the existing v0.5.0, whose Release predates this workflow). Run it against the
+  # tag so setuptools-scm derives the right version:
+  #   gh workflow run publish-pypi.yml --ref v0.5.0
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    # Only ever build/publish from a TAG ref. A release event is always on a tag;
+    # a workflow_dispatch must be run with --ref vX.Y.Z. This blocks an accidental
+    # dispatch from a branch (e.g. main), which setuptools-scm would version as a
+    # dev release (0.5.0.devN+g<sha>) and publish to PyPI — irreversible.
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0   # setuptools-scm needs full history + tags
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Build sdist + wheel
+        run: |
+          python -m pip install --upgrade build
+          python -m build
+      - name: Check metadata
+        run: |
+          python -m pip install --upgrade twine
+          python -m twine check dist/*
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  publish:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/')   # defense in depth; mirrors build
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write   # OIDC token for trusted publishing
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1

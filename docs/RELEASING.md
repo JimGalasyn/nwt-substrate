@@ -24,6 +24,10 @@ public surface, value-preserving throughout (no fitted constants — see
   Pushing the tag alone does nothing; you must create the Release.
 - Concept DOI **`10.5281/zenodo.20012027`** resolves to the latest version and
   never changes; each version gets its own version DOI, backfilled after release.
+- **PyPI publishes from the same Release event** via trusted publishing (OIDC, no
+  stored token — `.github/workflows/publish-pypi.yml`). The tag drives the version
+  (`setuptools-scm`), so there's nothing to bump. A one-time *pending publisher*
+  registration on PyPI is needed before the first release (see step 4).
 
 ## Steps
 
@@ -80,13 +84,32 @@ git push origin vX.Y.Z
 
 Tag subject convention: `nwt-substrate vX.Y.Z — <theme>` (matches prior tags).
 
-### 4. Publish the GitHub Release (this triggers Zenodo)
+### 4. Publish the GitHub Release (this triggers Zenodo **and PyPI**)
 
 ```bash
 gh release create vX.Y.Z \
   --title "vX.Y.Z — <theme>" \
   --notes-file docs/releases/vX.Y.Z.md
 ```
+
+Publishing the Release drives two independent automations off the one event: the
+**Zenodo–GitHub integration** archives the repo and mints the version DOI (this is
+the Zenodo GitHub app, *not* an Actions workflow in this repo), and the
+**`publish-pypi.yml` Actions workflow** builds + publishes the sdist/wheel to PyPI
+via trusted publishing (OIDC — no token). Confirm both:
+
+```bash
+gh run list --workflow publish-pypi.yml --limit 1   # build+publish green?
+curl -s https://pypi.org/pypi/nwt-substrate/json -o /dev/null -w "PyPI HTTP %{http_code}\n"
+```
+
+> **One-time PyPI setup (before the FIRST release only).** The project doesn't
+> exist on PyPI yet, so register a **pending publisher**: pypi.org → Account →
+> Publishing → *Add a pending publisher* with Project `nwt-substrate`, Owner
+> `JimGalasyn`, Repository `nwt-substrate`, Workflow `publish-pypi.yml`,
+> Environment `pypi`. Also create a GitHub Environment named `pypi`
+> (repo Settings → Environments). After the first successful publish PyPI
+> converts it to a normal trusted publisher; later releases need nothing.
 
 ### 5. Backfill the Zenodo version DOI
 
@@ -126,6 +149,8 @@ gh release edit vX.Y.Z --notes-file docs/releases/vX.Y.Z.md
 - [ ] `main` green; version chosen (semver)
 - [ ] Prep PR: CHANGELOG + `docs/releases/vX.Y.Z.md` + CITATION (version/date) + README (4 spots) — merged
 - [ ] Annotated tag pushed (`nwt-substrate vX.Y.Z — theme`)
-- [ ] GitHub Release published (triggers Zenodo)
+- [ ] (first release only) PyPI pending publisher + `pypi` GitHub Environment registered
+- [ ] GitHub Release published (triggers Zenodo **and** PyPI)
+- [ ] PyPI publish workflow green; package resolves on pypi.org
 - [ ] DOI backfilled (CHANGELOG + release notes + CITATION) via PR; Release body refreshed
 - [ ] Downstream pins / `llms.txt` updated if applicable

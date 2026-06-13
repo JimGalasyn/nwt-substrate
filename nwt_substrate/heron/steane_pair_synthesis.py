@@ -38,6 +38,8 @@ import json
 from pathlib import Path
 from typing import Literal
 
+from nwt_substrate.isa.constants import N_VERTICES_K7, RANK_SO7
+
 try:
     from qiskit import QuantumCircuit, QuantumRegister, ClassicalRegister
     HAS_QISKIT = True
@@ -50,9 +52,14 @@ _LOOKUP_PATH = (Path(__file__).parents[2] / "analysis"
                 / "steane_exp12_walk_pauli_table.json")
 
 
-def _load_lookup():
-    with open(_LOOKUP_PATH) as f:
-        return json.load(f)
+def _load_lookup() -> dict:
+    """Load the Steane Exp 12 walk-to-Pauli lookup table from disk.
+    
+    Returns
+    -------
+    dict
+        Lookup table mapping (p, q) walk coordinates to Pauli-word bit arrays.
+    """
 
 
 COMPENDIUM_LOOKUP = _load_lookup() if _LOOKUP_PATH.exists() else None
@@ -64,7 +71,7 @@ COMPENDIUM_LOOKUP = _load_lookup() if _LOOKUP_PATH.exists() else None
 # Hamming (7, 4) parity-check matrix rows = Steane stabilizer supports
 # Row k = positions q (0-indexed) where bit-k of (q+1) is set
 STEANE_STAB_SUPPORTS = [
-    [q for q in range(7) if ((q + 1) >> k) & 1] for k in range(3)
+    [q for q in range(N_VERTICES_K7) if ((q + 1) >> k) & 1] for k in range(RANK_SO7)
 ]
 # Each row has weight 4 (anti-Fano-line). Stabilizers are X⊗⊗⊗ on
 # supports[0..2] (X-type) and Z⊗⊗⊗ on supports[0..2] (Z-type).
@@ -79,12 +86,19 @@ STEANE_LOGICAL_Z_SUPPORT = [0, 1, 2]
 # Steane |0_L> preparation
 # ---------------------------------------------------------------------------
 
-def _add_steane_zero_prep(qc, qubits):
+def _add_steane_zero_prep(qc: "QuantumCircuit", qubits: list) -> None:
     """Add Steane [[7, 1, 3]] |0_L> preparation to circuit.
 
     Convention: qubits 0..6 are the Steane block (Hamming positions 1..7).
     The encoder uses 3 H gates on the "indicator" qubits (0, 1, 3 =
     positions 1, 2, 4) and 9 CNOTs to propagate.
+    
+    Parameters
+    ----------
+    qc : QuantumCircuit
+        The circuit to add the state preparation to.
+    qubits : list
+        List of 7 qubit indices for the Steane block.
     """
     # Step 1: H on the 3 indicator qubits (positions 1, 2, 4)
     qc.h(qubits[0])  # pos 1
@@ -114,9 +128,21 @@ def _add_steane_zero_prep(qc, qubits):
 # Pauli-word application from lookup table
 # ---------------------------------------------------------------------------
 
-def _apply_pauli_word(qc, qubits, x_bits, z_bits):
-    """Apply the walk's Pauli word: X_q if x_bits[q]; Z_q if z_bits[q]."""
-    for q in range(7):
+def _apply_pauli_word(qc: "QuantumCircuit", qubits: list, x_bits: list[int], z_bits: list[int]) -> None:
+    """Apply the walk's Pauli word: X_q if x_bits[q]; Z_q if z_bits[q].
+    
+    Parameters
+    ----------
+    qc : QuantumCircuit
+        The circuit to apply the Pauli word to.
+    qubits : list
+        List of qubit indices.
+    x_bits : list[int]
+        Binary array indicating where X gates should be applied.
+    z_bits : list[int]
+        Binary array indicating where Z gates should be applied.
+    """
+    for q in range(N_VERTICES_K7):
         if x_bits[q] and z_bits[q]:
             qc.y(qubits[q])  # Y up to phase (sufficient for stabilizer purposes)
         elif x_bits[q]:
@@ -129,7 +155,7 @@ def _apply_pauli_word(qc, qubits, x_bits, z_bits):
 # Stabilizer-syndrome measurement
 # ---------------------------------------------------------------------------
 
-def _add_syndrome_measurement(qc, sys_qubits, anc_qubits, cbits):
+def _add_syndrome_measurement(qc: "QuantumCircuit", sys_qubits: list, anc_qubits: list, cbits: object) -> None:
     """Measure the 6 Steane stabilizer generators using 6 ancillas.
 
     For each X-type stabilizer X_a X_b X_c X_d on support S:
@@ -141,9 +167,20 @@ def _add_syndrome_measurement(qc, sys_qubits, anc_qubits, cbits):
     For each Z-type stabilizer Z_a Z_b Z_c Z_d on support S:
         CNOT each q in S -> ancilla
         measure ancilla
+        
+    Parameters
+    ----------
+    qc : QuantumCircuit
+        The circuit to add measurements to.
+    sys_qubits : list
+        List of 7 system qubit indices.
+    anc_qubits : list
+        List of 6 ancilla qubit indices (for syndrome measurement).
+    cbits : ClassicalRegister
+        Classical register for syndrome outcomes (6 bits).
     """
     # X-type stabilizers (3 of them, ancillas 0, 1, 2)
-    for k in range(3):
+    for k in range(RANK_SO7):
         anc = anc_qubits[k]
         cb = cbits[k]
         support = STEANE_STAB_SUPPORTS[k]
@@ -153,7 +190,7 @@ def _add_syndrome_measurement(qc, sys_qubits, anc_qubits, cbits):
         qc.h(anc)
         qc.measure(anc, cb)
     # Z-type stabilizers (3 of them, ancillas 3, 4, 5)
-    for k in range(3):
+    for k in range(RANK_SO7):
         anc = anc_qubits[3 + k]
         cb = cbits[3 + k]
         support = STEANE_STAB_SUPPORTS[k]
@@ -166,22 +203,42 @@ def _add_syndrome_measurement(qc, sys_qubits, anc_qubits, cbits):
 # Logical-Z readout
 # ---------------------------------------------------------------------------
 
-def _add_logical_z_destructive(qc, sys_qubits, cbits):
+def _add_logical_z_destructive(qc: "QuantumCircuit", sys_qubits: list, cbits: object) -> None:
     """Destructive logical-Z readout: measure all 7 system qubits in Z basis,
     then post-process (compute parity on a Z_L representative support) on
     classical side.
 
     Writes all 7 single-qubit Z outcomes to cbits[0..6].
+    
+    Parameters
+    ----------
+    qc : QuantumCircuit
+        The circuit to add measurements to.
+    sys_qubits : list
+        List of 7 system qubit indices.
+    cbits : ClassicalRegister
+        Classical register for the 7 readout bits.
     """
-    for q in range(7):
+    for q in range(N_VERTICES_K7):
         qc.measure(sys_qubits[q], cbits[q])
 
 
-def _add_logical_z_ancilla(qc, sys_qubits, anc_qubit, cbit):
+def _add_logical_z_ancilla(qc: "QuantumCircuit", sys_qubits: list, anc_qubit: object, cbit: object) -> None:
     """Ancilla-coupled logical-Z: CNOT from each Z_L-support qubit to ancilla,
     measure ancilla. Non-destructive for the system qubits.
 
     Z_L = Z on qubits {0, 1, 2} (Fano line through positions 1, 2, 3).
+    
+    Parameters
+    ----------
+    qc : QuantumCircuit
+        The circuit to add the measurement to.
+    sys_qubits : list
+        List of 7 system qubit indices.
+    anc_qubit : Qubit
+        Single ancilla qubit for non-destructive Z_L measurement.
+    cbit : ClassicalBit
+        Classical bit for the measurement outcome.
     """
     for q_idx in STEANE_LOGICAL_Z_SUPPORT:
         qc.cx(sys_qubits[q_idx], anc_qubit)
@@ -288,11 +345,11 @@ def _build_circuit_from_control(kind, logical_z_mode):
     if kind == 'identity':
         pass  # no Pauli
     elif kind == 'x7':
-        for q in range(7): qc.x(sys[q])
+        for q in range(N_VERTICES_K7): qc.x(sys[q])
     elif kind == 'z7':
-        for q in range(7): qc.z(sys[q])
+        for q in range(N_VERTICES_K7): qc.z(sys[q])
     elif kind == 'h7':
-        for q in range(7): qc.h(sys[q])
+        for q in range(N_VERTICES_K7): qc.h(sys[q])
     else:
         raise ValueError(f"unknown control: {kind}")
     qc.barrier(label="syn")

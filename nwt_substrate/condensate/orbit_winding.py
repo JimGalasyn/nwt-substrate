@@ -31,9 +31,12 @@ import numpy as np
 from nwt_substrate.condensate.sigma_orbits import SIGMA_ORBITS
 
 
+from nwt_substrate.isa.constants import N_VERTICES_K7
+
 # K_7 Heffter vertex coordinates on the unit torus (u, v) ∈ [0, 1)²
 HEFFTER_VERT_UV = np.array(
-    [[(k % 7) / 7.0, (3 * k % 7) / 7.0] for k in range(7)],
+    [[(k % N_VERTICES_K7) / N_VERTICES_K7, (3 * k % N_VERTICES_K7) / N_VERTICES_K7] 
+     for k in range(N_VERTICES_K7)],
     dtype=float,
 )
 
@@ -107,7 +110,7 @@ def orbit_winding(orbit_id: int) -> OrbitWinding:
 
 
 def all_orbit_windings() -> list[OrbitWinding]:
-    return [orbit_winding(o) for o in range(7)]
+    return [orbit_winding(o) for o in range(N_VERTICES_K7)]
 
 
 def closed_walk_winding(walk: list[int]) -> tuple[int, int]:

@@ -13,6 +13,7 @@ from __future__ import annotations
 from collections import Counter
 from dataclasses import dataclass
 
+from nwt_substrate.isa.constants import RANK_SO7, N_VERTICES_K7
 from .spec import STEANE_STAB, STEANE_LZ
 
 # Hamming(7,4) syndrome position -> Fano point (mirror of the legacy pipeline)
@@ -25,9 +26,27 @@ def _bits(bitstring: str) -> list[int]:
 
 
 def fano(data_bits: list[int]) -> str:
-    """Map 7 data-qubit parities over the 3 stabilizer supports to a Fano point."""
-    s = [sum(data_bits[i] for i in STEANE_STAB[k]) % 2 for k in range(3)]
-    pos = s[0] + 2 * s[1] + 4 * s[2]
+    """Map 7 data-qubit parities over the 3 stabilizer supports to a Fano point.
+    
+    Parameters
+    ----------
+    data_bits : list[int]
+        List of 7 measurement outcomes (0 or 1).
+        
+    Returns
+    -------
+    str
+        Fano point label ('I', 'E1', 'E2', 'E3', 'F1', 'F2', 'F3') or 'I' if no error.
+        
+    Raises
+    ------
+    ValueError
+        If data_bits does not have exactly 7 elements.
+    """
+    if len(data_bits) != N_VERTICES_K7:
+        raise ValueError(f"Expected 7 data bits, got {len(data_bits)}")
+    s = [sum(data_bits[i] for i in STEANE_STAB[k]) % 2 for k in range(RANK_SO7)]
+    pos = sum(s[k] * _HAMMING_BIT_WEIGHTS[k] for k in range(RANK_SO7))
     return "I" if pos == 0 else QUBIT_TO_FANO[pos - 1]
 
 
@@ -36,9 +55,23 @@ def logical_z(data_bits: list[int]) -> int:
 
 
 # --------------------------------------------------------------- distributions
-def destructive_dists(z_counts: dict[str, int], x_counts: dict[str, int]):
+def destructive_dists(z_counts: dict[str, int], x_counts: dict[str, int]) -> tuple[object, object]:
     """From the two destructive-readout registers (each {bitstring: n}) return
-    (x_dist over x_fano, z_dist over (z_fano, logical_z))."""
+    (x_dist over x_fano, z_dist over (z_fano, logical_z)).
+    
+    Parameters
+    ----------
+    z_counts : dict[str, int]
+        Dictionary mapping Z-basis readout bitstrings to outcome counts.
+    x_counts : dict[str, int]
+        Dictionary mapping X-basis readout bitstrings to outcome counts.
+        
+    Returns
+    -------
+    tuple
+        (x_dist, z_dist) where x_dist is a Counter over x_fano points and
+        z_dist is a Counter over (z_fano, logical_z) tuples.
+    """
     x_dist: Counter = Counter()
     z_dist: Counter = Counter()
     for bs, n in z_counts.items():
@@ -49,16 +82,27 @@ def destructive_dists(z_counts: dict[str, int], x_counts: dict[str, int]):
     return x_dist, z_dist
 
 
-def ancilla_dist(counts) -> Counter:
+def ancilla_dist(counts: object) -> "Counter":
     """From an ancilla-scheme Counts (registers c_syn[6], c_lz[7]) return a joint
-    distribution over ((x_fano, z_fano), logical_z)."""
+    distribution over ((x_fano, z_fano), logical_z).
+    
+    Parameters
+    ----------
+    counts : Counts
+        Canonical Counts object with c_syn and c_lz registers.
+        
+    Returns
+    -------
+    Counter
+        Joint distribution over ((x_fano, z_fano), logical_z) outcomes.
+    """
     i_syn = counts.register_order.index("c_syn")
     i_lz = counts.register_order.index("c_lz")
     dist: Counter = Counter()
     for key, n in counts.data.items():
         syn, lz = key[i_syn], _bits(key[i_lz])
-        xpos = int(syn[0]) + 2 * int(syn[1]) + 4 * int(syn[2])
-        zpos = int(syn[3]) + 2 * int(syn[4]) + 4 * int(syn[5])
+        xpos = sum(int(syn[k]) * _HAMMING_BIT_WEIGHTS[k] for k in range(RANK_SO7))
+        zpos = sum(int(syn[RANK_SO7 + k]) * _HAMMING_BIT_WEIGHTS[k] for k in range(RANK_SO7))
         xf = "I" if xpos == 0 else QUBIT_TO_FANO[xpos - 1]
         zf = "I" if zpos == 0 else QUBIT_TO_FANO[zpos - 1]
         dist[((xf, zf), logical_z(lz))] += n

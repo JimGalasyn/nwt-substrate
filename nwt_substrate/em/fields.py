@@ -32,7 +32,7 @@ __all__ = [
 ]
 
 
-def _k_grids(N, dx):
+def _k_grids(N: int, dx: float) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     k = 2 * np.pi * np.fft.fftfreq(N, d=dx)
     KX, KY, KZ = np.meshgrid(k, k, k, indexing="ij")
     K2 = KX**2 + KY**2 + KZ**2
@@ -40,21 +40,21 @@ def _k_grids(N, dx):
     return KX, KY, KZ, K2
 
 
-def grid(N, L):
+def grid(N: int, L: float) -> tuple[np.ndarray, float, tuple[np.ndarray, np.ndarray, np.ndarray]]:
     """Return ``(g, dx, (X, Y, Z))`` for a cubic periodic grid of N points / side L."""
     g = np.linspace(-L / 2, L / 2, N, endpoint=False)
     X, Y, Z = np.meshgrid(g, g, g, indexing="ij")
     return g, float(g[1] - g[0]), (X, Y, Z)
 
 
-def _poisson_periodic(src, dx):
+def _poisson_periodic(src: np.ndarray, dx: float) -> np.ndarray:
     """Solve ∇²u = −src on a periodic cell (FFT); the k=0 mode is dropped."""
     _, _, _, K2 = _k_grids(src.shape[0], dx)
     sk = np.fft.fftn(src); sk[0, 0, 0] = 0.0
     return np.real(np.fft.ifftn(sk / K2))
 
 
-def _poisson_open(src, dx):
+def _poisson_open(src: np.ndarray, dx: float) -> np.ndarray:
     """Solve ∇²u = −src with open (free-space) BCs, via a zero-padded
     convolution with the Green's function 1/(4π r) (Hockney's method).  No
     periodic images, no neutralizing background — the isolated-source field."""
@@ -70,7 +70,7 @@ def _poisson_open(src, dx):
     return u[:N, :N, :N]
 
 
-def _grad(u, dx, bc):
+def _grad(u: np.ndarray, dx: float, bc: str) -> list[np.ndarray]:
     if bc == "periodic":
         KX, KY, KZ, _ = _k_grids(u.shape[0], dx)
         uk = np.fft.fftn(u)
@@ -79,7 +79,7 @@ def _grad(u, dx, bc):
     return [d[0], d[1], d[2]]
 
 
-def electric_field(rho, dx, eps0=1.0, bc="periodic"):
+def electric_field(rho: np.ndarray, dx: float, eps0: float = 1.0, bc: str = "periodic") -> list[np.ndarray]:
     """E from a charge density via ∇²φ = −ρ/ε₀, E = −∇φ.
 
     bc : "periodic" (FFT, neutralizing background — fine near the source and
@@ -92,7 +92,7 @@ def electric_field(rho, dx, eps0=1.0, bc="periodic"):
     return [-g for g in _grad(phi, dx, bc)]
 
 
-def magnetic_field(j, dx, mu0=1.0, bc="periodic"):
+def magnetic_field(j: list[np.ndarray], dx: float, mu0: float = 1.0, bc: str = "periodic") -> list[np.ndarray]:
     """B from a current density ``j=[jx,jy,jz]`` via ∇²A = −μ₀ j, B = ∇×A.
 
     bc : "periodic" or "open" (free-space, no image currents).
@@ -103,7 +103,7 @@ def magnetic_field(j, dx, mu0=1.0, bc="periodic"):
     return [dAz[1] - dAy[2], dAx[2] - dAz[0], dAy[0] - dAx[1]]
 
 
-def divergence(F, dx):
+def divergence(F: list[np.ndarray], dx: float) -> np.ndarray:
     """Spectral divergence of a vector field ``F=[Fx,Fy,Fz]``."""
     KX, KY, KZ, _ = _k_grids(F[0].shape[0], dx)
     return np.real(np.fft.ifftn(1j * (KX * np.fft.fftn(F[0])
@@ -111,7 +111,7 @@ def divergence(F, dx):
                                       + KZ * np.fft.fftn(F[2]))))
 
 
-def curl(F, dx):
+def curl(F: list[np.ndarray], dx: float) -> list[np.ndarray]:
     """Spectral curl of a vector field ``F=[Fx,Fy,Fz]``."""
     KX, KY, KZ, _ = _k_grids(F[0].shape[0], dx)
     Fx, Fy, Fz = (np.fft.fftn(c) for c in F)
@@ -130,6 +130,26 @@ def maxwell_eh(rho, j, dx, *, eh_xi=0.0, n_iter=6, tol=1e-5, eps0=1.0, mu0=1.0,
     magnetization ``M = −∂L_EH/∂B``, so Gauss/Ampère read ``∇·(E+P)=ρ`` and
     ``∇×(B−M)=j``.  Solved by fixed-point iteration: linear solve → vacuum
     ``P, M`` from ``(E, B)`` → resolve with ``ρ_eff = ρ−∇·P``, ``j_eff = j+∇×M``.
+
+    **Euler-Heisenberg vacuum polarization coefficients:**
+
+    The polarization and magnetization are derived from ``P = ∂L_EH/∂E`` and
+    ``M = ∂L_EH/∂B``:
+
+    - ``P[i] = 4·ξ·(E²-B²)·E[i] + 14·ξ·(E·B)·B[i]``
+    - ``M[i] = 4·ξ·(E²-B²)·B[i] - 14·ξ·(E·B)·E[i]``
+
+    The coefficients 4 and 14 arise from the tensor structure of the
+    Euler-Heisenberg Lagrangian:
+    - The factor 4 multiplies the diagonal invariant (E²-B²)
+    - The factor 14 multiplies the mixed invariant (E·B) and accounts for the
+      coupling between electric and magnetic field components in the nonlinear
+      vacuum response.
+
+    **References:**
+    - Heisenberg & Euler (1936): "Consequences of Dirac's theory of positrons"
+    - Jackson, *Classical Electrodynamics* (3rd ed.), §6.11
+    - Dittrich & Gies (2000): "Effective action for QED in 2+1 dimensions"
 
     Parameters
     ----------

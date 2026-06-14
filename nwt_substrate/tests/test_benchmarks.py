@@ -574,13 +574,21 @@ def test_o10_tautology_and_asserted_operator_lints():
     g.add("premise", o10.Stage.STRUCTURAL, 7.0)
     g.add("restated", o10.Stage.OUTPUT, 7.0, provenance=o10.DEFINITION)
     g.link("premise", "restated")
+    # zero-valued tautology: a CONVENTION node defined to equal a zero parent must
+    # still be caught (the lint is value identity, not relative error).
+    g.add("zero_premise", o10.Stage.STRUCTURAL, 0.0)
+    g.add("zero_restated", o10.Stage.OUTPUT, 0.0, provenance=o10.CONVENTION)
+    g.link("zero_premise", "zero_restated")
     # asserted operator: depended on, never built (no value, no parents, not axiom)
     g.add("⋆", o10.Stage.EVALUATOR, provenance=o10.ASSERTED)
     g.add("readout", o10.Stage.OUTPUT, 1.0)
     g.link("⋆", "readout")
-    taut = g.tautology_nodes()
-    assert len(taut) == 1 and taut[0]["node"] == "restated" and taut[0]["equals_parent"] == "premise"
-    assert g.asserted_operators() == ["⋆"]
+    # an ASSERTED node that nothing depends on is NOT a smuggle (no outgoing edge)
+    g.add("orphan", o10.Stage.EVALUATOR, provenance=o10.ASSERTED)
+    taut = {t["node"]: t for t in g.tautology_nodes()}
+    assert taut["restated"]["equals_parent"] == "premise"
+    assert "zero_restated" in taut                       # zero parent still flagged
+    assert g.asserted_operators() == ["⋆"]               # not "orphan" (unused)
     # structure itself is still "valid" — the lints catch what invariants miss
     assert g.is_acyclic() and g.backward_edges() == []
 

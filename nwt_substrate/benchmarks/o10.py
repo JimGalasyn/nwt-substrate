@@ -297,9 +297,11 @@ class DerivationDAG:
         used = {s for s, _ in self.edges}
         out = set()
         for n, nd in self.nodes.items():
+            if n not in used:                 # nothing depends on it -> not a smuggle
+                continue
             if self.provenance(n) == ASSERTED:
                 out.add(n)
-            elif (n in used and nd.value is None and not self._parents(n)
+            elif (nd.value is None and not self._parents(n)
                   and nd.stage not in (Stage.STRUCTURAL, Stage.WITNESS)):
                 out.add(n)
         return sorted(out)
@@ -320,7 +322,11 @@ class DerivationDAG:
                 continue
             for p in self._parents(n):
                 pv = self.nodes[p].value
-                if pv is not None and abs(pv) > 0 and abs(nd.value - pv) <= rel * abs(pv):
+                if pv is None:
+                    continue
+                # absolute floor of 1 so a zero-valued definition/convention is
+                # still caught (the lint is value identity, not relative error).
+                if abs(nd.value - pv) <= rel * max(abs(pv), 1.0):
                     out.append({"node": n, "equals_parent": p, "value": nd.value,
                                 "provenance": self.provenance(n)})
                     break
@@ -329,14 +335,16 @@ class DerivationDAG:
     def provenance_audit(self, tol: float = 0.01) -> dict:
         """One-call summary of the three value-provenance lints — the gauntlet axis
         the structural invariants and cit do not cover."""
+        suspect = self.provenance_defects(tol)
+        circular = [r for r in suspect if r["circular"]]
+        asserted = self.asserted_operators()
+        tautologies = self.tautology_nodes()
         return {
-            "circular_passes": [r for r in self.provenance_defects(tol) if r["circular"]],
-            "suspect_outputs": self.provenance_defects(tol),
-            "asserted_operators": self.asserted_operators(),
-            "tautologies": self.tautology_nodes(),
-            "clean": (not self.asserted_operators()
-                      and not self.tautology_nodes()
-                      and not [r for r in self.provenance_defects(tol) if r["circular"]]),
+            "circular_passes": circular,
+            "suspect_outputs": suspect,
+            "asserted_operators": asserted,
+            "tautologies": tautologies,
+            "clean": not asserted and not tautologies and not circular,
         }
 
     # ---- derivation-route redundancy (M. Wende's "how many independent routes

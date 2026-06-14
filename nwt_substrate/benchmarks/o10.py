@@ -39,6 +39,19 @@ benchmarks whose graph-independent routes collapse into one (hidden SPOFs).
 Add ``--priority`` for M. Wende's *prioritization* layer: the directional dual of
 the diagnostics, ranking the open items by closure gained per unit effort (and
 triaging the sweep-unreachable benchmarks whose effort is unknown until read).
+
+A **value-provenance** layer runs in both readouts (it is cheap, so always on).
+The structural invariants and ``cit`` check *where* a value sits and *whether* it
+matches; they cannot see *how* the value was obtained — and a value that was
+fitted, normalised, post-selected, or convention-pinned matches its witness by
+construction, so a clean cit edge corroborates the choice, not the theory.  Each
+``Node`` carries a ``provenance`` (DERIVED / MEASURED / DEFINITION / NORMALIZED /
+FITTED / POST_SELECTED / CONVENTION / ASSERTED; default inferred), and three lints
+mark — never repair — what the rest of the DAG misses: ``provenance_defects`` (a
+non-derived OUTPUT passing cit = circular), ``tautology_nodes`` (a value defined
+to equal its own premise), and ``asserted_operators`` (an operator depended on but
+never constructed).  These encode the failure modes a Maxwell-from-D12RG review
+and our occasion-inflation κ=6 / H0 audit both turned on.
 """
 
 from __future__ import annotations
@@ -59,6 +72,30 @@ class Stage(IntEnum):
     WITNESS = 4         # CODATA-2018 / PDG measured value — sink only
 
 
+# Value provenance — HOW a node's value was obtained, orthogonal to its proof
+# Stage.  Stage says *where in the ladder* a node sits; provenance says *how the
+# number got there*, which is what the structural invariants and cit cannot see:
+# a value that was fitted / normalised / post-selected / convention-pinned AGREES
+# with its witness by construction, so a clean cit edge corroborates nothing.
+# This is the failure mode an external Maxwell-from-D12RG derivation review and
+# our own occasion-inflation κ=6 / H0 audit both turned on: cit asks "does it
+# match?"; the provenance lints ask "would it match no matter what?".  Defects
+# here are MARKED, never repaired (the same O10 discipline as cit defects).
+DERIVED = "derived"            # forced from upstream structure (the good case)
+MEASURED = "measured"          # empirical witness (CODATA / PDG)
+DEFINITION = "definition"      # assigned by fiat; value IS a parent -> tautology risk
+NORMALIZED = "normalized"      # set to a fixed value (=1, ...) by a normalisation choice
+FITTED = "fitted"             # tuned to match the target
+POST_SELECTED = "post_selected"  # the closest of a search (look-elsewhere)
+CONVENTION = "convention"      # pinned by an arbitrary convention (e.g. radius λ̄ vs λ̄/2)
+ASSERTED = "asserted"          # depended on as an operator but never constructed
+
+# Values whose agreement with a witness is circular, not evidence.
+SUSPECT_PROVENANCE = frozenset(
+    {DEFINITION, NORMALIZED, FITTED, POST_SELECTED, CONVENTION})
+_VALID_PROVENANCE = SUSPECT_PROVENANCE | {DERIVED, MEASURED, ASSERTED}
+
+
 @dataclass(frozen=True)
 class Node:
     name: str
@@ -72,6 +109,8 @@ class Node:
     #                               set directly for suite benchmarks; None -> computed
     #                               from values, or qualitative (no metric).
     kind: str = ""                # provenance of dev: ppm / pct / exact / score / qualitative
+    provenance: str = ""          # how the VALUE was obtained (module constants above);
+    #                               "" -> inferred (MEASURED for WITNESS, else DERIVED).
 
 
 @dataclass
@@ -82,9 +121,12 @@ class DerivationDAG:
 
     def add(self, name: str, stage: Stage, value: float | None = None,
             note: str = "", commutative: bool = False,
-            dev: float | None = None, kind: str = "") -> str:
+            dev: float | None = None, kind: str = "", provenance: str = "") -> str:
+        if provenance and provenance not in _VALID_PROVENANCE:
+            raise ValueError(f"unknown provenance {provenance!r} for node {name!r}")
         if name not in self.nodes:
-            self.nodes[name] = Node(name, stage, value, note, commutative, dev, kind)
+            self.nodes[name] = Node(name, stage, value, note, commutative,
+                                    dev, kind, provenance)
         return name
 
     def link(self, src: str, dst: str) -> None:
@@ -208,6 +250,94 @@ class DerivationDAG:
             rows.append({"node": n, "parents": ps, "values": vals,
                          "commutes": (len({round(v, 9) for v in vals}) == 1) if vals else True})
         return rows
+
+    # ---- value-provenance lints (the "would it match no matter what?" axis cit
+    #      cannot see — fitted/normalised/post-selected values, tautologies, and
+    #      asserted-but-unconstructed operators) ----
+
+    def provenance(self, name: str) -> str:
+        """A node's value provenance, inferring the default from its stage when
+        unset: a WITNESS is MEASURED, everything else is DERIVED until declared
+        otherwise.  Backwards-compatible: existing DAGs read as fully derived."""
+        nd = self.nodes[name]
+        if nd.provenance:
+            return nd.provenance
+        return MEASURED if nd.stage == Stage.WITNESS else DERIVED
+
+    def provenance_defects(self, tol: float = 0.01) -> list[dict]:
+        """OUTPUTs whose value was NOT genuinely derived (fitted / normalised /
+        post-selected / convention-pinned / defined) yet pass cit anyway.  Such a
+        value agrees with its witness *by construction*, so a clean cit edge is
+        circular — corroboration of the choice, not the theory.  This is the
+        anti-numerology counterpart to ``cit_readout``: cit asks "does it match?",
+        this asks "would it match regardless?".  Marked, never repaired."""
+        cit = {r["output"]: r for r in self.cit_readout(tol)}
+        rows = []
+        for n, nd in self.nodes.items():
+            if nd.stage != Stage.OUTPUT:
+                continue
+            prov = self.provenance(n)
+            if prov not in SUSPECT_PROVENANCE:
+                continue
+            r = cit.get(n)
+            passes = bool(r and r["admissible"])
+            rows.append({"output": n, "provenance": prov, "passes_cit": passes,
+                         "rel_dev": (r["rel_dev"] if r else None),
+                         # a SUSPECT value that *passes* cit is the circular case;
+                         # one that *fails* is at least honestly marked by cit too.
+                         "circular": passes, "note": nd.note})
+        return sorted(rows, key=lambda r: (not r["circular"], r["output"]))
+
+    def asserted_operators(self) -> list[str]:
+        """Nodes that some derivation *depends on* but that are never constructed:
+        explicit ASSERTED provenance, or a non-axiom, non-witness node that is used
+        as a parent yet has no value and no incoming construction edge.  This is
+        the undefined-Hodge-star failure mode — a step that leans on an operator
+        doing all the work without ever building it."""
+        used = {s for s, _ in self.edges}
+        out = set()
+        for n, nd in self.nodes.items():
+            if self.provenance(n) == ASSERTED:
+                out.add(n)
+            elif (n in used and nd.value is None and not self._parents(n)
+                  and nd.stage not in (Stage.STRUCTURAL, Stage.WITNESS)):
+                out.add(n)
+        return sorted(out)
+
+    def tautology_nodes(self, rel: float = 1e-9) -> list[dict]:
+        """SYMBOLIC/OUTPUT nodes whose value equals a parent's to machine precision
+        *and* whose provenance is by-fiat (DEFINITION / NORMALIZED / CONVENTION) —
+        a "theorem" that is its own premise relabelled (the J:=δF → "derive" d*F=J
+        pattern; ChargeCell² defined-then-"found"=1).  Value identity alone is fine
+        (a pass-through evaluator is honest); identity *plus* a by-fiat value is the
+        tautology."""
+        suspect = {DEFINITION, NORMALIZED, CONVENTION}
+        out = []
+        for n, nd in self.nodes.items():
+            if nd.stage not in (Stage.SYMBOLIC, Stage.OUTPUT) or nd.value is None:
+                continue
+            if self.provenance(n) not in suspect:
+                continue
+            for p in self._parents(n):
+                pv = self.nodes[p].value
+                if pv is not None and abs(pv) > 0 and abs(nd.value - pv) <= rel * abs(pv):
+                    out.append({"node": n, "equals_parent": p, "value": nd.value,
+                                "provenance": self.provenance(n)})
+                    break
+        return out
+
+    def provenance_audit(self, tol: float = 0.01) -> dict:
+        """One-call summary of the three value-provenance lints — the gauntlet axis
+        the structural invariants and cit do not cover."""
+        return {
+            "circular_passes": [r for r in self.provenance_defects(tol) if r["circular"]],
+            "suspect_outputs": self.provenance_defects(tol),
+            "asserted_operators": self.asserted_operators(),
+            "tautologies": self.tautology_nodes(),
+            "clean": (not self.asserted_operators()
+                      and not self.tautology_nodes()
+                      and not [r for r in self.provenance_defects(tol) if r["circular"]]),
+        }
 
     # ---- derivation-route redundancy (M. Wende's "how many independent routes
     #      converge, and what survives if one is removed?") ----
@@ -533,6 +663,30 @@ def _diversity_lines(report, threshold: float = 0.5) -> list[str]:
     return lines
 
 
+def _provenance_lines(g: DerivationDAG, tol: float = 0.01) -> list[str]:
+    """The value-provenance readout: the "would it match no matter what?" axis.
+    Marks OUTPUTs that pass cit on a non-derived value (circular), operators that
+    are asserted but never built, and definitional tautologies — none of which the
+    structural invariants or cit can see.  Clean DAGs print one reassuring line."""
+    audit = g.provenance_audit(tol)
+    lines = ["", "Value-provenance lints (HOW each value was obtained — the axis "
+             "cit cannot see; marked, not repaired):"]
+    if audit["clean"]:
+        lines.append("  [clean]  every output is DERIVED/MEASURED; no asserted operators, "
+                     "no definitional tautologies, no fitted value passing cit.")
+        return lines
+    for r in audit["circular_passes"]:
+        lines.append(f"  [CIRCULAR ]  {r['output']:26s} provenance={r['provenance']} "
+                     f"passes cit — agreement is not evidence (value not derived)")
+    for r in audit["tautologies"]:
+        lines.append(f"  [TAUTOLOGY]  {r['node']:26s} = parent {r['equals_parent']} "
+                     f"by {r['provenance']} — a theorem that is its own premise")
+    for n in audit["asserted_operators"]:
+        lines.append(f"  [ASSERTED ]  {n:26s} depended on but never constructed "
+                     "(undefined-operator smuggle)")
+    return lines
+
+
 def _redundancy_lines(g: DerivationDAG, list_all: bool = True,
                       label: str = "targets", report=None) -> list[str]:
     """The M. Wende derivation-route-redundancy readout: per-target independent
@@ -675,6 +829,7 @@ def _main_suite(use_sensitivity: bool = False, show_redundancy: bool = False,
             lines.append(f"  [DEFECT]  {r['output']:36s} {r['rel_dev'] * 100:6.2f}%")
     if qual:
         lines.append(f"  qualitative (no vs-measurement metric): {', '.join(qual)}")
+    lines += _provenance_lines(g)
     if report is not None:
         lines += ["", "Structural-load ranking (isa integers by # benchmarks moved):"]
         for n, load in g.load_ranking()[:10]:
@@ -730,6 +885,8 @@ def main(argv: list[str] | None = None) -> int:
     for r in g.commutative_checks():
         lines.append(f"  [{'commutes' if r['commutes'] else 'BREAKS'}]  {r['node']}"
                      f"  via {r['parents']}  = {r['values']}")
+
+    lines += _provenance_lines(g)
 
     if "--redundancy" in (argv or []):
         lines += _redundancy_lines(g)

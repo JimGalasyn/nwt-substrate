@@ -522,3 +522,81 @@ def test_o10_closure_priority_ranks_by_roi():
     # the sweep-unreachable benchmark goes to triage with +0.5 potential
     triage = {t["benchmark"]: t for t in res["triage"]}
     assert triage["C"]["potential"] == 0.5 and not triage["C"]["defect"]
+
+
+def test_o10_provenance_constants_dag_is_clean():
+    """The real constants DAG carries no value-provenance defects: every output is
+    genuinely DERIVED (default), no operator is asserted-but-unconstructed, and no
+    node is a definitional tautology.  Confirms the layer is non-disruptive and
+    that the current constants stack is honest on the 'how was this value obtained'
+    axis (the part cit cannot see)."""
+    from nwt_substrate.benchmarks import o10
+    g = o10.build_constants_dag()
+    audit = g.provenance_audit(tol=0.01)
+    assert audit["clean"]
+    assert audit["circular_passes"] == [] and audit["tautologies"] == []
+    assert audit["asserted_operators"] == []
+    # default inference: outputs derived, witnesses measured
+    assert g.provenance("inv_alpha") == o10.DERIVED
+    assert g.provenance("wit:inv_alpha") == o10.MEASURED
+
+
+def test_o10_provenance_catches_fitted_value_passing_cit():
+    """The headline gap cit cannot close: a value tuned to its target AGREES with
+    the witness, so cit passes it — but it corroborates the fit, not the theory.
+    provenance_defects marks it 'circular'.  This is the occasion-inflation κ=6 /
+    H0-grid-search and Leighton-6M ChargeCell²=1 failure mode, encoded."""
+    from nwt_substrate.benchmarks import o10
+    g = o10.DerivationDAG()
+    g.add("anchor", o10.Stage.STRUCTURAL, 1.0)
+    g.add("sym:fit", o10.Stage.SYMBOLIC, note="post-selected from a 60-config search")
+    g.add("fitted_out", o10.Stage.OUTPUT, 42.0, provenance=o10.POST_SELECTED)
+    g.add("wit:fit", o10.Stage.WITNESS, 42.0)               # matches to the digit
+    g.link("anchor", "sym:fit"); g.link("sym:fit", "fitted_out"); g.link("fitted_out", "wit:fit")
+    # cit is fooled — the value matches its witness
+    assert g.cit_defects(tol=0.01) == []
+    # provenance is not: the match is circular (value was post-selected, not derived)
+    audit = g.provenance_audit(tol=0.01)
+    assert not audit["clean"]
+    circ = audit["circular_passes"]
+    assert len(circ) == 1 and circ[0]["output"] == "fitted_out"
+    assert circ[0]["provenance"] == o10.POST_SELECTED and circ[0]["circular"]
+
+
+def test_o10_tautology_and_asserted_operator_lints():
+    """tautology_nodes flags a value defined to equal its own premise (J:=δF then
+    'derive' d*F=J); asserted_operators flags an operator depended on but never
+    constructed (the undefined-Hodge-star smuggle).  Both are invisible to the
+    structural invariants — the edges are acyclic and one-way."""
+    from nwt_substrate.benchmarks import o10
+    g = o10.DerivationDAG()
+    # tautology: an OUTPUT defined to equal its parent's value
+    g.add("premise", o10.Stage.STRUCTURAL, 7.0)
+    g.add("restated", o10.Stage.OUTPUT, 7.0, provenance=o10.DEFINITION)
+    g.link("premise", "restated")
+    # zero-valued tautology: a CONVENTION node defined to equal a zero parent must
+    # still be caught (the lint is value identity, not relative error).
+    g.add("zero_premise", o10.Stage.STRUCTURAL, 0.0)
+    g.add("zero_restated", o10.Stage.OUTPUT, 0.0, provenance=o10.CONVENTION)
+    g.link("zero_premise", "zero_restated")
+    # asserted operator: depended on, never built (no value, no parents, not axiom)
+    g.add("⋆", o10.Stage.EVALUATOR, provenance=o10.ASSERTED)
+    g.add("readout", o10.Stage.OUTPUT, 1.0)
+    g.link("⋆", "readout")
+    # an ASSERTED node that nothing depends on is NOT a smuggle (no outgoing edge)
+    g.add("orphan", o10.Stage.EVALUATOR, provenance=o10.ASSERTED)
+    taut = {t["node"]: t for t in g.tautology_nodes()}
+    assert taut["restated"]["equals_parent"] == "premise"
+    assert "zero_restated" in taut                       # zero parent still flagged
+    assert g.asserted_operators() == ["⋆"]               # not "orphan" (unused)
+    # structure itself is still "valid" — the lints catch what invariants miss
+    assert g.is_acyclic() and g.backward_edges() == []
+
+
+def test_o10_provenance_rejects_unknown_label():
+    """add() validates the provenance label so a typo can't silently disable a lint."""
+    import pytest
+    from nwt_substrate.benchmarks import o10
+    g = o10.DerivationDAG()
+    with pytest.raises(ValueError):
+        g.add("x", o10.Stage.OUTPUT, 1.0, provenance="totally-derived-trust-me")

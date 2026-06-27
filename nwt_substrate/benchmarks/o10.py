@@ -96,6 +96,43 @@ SUSPECT_PROVENANCE = frozenset(
 _VALID_PROVENANCE = SUSPECT_PROVENANCE | {DERIVED, MEASURED, ASSERTED}
 
 
+# Result-level CLAIM status — what the HEADLINE asserts, orthogonal to a node's
+# value-provenance (provenance says HOW the number got there; status says what
+# epistemic standing the result claims).  Adapted from the per-section audit
+# blocks of an external D12RG "trace-determinant carrier" paper, whose discipline
+# (carrier first, downstream readouts second, NO REVERSE SMUGGLING) is exactly
+# what catches a downstream coincidence retro-justifying an upstream premise — a
+# smuggle that is usually NOT a cycle (it is a prose inference never added as an
+# edge, so is_acyclic() stays green).  Only STATUS_DEFERRED_BRIDGE carries an
+# obligation; the rest are descriptive.
+STATUS_DEFINITION = "status_definition"        # the headline is a definition
+STATUS_THEOREM = "status_theorem"              # forced from upstream (claims proof)
+STATUS_MEASURED_MATCH = "status_measured_match"  # agrees with an empirical witness
+STATUS_DEFERRED_BRIDGE = "status_deferred_bridge"  # an IOU to future work — MUST
+#                              name the killable test that would discharge it.
+_VALID_STATUS = frozenset(
+    {STATUS_DEFINITION, STATUS_THEOREM, STATUS_MEASURED_MATCH, STATUS_DEFERRED_BRIDGE})
+
+
+@dataclass(frozen=True)
+class ForbiddenCollapse:
+    """An *anti-edge*: a declaration that ``dst`` must NOT come to depend on
+    ``src`` — the structural form of "X readout ⇏ the theorem that produced X".
+    The DAG audits only edges that exist in it, so a reverse-smuggle (using a
+    downstream match to prop up an upstream premise) is invisible to is_acyclic()
+    until someone wires it up; this records the forbidden wiring so the lint can
+    fire the moment it appears.
+
+    ``discharge`` is the killable test that *would* license the collapse.  An
+    empty discharge is itself a defect: forbidding a collapse you cannot say how
+    to license is an un-cashable IOU (the unfalsifiability the source paper fell
+    into — deferral as a permanent shield rather than a tracked debt)."""
+    src: str
+    dst: str
+    reason: str = ""
+    discharge: str = ""
+
+
 @dataclass(frozen=True)
 class Node:
     name: str
@@ -111,6 +148,9 @@ class Node:
     kind: str = ""                # provenance of dev: ppm / pct / exact / score / qualitative
     provenance: str = ""          # how the VALUE was obtained (module constants above);
     #                               "" -> inferred (MEASURED for WITNESS, else DERIVED).
+    status: str = ""              # result-level CLAIM standing (STATUS_* above); "" -> none.
+    discharge: str = ""           # for a STATUS_DEFERRED_BRIDGE: the killable test that
+    #                               would discharge the IOU; "" -> an un-cashable obligation.
 
 
 @dataclass
@@ -118,19 +158,30 @@ class DerivationDAG:
     """A directed acyclic graph of one constants-derivation stack."""
     nodes: dict[str, Node] = field(default_factory=dict)
     edges: list[tuple[str, str]] = field(default_factory=list)
+    antiedges: list[ForbiddenCollapse] = field(default_factory=list)
 
     def add(self, name: str, stage: Stage, value: float | None = None,
             note: str = "", commutative: bool = False,
-            dev: float | None = None, kind: str = "", provenance: str = "") -> str:
+            dev: float | None = None, kind: str = "", provenance: str = "",
+            status: str = "", discharge: str = "") -> str:
         if provenance and provenance not in _VALID_PROVENANCE:
             raise ValueError(f"unknown provenance {provenance!r} for node {name!r}")
+        if status and status not in _VALID_STATUS:
+            raise ValueError(f"unknown status {status!r} for node {name!r}")
         if name not in self.nodes:
             self.nodes[name] = Node(name, stage, value, note, commutative,
-                                    dev, kind, provenance)
+                                    dev, kind, provenance, status, discharge)
         return name
 
     def link(self, src: str, dst: str) -> None:
         self.edges.append((src, dst))
+
+    def forbid(self, src: str, dst: str, reason: str = "", discharge: str = "") -> None:
+        """Declare an anti-edge: ``dst`` must not come to depend on ``src``.  Like
+        ``link``, it does not require the endpoints to exist yet (they may be added
+        later).  ``discharge`` names the killable test that would license the
+        collapse; leaving it empty is itself flagged by ``collapse_defects``."""
+        self.antiedges.append(ForbiddenCollapse(src, dst, reason, discharge))
 
     def _children(self, name: str) -> list[str]:
         return [d for s, d in self.edges if s == name]
@@ -347,6 +398,87 @@ class DerivationDAG:
             "clean": not asserted and not tautologies and not circular,
         }
 
+    # ---- forbidden-collapse lints (the *negative-edge* axis: a downstream readout
+    #      retro-justifying an upstream premise — "X readout ⇏ the theorem that
+    #      produced X".  The provenance lints ask "would this value match no matter
+    #      what?"; these ask "is a conclusion being smuggled back into its own
+    #      premise?", the reverse-implication the directed DAG cannot see until the
+    #      smuggle is wired up).  Marked, never repaired. ----
+
+    def _reaches(self, src: str, dst: str) -> bool:
+        """Whether a directed path src -> ... -> dst exists (src itself excluded)."""
+        if src not in self.nodes or dst not in self.nodes:
+            return False
+        stack, seen = list(self._children(src)), set()
+        while stack:
+            n = stack.pop()
+            if n == dst:
+                return True
+            if n in seen:
+                continue
+            seen.add(n)
+            stack.extend(self._children(n))
+        return False
+
+    def deferred_bridges(self) -> list[str]:
+        """Nodes whose headline status is a DEFERRED_BRIDGE (an IOU to future work)."""
+        return sorted(n for n, nd in self.nodes.items()
+                      if nd.status == STATUS_DEFERRED_BRIDGE)
+
+    def collapse_defects(self, tol: float = 0.01) -> list[dict]:
+        """Audit the declared anti-edges and deferred bridges.  Four defect kinds:
+          * ``violated``     — a directed path src->dst now EXISTS: the forbidden
+                               wiring was added (a conclusion feeds its own premise).
+          * ``coincidence``  — a MEASURED node whose value equals src's (within
+                               ``tol``) reaches dst: the premise is propped up by a
+                               numeric match laundered through a different node.
+          * ``undischarged`` — a ``forbid`` with no ``discharge``: an un-cashable
+                               IOU (forbidding a collapse you can't say how to
+                               license — the source paper's unfalsifiability trap).
+          * ``bridge_iou``   — a STATUS_DEFERRED_BRIDGE node with no ``discharge``.
+        ``violated``/``coincidence`` are hard (a real smuggle); the two IOU kinds
+        are marked obligations, surfaced but not failing the structural checklist."""
+        rows: list[dict] = []
+        for fc in self.antiedges:
+            if self._reaches(fc.src, fc.dst):
+                rows.append({"kind": "violated", "src": fc.src, "dst": fc.dst,
+                             "reason": fc.reason, "discharge": fc.discharge})
+            else:
+                sv = self.nodes[fc.src].value if fc.src in self.nodes else None
+                if sv is not None:
+                    for m, nd in self.nodes.items():
+                        if (m != fc.src and self.provenance(m) == MEASURED
+                                and nd.value is not None
+                                and abs(nd.value - sv) <= tol * max(abs(sv), 1.0)
+                                and (m == fc.dst or self._reaches(m, fc.dst))):
+                            rows.append({"kind": "coincidence", "src": fc.src,
+                                         "dst": fc.dst, "via": m, "reason": fc.reason,
+                                         "discharge": fc.discharge})
+                            break
+            if not fc.discharge.strip():
+                rows.append({"kind": "undischarged", "src": fc.src, "dst": fc.dst,
+                             "reason": fc.reason})
+        for n in self.deferred_bridges():
+            if not self.nodes[n].discharge.strip():
+                rows.append({"kind": "bridge_iou", "node": n,
+                             "note": self.nodes[n].note})
+        return rows
+
+    def collapse_audit(self, tol: float = 0.01) -> dict:
+        """One-call summary of the forbidden-collapse layer.  ``violations`` are the
+        hard reverse-smuggles (a forbidden path or a laundered numeric match);
+        ``open_obligations`` are the un-cashable IOUs (anti-edges or bridges with no
+        discharge).  ``clean`` requires both empty."""
+        defects = self.collapse_defects(tol)
+        violations = [d for d in defects if d["kind"] in ("violated", "coincidence")]
+        obligations = [d for d in defects if d["kind"] in ("undischarged", "bridge_iou")]
+        return {
+            "violations": violations,
+            "open_obligations": obligations,
+            "deferred_bridges": self.deferred_bridges(),
+            "clean": not violations and not obligations,
+        }
+
     # ---- derivation-route redundancy (M. Wende's "how many independent routes
     #      converge, and what survives if one is removed?") ----
 
@@ -504,6 +636,11 @@ class DerivationDAG:
             "acyclic_at_proof_authority": self.is_acyclic(),
             "witnesses_are_sinks": self.witnesses_are_sinks(),
             "commutative_diagrams_agree": all(r["commutes"] for r in self.commutative_checks()),
+            # a declared anti-edge that is now actually wired up (or propped by a
+            # laundered numeric match) is a structural defect, not just a warning:
+            # the DAG derives something it forbade.  Un-cashable IOUs are reported
+            # by collapse_audit but kept out of the hard checklist (marked, not failed).
+            "no_forbidden_collapse_violated": not self.collapse_audit()["violations"],
         }
 
 
@@ -567,6 +704,22 @@ def build_constants_dag() -> DerivationDAG:
           commutative=True)
     g.link("DIM_OCTONION", "id:8")
     g.link("DIM_S_SPIN7", "id:8")
+
+    # Forbidden collapse (dogfood of the anti-edge layer): η_B = 3α⁴/14 lands on the
+    # Planck baryon asymmetry, but int:3 and int:14 are bare structural literals here.
+    # The Planck match must NOT be allowed to retro-justify the choice of 3 and 14 —
+    # that would be the conclusion (the witness) feeding its own premise.  The path
+    # wit:eta_B -> int:14 does not exist (witnesses are sinks), so this is not yet
+    # violated; the discharge names the killable test that *would* license it, so the
+    # obligation is honestly OPEN rather than an un-cashable IOU.
+    g.forbid("wit:eta_B", "int:14",
+             reason="Planck η_B match ⇏ the integers 3,14 that hit it",
+             discharge="derive 3 & 14 from Jones/Murasugi knot-chirality independently "
+                       "of the Planck value — e.g. a second baryon-sector observable, or "
+                       "a neighbouring-α test the integers cannot be retuned for")
+    g.forbid("wit:eta_B", "int:3",
+             reason="Planck η_B match ⇏ the integers 3,14 that hit it",
+             discharge="as int:14 — forced from chirality combinatorics, not back-fit")
     return g
 
 
@@ -692,6 +845,43 @@ def _provenance_lines(g: DerivationDAG, tol: float = 0.01) -> list[str]:
     for n in audit["asserted_operators"]:
         lines.append(f"  [ASSERTED ]  {n:26s} depended on but never constructed "
                      "(undefined-operator smuggle)")
+    return lines
+
+
+def _collapse_lines(g: DerivationDAG, tol: float = 0.01) -> list[str]:
+    """The forbidden-collapse readout: declared anti-edges (no-reverse-smuggling
+    rules) and deferred-bridge IOUs.  A VIOLATED line is a conclusion now feeding
+    its own premise; an OPEN line is a tracked debt that names its killable test;
+    an IOU line is an obligation with no discharge — the unfalsifiability trap."""
+    audit = g.collapse_audit(tol)
+    if not g.antiedges and not audit["deferred_bridges"]:
+        return []
+    lines = ["", "Forbidden-collapse lints (no-reverse-smuggling — a downstream "
+             "readout propping up an upstream premise; marked, not repaired):"]
+    if audit["clean"] and not g.antiedges:
+        lines.append("  [clean]  no anti-edges declared.")
+        return lines
+    for d in audit["violations"]:
+        if d["kind"] == "violated":
+            lines.append(f"  [VIOLATED ]  {d['src']} ⇒ {d['dst']} now has a directed path "
+                         f"— {d['reason'] or 'forbidden collapse wired up'}")
+        else:
+            lines.append(f"  [LAUNDERED]  {d['src']} ⇒ {d['dst']} via {d['via']} (matching "
+                         f"value) — {d['reason'] or 'premise propped by a numeric match'}")
+    for d in audit["open_obligations"]:
+        if d["kind"] == "undischarged":
+            lines.append(f"  [IOU      ]  {d['src']} ⇏ {d['dst']} has NO discharge test "
+                         "— un-cashable (name the killable test or drop the anti-edge)")
+        else:
+            lines.append(f"  [IOU      ]  deferred bridge {d['node']!r} has no discharge "
+                         "— name the test that would close it")
+    # honestly-open anti-edges (named discharge, not yet met) — the tracked-debt case
+    viol = {(d["src"], d["dst"]) for d in audit["violations"]}
+    obl = {(d.get("src"), d.get("dst")) for d in audit["open_obligations"]}
+    for fc in g.antiedges:
+        if (fc.src, fc.dst) in viol or (fc.src, fc.dst) in obl:
+            continue
+        lines.append(f"  [open     ]  {fc.src} ⇏ {fc.dst}   discharge: {fc.discharge}")
     return lines
 
 
@@ -838,6 +1028,7 @@ def _main_suite(use_sensitivity: bool = False, show_redundancy: bool = False,
     if qual:
         lines.append(f"  qualitative (no vs-measurement metric): {', '.join(qual)}")
     lines += _provenance_lines(g)
+    lines += _collapse_lines(g)
     if report is not None:
         lines += ["", "Structural-load ranking (isa integers by # benchmarks moved):"]
         for n, load in g.load_ranking()[:10]:
@@ -895,6 +1086,7 @@ def main(argv: list[str] | None = None) -> int:
                      f"  via {r['parents']}  = {r['values']}")
 
     lines += _provenance_lines(g)
+    lines += _collapse_lines(g)
 
     if "--redundancy" in (argv or []):
         lines += _redundancy_lines(g)

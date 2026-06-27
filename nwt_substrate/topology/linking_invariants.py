@@ -98,6 +98,48 @@ def linking_matrix(curves: list[np.ndarray]) -> np.ndarray:
     return L
 
 
+def net_linking(curves: list[np.ndarray]) -> float:
+    """Net (signed) total linking of a list of closed curves.
+
+    The signed sum of the off-diagonal pairwise Gauss linking numbers,
+
+        Lk_net = sum_{i<j} lk(curve_i, curve_j) = linking_matrix(curves).sum() / 2,
+
+    built directly on top of `linking_matrix`.
+
+    Why it matters -- it is a PSEUDOSCALAR.  Under a parity (mirror) reflection
+    every Gauss linking number flips sign, so for any parity-symmetric (achiral)
+    ensemble of curves -- one whose mirror image is equidistributed with itself
+    -- the ensemble mean of `net_linking` is exactly 0.  A net value != 0 is
+    therefore the chiral signature: it can only arise from a chirality bias in
+    how the curves were produced.  This is the topological order parameter
+    behind NWT's baryon asymmetry: with baryon number = vortex linking number
+    (Gudnason-Nitta, PRD 101, 065011, 2020) a nonzero ensemble-mean net linking
+    IS a net baryon number, the eta_B / matter-over-antimatter analog (see
+    `nwt_substrate.cosmology.eta_B_sign` and the dynamical Chern-Simons
+    mechanism in `nwt_substrate.condensate.chiral_magnetic`).
+
+    The obstacle this quantity has to beat is the Rivers-Volovik null
+    (PRL 127, 115702, 2021): a local winding-sign bias produces NO net-linking
+    imbalance, so a credible mechanism must drive `net_linking` away from zero
+    through a *bulk* chiral chemical potential (the Chiral Magnetic Effect),
+    not a per-vortex sign preference.
+
+    Parameters
+    ----------
+    curves : list of np.ndarray
+        n closed curves, each shape (m, 3) (see `gauss_linking_number`).
+
+    Returns
+    -------
+    float
+        Sum of the off-diagonal pairwise linking numbers (real-valued; round
+        for the integer invariant).  A single curve (or none) gives 0.0.
+    """
+    L = linking_matrix(curves)
+    return float(L.sum() / 2.0)
+
+
 def link_deletion_test(curves: list[np.ndarray]) -> list[np.ndarray]:
     """Linking matrix of the remaining curves after deleting each one in turn.
 

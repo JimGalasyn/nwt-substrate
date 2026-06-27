@@ -27,6 +27,7 @@ from .colored_jones import (
 from .linking_invariants import (
     gauss_linking_number,
     linking_matrix,
+    net_linking,
     link_deletion_test,
     milnor_indeterminacy,
     borromean_rings,
@@ -53,6 +54,7 @@ __all__ = [
     "DEFAULT_LEVEL",
     "gauss_linking_number",
     "linking_matrix",
+    "net_linking",
     "link_deletion_test",
     "milnor_indeterminacy",
     "borromean_rings",

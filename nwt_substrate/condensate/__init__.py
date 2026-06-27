@@ -56,6 +56,12 @@ from nwt_substrate.condensate.antimatter import (
     is_pure_antimatter_walk,
     cpt_verification,
 )
+from nwt_substrate.condensate.chiral_magnetic import (
+    cme_growth_rate,
+    cme_current,
+    SOURCE_SIM,
+    JOYCE_SHAPOSHNIKOV_NOTE,
+)
 
 __all__ = [
     # abelian_higgs
@@ -77,4 +83,7 @@ __all__ = [
     "matter_direction_fraction",
     "is_pure_matter_walk", "is_pure_antimatter_walk",
     "cpt_verification",
+    # chiral_magnetic (dynamical-framing Chern-Simons / CME)
+    "cme_growth_rate", "cme_current",
+    "SOURCE_SIM", "JOYCE_SHAPOSHNIKOV_NOTE",
 ]

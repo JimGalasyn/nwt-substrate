@@ -600,3 +600,160 @@ def test_o10_provenance_rejects_unknown_label():
     g = o10.DerivationDAG()
     with pytest.raises(ValueError):
         g.add("x", o10.Stage.OUTPUT, 1.0, provenance="totally-derived-trust-me")
+    with pytest.raises(ValueError):                       # status label likewise validated
+        g.add("y", o10.Stage.OUTPUT, 1.0, status="status-trust-me")
+
+
+def test_o10_collapse_catches_smuggle_the_invariants_miss():
+    """The axis the directed DAG cannot see.  A reverse-smuggle wired *same-stage*
+    (premise and the node propping it both STRUCTURAL) is NOT a backward edge and
+    NOT a cycle — so backward_edges(), is_acyclic(), and witnesses_are_sinks() all
+    stay green.  Only the declared anti-edge fires: 'the conclusion B ⇏ its premise
+    A'.  This is the gap the format closes — the DAG audits only edges it contains,
+    and one-way staging alone does not forbid a same-tier conclusion→premise link."""
+    from nwt_substrate.benchmarks import o10
+    g = o10.DerivationDAG()
+    g.add("int14", o10.Stage.STRUCTURAL, 14.0, note="bare literal premise")
+    g.add("downstream14", o10.Stage.STRUCTURAL, 14.0, note="a quantity that equals 14")
+    g.forbid("downstream14", "int14", reason="conclusion ⇏ the premise it rests on",
+             discharge="derive int14 from chirality combinatorics, not from downstream14")
+    # before the smuggle: clean, and every structural invariant passes.
+    assert g.collapse_audit()["clean"]
+    assert all(g.acceptance_checklist().values())
+    # the smuggle: downstream14 is wired to justify int14.  Same stage -> no backward
+    # edge; int14 does not reach downstream14 -> no cycle; no witness sources anything.
+    g.link("downstream14", "int14")
+    chk = g.acceptance_checklist()
+    assert chk["all_edges_directed_one_way"]      # same-stage edge is allowed
+    assert chk["acyclic_at_proof_authority"]      # still a DAG
+    assert chk["witnesses_are_sinks"]             # no witness involved
+    assert not chk["no_forbidden_collapse_violated"]   # ONLY this fires
+    v = g.collapse_audit()["violations"]
+    assert len(v) == 1 and v[0]["kind"] == "violated"
+    assert (v[0]["src"], v[0]["dst"]) == ("downstream14", "int14")
+
+
+def test_o10_collapse_flags_laundered_match_and_uncashable_iou():
+    """Two subtler cases: (a) the premise propped up not by a direct path but by a
+    DIFFERENT node carrying the same MEASURED value (a laundered coincidence — the
+    measured input is not a terminal witness, so witnesses_are_sinks still holds);
+    and (b) an anti-edge with no discharge — forbidding a collapse you can't say how
+    to license, the unfalsifiability trap the source paper fell into."""
+    from nwt_substrate.benchmarks import o10
+    g = o10.DerivationDAG()
+    g.add("match", o10.Stage.OUTPUT, 0.231)              # value the premise must not lean on
+    g.add("premise", o10.Stage.OUTPUT, 1.0)
+    # a measured input (NOT a terminal witness) carries the same value and reaches premise
+    g.add("laundry", o10.Stage.OUTPUT, 0.231, provenance=o10.MEASURED)
+    g.add("mid", o10.Stage.OUTPUT, 9.0)
+    g.link("laundry", "mid"); g.link("mid", "premise")
+    g.forbid("match", "premise", reason="value coincidence ⇏ premise",
+             discharge="independent derivation")
+    # no direct path match->premise, so not 'violated'; but a same-valued measured
+    # node launders into premise — caught as a coincidence (and witnesses_are_sinks ok).
+    assert g.acceptance_checklist()["witnesses_are_sinks"]
+    coincs = [d for d in g.collapse_defects() if d["kind"] == "coincidence"]
+    assert len(coincs) == 1 and coincs[0]["via"] == "laundry"
+    assert g.collapse_audit()["violations"]              # coincidence is a hard violation
+    # (b) un-cashable IOU: an anti-edge with an empty discharge is itself a defect.
+    g.forbid("match", "premise", reason="duplicate, no test named")  # discharge=""
+    obligations = [d for d in g.collapse_defects() if d["kind"] == "undischarged"]
+    assert len(obligations) == 1
+    assert not g.collapse_audit()["clean"]
+
+
+def test_o10_collapse_deferred_bridge_requires_discharge():
+    """A STATUS_DEFERRED_BRIDGE is an IOU to future work; leaving its discharge
+    empty makes it un-cashable (the NWT guard that inverts the source paper's
+    'deferral as a permanent shield').  A named discharge is a tracked debt and
+    passes; an empty one is flagged."""
+    from nwt_substrate.benchmarks import o10
+    g = o10.DerivationDAG()
+    g.add("maxwell_projection", o10.Stage.SYMBOLIC,
+          status=o10.STATUS_DEFERRED_BRIDGE, note="deferred to a future field paper")
+    assert g.deferred_bridges() == ["maxwell_projection"]
+    iou = [d for d in g.collapse_defects() if d["kind"] == "bridge_iou"]
+    assert len(iou) == 1 and iou[0]["node"] == "maxwell_projection"
+    # give it a killable test -> tracked debt, no longer an un-cashable IOU.
+    import dataclasses
+    g.nodes["maxwell_projection"] = dataclasses.replace(
+        g.nodes["maxwell_projection"],
+        discharge="a Maxwell-sector observable the projection must predict")
+    assert [d for d in g.collapse_defects() if d["kind"] == "bridge_iou"] == []
+
+
+def test_o10_constants_dag_records_eta_B_anti_edge_open():
+    """Dogfood: the real constants DAG declares the η_B=3α⁴/14 anti-edge — the
+    Planck match must not retro-justify the bare integers 3,14.  It is honestly
+    OPEN (named discharge, not yet met), so: not violated, no un-cashable IOU, and
+    the structural checklist still passes — but the obligation is on the record."""
+    from nwt_substrate.benchmarks import o10
+    g = o10.build_constants_dag()
+    audit = g.collapse_audit()
+    assert audit["violations"] == []                     # no smuggle wired up
+    assert audit["open_obligations"] == []               # every anti-edge names a test
+    assert audit["clean"]
+    assert g.acceptance_checklist()["no_forbidden_collapse_violated"]
+    # the anti-edges exist and point witness -> bare integer (the forbidden direction)
+    pairs = {(fc.src, fc.dst) for fc in g.antiedges}
+    assert ("wit:eta_B", "int:14") in pairs and ("wit:eta_B", "int:3") in pairs
+    assert all(fc.discharge.strip() for fc in g.antiedges)  # all honestly cashable
+
+
+def test_o10_collapse_lines_render_every_kind():
+    """The forbidden-collapse REPORT renderer (_collapse_lines) must surface each
+    defect kind under its own tag.  Build one graph carrying all four at once —
+    a wired-up smuggle (VIOLATED), a laundered numeric match (LAUNDERED), an
+    anti-edge with no discharge (IOU), an honestly-open tracked debt (open), and a
+    deferred bridge with no discharge (IOU) — then assert the rendered text shows
+    every tag.  Also covers the two no-op shapes: an empty graph renders nothing,
+    and a graph with only a discharged bridge renders the [clean] line."""
+    from nwt_substrate.benchmarks import o10
+    g = o10.DerivationDAG()
+    # VIOLATED: a directed path src -> dst now exists (discharge set, so not also IOU)
+    g.add("vsrc", o10.Stage.STRUCTURAL, 1.0)
+    g.add("vdst", o10.Stage.STRUCTURAL, 2.0)
+    g.link("vsrc", "vdst")
+    g.forbid("vsrc", "vdst", reason="wired up", discharge="derive independently")
+    # LAUNDERED: a different MEASURED node with the same value reaches dst
+    g.add("lsrc", o10.Stage.OUTPUT, 0.5)
+    g.add("ldst", o10.Stage.OUTPUT, 9.0)
+    g.add("laundry", o10.Stage.OUTPUT, 0.5, provenance=o10.MEASURED)
+    g.link("laundry", "ldst")
+    g.forbid("lsrc", "ldst", reason="laundered match", discharge="independent route")
+    # IOU (undischarged anti-edge): empty discharge, not violated, not laundered
+    g.add("usrc", o10.Stage.STRUCTURAL, 3.0)
+    g.add("udst", o10.Stage.STRUCTURAL, 4.0)
+    g.forbid("usrc", "udst", reason="no test named")        # discharge=""
+    # open (tracked debt): named discharge, not violated, not laundered
+    g.add("osrc", o10.Stage.STRUCTURAL, 5.0)
+    g.add("odst", o10.Stage.STRUCTURAL, 6.0)
+    g.forbid("osrc", "odst", reason="open debt", discharge="a future killable test")
+    # bridge IOU: a deferred bridge with no discharge
+    g.add("bridge", o10.Stage.SYMBOLIC, status=o10.STATUS_DEFERRED_BRIDGE, note="future")
+
+    text = "\n".join(o10._collapse_lines(g))
+    assert "[VIOLATED ]" in text and "vsrc" in text
+    assert "[LAUNDERED]" in text and "via laundry" in text
+    assert "[IOU      ]" in text                             # both undischarged + bridge
+    assert "deferred bridge 'bridge'" in text
+    assert "[open     ]" in text and "a future killable test" in text
+
+    # no-op shapes
+    assert o10._collapse_lines(o10.DerivationDAG()) == []    # nothing declared -> nothing
+    gc = o10.DerivationDAG()
+    gc.add("ok_bridge", o10.Stage.SYMBOLIC, status=o10.STATUS_DEFERRED_BRIDGE,
+           discharge="a named test")
+    assert any("[clean]" in ln for ln in o10._collapse_lines(gc))
+
+
+def test_o10_main_emits_collapse_section(capsys):
+    """The CLI entrypoints wire _collapse_lines into both the default report and the
+    --suite report.  The default report runs on the constants DAG (which carries the
+    open η_B anti-edges), so it must return 0 and print the no-reverse-smuggling
+    section; the --suite report runs its own (anti-edge-free) DAG, so it just
+    exercises the integration line and must return 0."""
+    from nwt_substrate.benchmarks import o10
+    assert o10.main([]) == 0
+    assert "no-reverse-smuggling" in capsys.readouterr().out
+    assert o10.main(["--suite"]) == 0

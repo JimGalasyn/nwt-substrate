@@ -139,6 +139,25 @@ def test_alpha_qed_leakage_pinned_in_dispute():
         "(dated) rather than deleting this test")
 
 
+def test_neighbouring_value_lookelsewhere_measured():
+    """Gauntlet mode 5, pinned: the substrate fitting pattern fits RANDOM
+    targets inside G's error bar most of the time (full menu), so the real
+    m_e/M_Pl ppm-hit carries no information beyond the menu.  The thresholds
+    here are loose floors — if a code change makes the procedure LESS able to
+    fit noise, these bounds still hold; if someone weakens the test to rescue
+    the G relation, the diff is the receipt."""
+    from nwt_substrate.benchmarks.neighbouring_value import (
+        FULL_MENU, MINIMAL_MENU, sweep,
+    )
+    full = sweep(FULL_MENU, n_targets=500, seed=7)
+    assert full["frac_within_G_bar"] > 0.5      # measured ~0.83
+    minimal = sweep(MINIMAL_MENU, n_targets=500, seed=7)
+    assert minimal["frac_within_G_bar"] > 0.10  # measured ~0.24
+    # and the evidence is pinned in the dispute record
+    from nwt_substrate.benchmarks.surface import DISPUTES
+    assert "neighbouring_value" in DISPUTES["m_e_over_M_Pl"]
+
+
 def test_mass_rows_post_selected():
     """Mass-ratio rows carry POST_SELECTED (the compendium's own 2026-04-30
     correction note is the in-repo evidence) — they may never quietly become

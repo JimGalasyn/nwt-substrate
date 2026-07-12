@@ -220,7 +220,16 @@ DISPUTES: dict[str, str] = {
                      "feeding the measured constant into its own prediction — the "
                      "reverse-smuggle the O10 quarantine forbids (same genus as "
                      "the v0.3.1 sin²θ_W bug).  Contrast: substrate_gf.py "
-                     "(v_over_m_e) imports ALPHA_SUBSTRATE and is clean.",
+                     "(v_over_m_e) imports ALPHA_SUBSTRATE and is clean.  "
+                     "EVIDENCE 2 (2026-07-12, neighbouring_value.py — gauntlet "
+                     "mode 5, quantified): the same fitting pattern (structural-"
+                     "menu prefactor × α^(n/2) × two rational bracket stages) "
+                     "fits RANDOM targets to a median ~2.5 ppm, with ~83% landing "
+                     "inside G's 22 ppm bar (full menu; ~24% even on the minimal "
+                     "{1,2,3,7,8,21} menu) — better than the published chain's "
+                     "actual ~5 ppm hit.  A ppm-scale landing is the EXPECTED "
+                     "outcome of the procedure for an arbitrary number; the "
+                     "look-elsewhere volume fully absorbs the coincidence.",
 }
 
 

@@ -88,11 +88,16 @@ NORMALIZED = "normalized"      # set to a fixed value (=1, ...) by a normalisati
 FITTED = "fitted"             # tuned to match the target
 POST_SELECTED = "post_selected"  # the closest of a search (look-elsewhere)
 CONVENTION = "convention"      # pinned by an arbitrary convention (e.g. radius λ̄ vs λ̄/2)
+MOTIVATED = "motivated"        # structural rationale, not forced (the L4(a) audit
+#                                vocabulary: "motivated rather than derived" — a counted
+#                                exponent, a matched amplitude, an identified prefactor)
 ASSERTED = "asserted"          # depended on as an operator but never constructed
 
-# Values whose agreement with a witness is circular, not evidence.
+# Values whose agreement with a witness is circular, not evidence.  MOTIVATED is
+# suspect: a motivated-not-forced value could have been motivated differently had
+# the target differed, so its match corroborates the identification, not the theory.
 SUSPECT_PROVENANCE = frozenset(
-    {DEFINITION, NORMALIZED, FITTED, POST_SELECTED, CONVENTION})
+    {DEFINITION, NORMALIZED, FITTED, POST_SELECTED, CONVENTION, MOTIVATED})
 _VALID_PROVENANCE = SUSPECT_PROVENANCE | {DERIVED, MEASURED, ASSERTED}
 
 
@@ -151,6 +156,19 @@ class Node:
     status: str = ""              # result-level CLAIM standing (STATUS_* above); "" -> none.
     discharge: str = ""           # for a STATUS_DEFERRED_BRIDGE: the killable test that
     #                               would discharge the IOU; "" -> an un-cashable obligation.
+    sigma: float | None = None    # WITNESS 1σ experimental uncertainty (absolute), enabling
+    #                               the S-NOW readout; None -> witness has no error budget
+    #                               and cannot be S-NOW-scored (cit-only).
+    disputed: str = ""            # provenance DISPUTE record: a pinned EXTERNAL audit
+    #                               contests this node's self-declared provenance
+    #                               ("contested=<tag> per <repo/path@sha>").  A dispute is
+    #                               marked, never repaired: cit agreement on any OUTPUT
+    #                               downstream of a disputed node is suspended as
+    #                               corroboration until the dispute is adjudicated
+    #                               (the Auditor's verdict replaces the tag AND clears
+    #                               this field, citing the verdict).  Self-tags and
+    #                               external audits disagreeing silently is the failure
+    #                               mode this field exists to surface.
 
 
 @dataclass
@@ -163,14 +181,16 @@ class DerivationDAG:
     def add(self, name: str, stage: Stage, value: float | None = None,
             note: str = "", commutative: bool = False,
             dev: float | None = None, kind: str = "", provenance: str = "",
-            status: str = "", discharge: str = "") -> str:
+            status: str = "", discharge: str = "",
+            sigma: float | None = None, disputed: str = "") -> str:
         if provenance and provenance not in _VALID_PROVENANCE:
             raise ValueError(f"unknown provenance {provenance!r} for node {name!r}")
         if status and status not in _VALID_STATUS:
             raise ValueError(f"unknown status {status!r} for node {name!r}")
         if name not in self.nodes:
             self.nodes[name] = Node(name, stage, value, note, commutative,
-                                    dev, kind, provenance, status, discharge)
+                                    dev, kind, provenance, status, discharge,
+                                    sigma, disputed)
         return name
 
     def link(self, src: str, dst: str) -> None:
@@ -397,6 +417,72 @@ class DerivationDAG:
             "tautologies": tautologies,
             "clean": not asserted and not tautologies and not circular,
         }
+
+    # ---- provenance-dispute lint (the T1 axis: the DAG's SELF-declared tags vs
+    #      the program's own PINNED external audits.  A provenance lint that the
+    #      claim's author satisfies by tagging everything DERIVED is theater; this
+    #      lint surfaces every node whose tag a pinned audit contests, and
+    #      suspends cit corroboration downstream until adjudication.  Marked,
+    #      never repaired — adjudication (the memory-blind Auditor's verdict)
+    #      replaces the tag and clears the dispute, citing the verdict.) ----
+
+    def disputed_nodes(self) -> list[str]:
+        """Nodes whose self-declared provenance is contested by a pinned external
+        audit (``disputed`` non-empty)."""
+        return sorted(n for n, nd in self.nodes.items() if nd.disputed)
+
+    def dispute_audit(self, tol: float = 0.01) -> dict:
+        """Per disputed node: the dispute record and every OUTPUT it reaches —
+        those outputs' cit passes are SUSPENDED as corroboration pending
+        adjudication (agreement with a witness cannot corroborate a chain whose
+        provenance is itself in dispute)."""
+        cit = {r["output"]: r for r in self.cit_readout(tol)}
+        rows = []
+        suspended: set[str] = set()
+        for n in self.disputed_nodes():
+            outs = sorted(self.reachable_outputs(n) | (
+                {n} if self.nodes[n].stage == Stage.OUTPUT else set()))
+            suspended.update(o for o in outs if cit.get(o, {}).get("admissible"))
+            rows.append({"node": n, "dispute": self.nodes[n].disputed,
+                         "self_tag": self.provenance(n), "reaches": outs})
+        return {"disputes": rows,
+                "suspended_outputs": sorted(suspended),
+                "clean": not rows}
+
+    # ---- S-NOW readout (precision confrontation): cit with a fixed tolerance is
+    #      a smoke test — at tol=1% every sub-percent postdiction "passes".  The
+    #      kill surface asks the sharper question: is the frozen form compatible
+    #      with the measured value AT THE EXPERIMENT'S OWN PRECISION?  A row can
+    #      pass cit and still be DEAD-AS-EXACT by thousands of σ (α itself is).
+    #      Requires witness nodes to carry ``sigma``; rows without one are
+    #      reported UNSCORED rather than silently skipped. ----
+
+    def snow_readout(self, n_sigma: float = 2.0) -> list[dict]:
+        """Per OUTPUT->WITNESS edge: z = |predicted − measured| / σ_measured and
+        the verdict — EXACT-COMPATIBLE (z ≤ n_sigma), DEAD-AS-EXACT (z > n_sigma:
+        the frozen form is excluded at current experimental precision and
+        survives only as the leading order of an undeclared series), or UNSCORED
+        (witness has no σ).  NOTE: a pass is *compatibility*, not confirmation —
+        postdictive values are compatible with their own targets by construction;
+        only the S-FORWARD channel can upgrade a row to evidence."""
+        rows = []
+        for s, d in self.edges:
+            so, do = self.nodes[s], self.nodes[d]
+            if so.stage != Stage.OUTPUT or do.stage != Stage.WITNESS:
+                continue
+            if so.value is None or do.value is None:
+                continue                                   # qualitative — cit's domain
+            if do.sigma is None or do.sigma <= 0:
+                rows.append({"output": s, "witness": d, "predicted": so.value,
+                             "measured": do.value, "sigma": None, "z": None,
+                             "verdict": "UNSCORED"})
+                continue
+            z = abs(so.value - do.value) / do.sigma
+            rows.append({"output": s, "witness": d, "predicted": so.value,
+                         "measured": do.value, "sigma": do.sigma, "z": z,
+                         "verdict": "EXACT-COMPATIBLE" if z <= n_sigma
+                                    else "DEAD-AS-EXACT"})
+        return rows
 
     # ---- forbidden-collapse lints (the *negative-edge* axis: a downstream readout
     #      retro-justifying an upstream premise — "X readout ⇏ the theorem that
@@ -848,6 +934,44 @@ def _provenance_lines(g: DerivationDAG, tol: float = 0.01) -> list[str]:
     return lines
 
 
+def _dispute_lines(g: DerivationDAG, tol: float = 0.01) -> list[str]:
+    """The provenance-dispute readout: self-declared tags contested by pinned
+    external audits.  Every affected output's cit pass is listed as SUSPENDED —
+    agreement cannot corroborate a chain whose provenance is in dispute.  A DAG
+    with no disputes prints nothing (the section only appears when it bites)."""
+    audit = g.dispute_audit(tol)
+    if audit["clean"]:
+        return []
+    lines = ["", "Provenance disputes (self-declared tag vs pinned external audit; "
+             "marked, not repaired — adjudication replaces the tag):"]
+    for r in audit["disputes"]:
+        lines.append(f"  [DISPUTED ]  {r['node']:26s} self={r['self_tag']}   {r['dispute']}")
+    if audit["suspended_outputs"]:
+        lines.append("  cit passes SUSPENDED as corroboration pending adjudication: "
+                     + ", ".join(audit["suspended_outputs"]))
+    return lines
+
+
+def _snow_lines(g: DerivationDAG, n_sigma: float = 2.0) -> list[str]:
+    """The S-NOW readout: each scored output confronted at the experiment's own
+    precision.  Pass = compatibility (postdictions are compatible with their own
+    targets by construction), never confirmation."""
+    rows = g.snow_readout(n_sigma)
+    if not rows:
+        return []
+    lines = ["", f"S-NOW readout (|predicted − measured| / σ_experiment; "
+             f"verdict at {n_sigma:g}σ — compatibility, NOT confirmation):"]
+    for r in sorted(rows, key=lambda r: -(r["z"] if r["z"] is not None else -1)):
+        if r["z"] is None:
+            lines.append(f"  [unscored      ]  {r['output']:24s} witness has no σ")
+            continue
+        tag = "ok  " if r["verdict"] == "EXACT-COMPATIBLE" else "DEAD"
+        z = f"{r['z']:.3g}σ" if r["z"] < 1e6 else f"{r['z']:.2e}σ"
+        lines.append(f"  [{tag} {z:>10s}]  {r['output']:24s} "
+                     f"{r['predicted']:.9g}  vs  {r['measured']:.9g} ± {r['sigma']:.2g}")
+    return lines
+
+
 def _collapse_lines(g: DerivationDAG, tol: float = 0.01) -> list[str]:
     """The forbidden-collapse readout: declared anti-edges (no-reverse-smuggling
     rules) and deferred-bridge IOUs.  A VIOLATED line is a conclusion now feeding
@@ -1086,6 +1210,8 @@ def main(argv: list[str] | None = None) -> int:
                      f"  via {r['parents']}  = {r['values']}")
 
     lines += _provenance_lines(g)
+    lines += _dispute_lines(g)
+    lines += _snow_lines(g)
     lines += _collapse_lines(g)
 
     if "--redundancy" in (argv or []):

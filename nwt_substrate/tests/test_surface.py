@@ -88,59 +88,77 @@ def test_n_minus_p_split_predicted_zero():
     assert _verdict("n_minus_p_over_m_e") == "DEAD-AS-EXACT"
 
 
-def test_undisputed_survivors():
-    """The undisputed rows currently compatible at 2σ.  If a library change
+def test_clean_survivors():
+    """Rows compatible at 2σ whose provenance is NOT suspect.  After the
+    2026-07-12 adjudication (verdict 4032d04) the fitted/post-selected rows
+    are excluded by tag rather than by open dispute; what remains is the
+    program's entire surviving compatible-and-clean set.  If a library change
     grows or shrinks this set, that is a headline event, not noise."""
+    from nwt_substrate.benchmarks.o10 import SUSPECT_PROVENANCE
     g = build_surface_dag()
-    disputed_rows = {r.key for r in surface_rows() if r.disputed}
+    suspect = {r.key for r in surface_rows()
+               if r.provenance in SUSPECT_PROVENANCE}
     survivors = {r["output"] for r in g.snow_readout()
-                 if r["verdict"] == "EXACT-COMPATIBLE"} - disputed_rows
-    assert survivors == {"cabibbo_lambda", "sin2_theta_13", "m_Sigma*_over_m_e"}
+                 if r["verdict"] == "EXACT-COMPATIBLE"} - suspect
+    assert survivors == {"cabibbo_lambda", "sin2_theta_13"}
 
 
 # ---------------------------------------------------------------------------
-# Disputes (T1: self-tags vs pinned external audits)
+# Adjudications (T1 closed: the Auditor verdict of 2026-07-12, nwt-audit
+# 4032d04 — DERIVED refuted on all four rows; write-backs below are the
+# pre-committed consequences, executed citing that verdict)
 # ---------------------------------------------------------------------------
 
-def test_disputes_present_and_suspending():
-    """The three pinned-audit disputes exist and suspend their rows' cit
-    passes as corroboration."""
+def test_adjudications_written_back():
+    """The four adjudicated tags are in force, every ground cites the
+    verdict, no dispute remains open, and the suspended-cit machinery is
+    quiescent (nothing left to suspend)."""
+    from nwt_substrate.benchmarks.surface import ADJUDICATIONS
+    expected = {"eta_B": "post_selected", "omega_b_c": "fitted",
+                "m_e_over_M_Pl": "motivated", "rho_lambda": "motivated"}
+    rows = {r.key: r for r in surface_rows()}
+    for key, tag in expected.items():
+        assert rows[key].provenance == tag, key
+        assert rows[key].disputed == "", key            # cleared by adjudication
+        assert "2026-07-12-constants-provenance-disputes" in rows[key].note, key
+        assert ADJUDICATIONS[key][0] == tag
     g = build_surface_dag()
-    audit = g.dispute_audit()
-    disputed = {r["node"] for r in audit["disputes"]}
-    assert {"sym:eta_B", "sym:omega_b_c", "sym:m_e_over_M_Pl",
-            "sym:rho_lambda"} <= disputed
-    assert "eta_B" in audit["suspended_outputs"]
-    assert "omega_b_c" in audit["suspended_outputs"]
+    assert g.dispute_audit()["clean"]
 
 
-def test_alpha_qed_leakage_pinned_in_dispute():
-    """The measured-α leakage evidence stays in the m_e_over_M_Pl dispute
-    record until the Auditor adjudicates: gravity/coupling.py defaults its
-    chain to alpha=ALPHA_QED (the measured CODATA value), which is where the
-    'G at 11 ppm' headline came from — substrate-pure the chain misses G by
-    ~150 ppm ≈ 7σ.  Dropping this evidence is a dispute-record edit, which is
-    forbidden short of adjudication."""
-    from nwt_substrate.benchmarks.surface import DISPUTES
-    record = DISPUTES["m_e_over_M_Pl"]
-    assert "ALPHA_QED" in record
-    assert "reverse-smuggle" in record
-    # and the leakage itself is real: the coupling chain's default arg is the
-    # measured α, not the substrate α.
+def test_adjudicated_rows_flagged_circular_on_cit():
+    """With suspect tags in force, any of the four rows that passes cit must
+    surface in provenance_defects as CIRCULAR — agreement is not evidence for
+    a fitted/post-selected/motivated value.  (This is the verdict's 'S-NOW
+    compatibility may never be cited as support' clause, enforced by lint.)"""
+    g = build_surface_dag()
+    circular = {r["output"] for r in g.provenance_audit()["circular_passes"]}
+    # eta_B, omega_b_c and rho_lambda pass cit at 1% — they must be flagged.
+    assert {"eta_B", "omega_b_c", "rho_lambda"} <= circular
+
+
+def test_alpha_qed_leakage_still_pinned():
+    """The measured-α leakage (exhibit (a), CONFIRMED by the Auditor) remains
+    documented in the adjudication section and the leakage itself remains in
+    coupling.py.  If the default is ever flipped to the substrate α, that is
+    a post-verdict correction: record it by dated note, do not delete this
+    test."""
     import inspect
+    import pathlib
+
+    from nwt_substrate.benchmarks import surface as surface_mod
+    src = pathlib.Path(surface_mod.__file__).read_text()
+    assert "ALPHA_QED" in src and "neighbouring_value" in src
     from nwt_substrate.gravity import coupling
     from nwt_substrate.gravity.constants import ALPHA_QED
     from nwt_substrate.isa.constants import ALPHA_SUBSTRATE
-    sig = inspect.signature(coupling.m_e_over_M_Pl_NNLO)
-    default = sig.parameters["alpha"].default
-    assert default == ALPHA_QED and default != ALPHA_SUBSTRATE, (
-        "coupling.py's default α changed — if it now uses the substrate α, "
-        "this is an adjudication-relevant fix: update the dispute record "
-        "(dated) rather than deleting this test")
+    default = inspect.signature(coupling.m_e_over_M_Pl_NNLO).parameters["alpha"].default
+    assert default == ALPHA_QED and default != ALPHA_SUBSTRATE
 
 
 def test_neighbouring_value_lookelsewhere_measured():
-    """Gauntlet mode 5, pinned: the substrate fitting pattern fits RANDOM
+    """Gauntlet mode 5, pinned (exhibit (b), CONFIRMED by the Auditor with
+    independent seeds/menus): the substrate fitting pattern fits RANDOM
     targets inside G's error bar most of the time (full menu), so the real
     m_e/M_Pl ppm-hit carries no information beyond the menu.  The thresholds
     here are loose floors — if a code change makes the procedure LESS able to
@@ -153,9 +171,6 @@ def test_neighbouring_value_lookelsewhere_measured():
     assert full["frac_within_G_bar"] > 0.5      # measured ~0.83
     minimal = sweep(MINIMAL_MENU, n_targets=500, seed=7)
     assert minimal["frac_within_G_bar"] > 0.10  # measured ~0.24
-    # and the evidence is pinned in the dispute record
-    from nwt_substrate.benchmarks.surface import DISPUTES
-    assert "neighbouring_value" in DISPUTES["m_e_over_M_Pl"]
 
 
 def test_mass_rows_post_selected():
@@ -182,17 +197,24 @@ def test_anti_edges_carry_discharges():
 # ---------------------------------------------------------------------------
 
 def test_order_pins_frozen():
-    """The frozen order per closed form, verbatim.  Changing an order (e.g.
-    adding an NNLO term to survive a data update) must change this test —
-    a dated, deliberate amendment, never a silent retrofit."""
+    """The frozen order per closed form, verbatim.  Changing an order must
+    change this test — a dated, deliberate amendment, never a silent retrofit.
+
+    AMENDMENT 2026-07-12 (authorized): m_e_over_M_Pl and rho_lambda
+    NNLO → NLO per the Auditor verdict CL-2
+    (2026-07-12-constants-provenance-disputes, nwt-audit 4032d04): the NNLO
+    α² coefficient is documented target-selection (Paper 17 computed it from
+    CODATA before choosing the nearest structural integer); NLO is the
+    externally audited L4(a) form.  NNLO is retired from claim status and no
+    post-freeze order change can revive it."""
     assert ORDER_PINS == {
         "inv_alpha": "exact",
         "sin2_theta_W": "LO",
         "cabibbo_lambda": "exact",
         "eta_B": "exact",
-        "m_e_over_M_Pl": "NNLO",
+        "m_e_over_M_Pl": "NLO",
         "omega_b_c": "NLO",
-        "rho_lambda": "NNLO",
+        "rho_lambda": "NLO",
         "v_over_m_e": "NLO",
         "sin2_theta_13": "LO",
         "sin2_theta_12": "LO",

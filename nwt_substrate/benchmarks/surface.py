@@ -191,45 +191,52 @@ EXCLUSIONS: dict[str, str] = {
 
 
 # ===========================================================================
-# Provenance disputes — pinned external audits contesting self-declared tags.
-# These strings ride on the symbolic nodes; dispute_audit() suspends the
-# affected rows' cit passes until the memory-blind Auditor adjudicates.
+# Provenance ADJUDICATIONS — the four disputes deposited to the memory-blind
+# Auditor were adjudicated 2026-07-12 (VERDICT, nwt-audit
+# `audits/2026-07-12-constants-provenance-disputes/`, commit 4032d04):
+# self-tag DERIVED **REFUTED on every row**.  Per the o10 dispute semantics,
+# adjudication replaces the tag and clears the `disputed` field, citing the
+# verdict — which these records do.  The full contest evidence (the two
+# exhibits: the gravity/coupling.py alpha=ALPHA_QED default behind the
+# public "G at −11 ppm" headline, substrate-pure ≈7σ outside; and the
+# neighbouring_value.py look-elsewhere volume, ~83% of random targets inside
+# G's bar) was REPRODUCED by the Auditor (CL-3(a),(b) CONFIRMED, with
+# independent seed/menu/stage-count robustness probes) and is preserved in
+# the deposit's CLAIM.md and the verdict's work/ directory.
 # ===========================================================================
 
-_POSTMORTEM = "null-worldtube-private analysis/COSMOGENESIS_POSTMORTEM.md §2.4"
-_L4A = "null-worldtube-private analysis/I2_L4a_paper18_G_chain.md (2026-07-10)"
+_VERDICT = ("Auditor verdict 2026-07-12-constants-provenance-disputes "
+            "(nwt-audit 4032d04)")
 
-DISPUTES: dict[str, str] = {
-    "eta_B": f"contested={POST_SELECTED} per {_POSTMORTEM} "
-             "(the 3α⁴/14 form survived a 17-formula sweep) — Auditor to adjudicate",
-    "omega_b_c": f"contested={FITTED} per {_POSTMORTEM} "
-                 "(the 75α² NLO term was added inside the Planck error bar) "
-                 "— Auditor to adjudicate",
-    "m_e_over_M_Pl": f"contested={MOTIVATED} per {_L4A} (exponent 21 counted, "
-                     "√α-per-edge matched via the non-rigorous CS integral, 8/7 "
-                     "identified, NLO empirical); the NNLO bracket postdates that "
-                     "audit — Auditor to adjudicate the ORDER pin too.  "
-                     "EVIDENCE (2026-07-12, this repo): gravity/coupling.py "
-                     "defaults its chain to alpha=ALPHA_QED — the MEASURED CODATA "
-                     "α, not the substrate α — which is where the headline 'G at "
-                     "11 ppm, inside CODATA's 22 ppm bar' came from.  Exponent "
-                     "leverage (G ∝ α²¹) amplifies the substrate α's 7.6 ppm miss "
-                     "to ~160 ppm in G; computed substrate-pure (predict.py) the "
-                     "chain misses G by ~150 ppm ≈ 7σ OUTSIDE the bar.  The "
-                     "'within the error bar' impression was manufactured by "
-                     "feeding the measured constant into its own prediction — the "
-                     "reverse-smuggle the O10 quarantine forbids (same genus as "
-                     "the v0.3.1 sin²θ_W bug).  Contrast: substrate_gf.py "
-                     "(v_over_m_e) imports ALPHA_SUBSTRATE and is clean.  "
-                     "EVIDENCE 2 (2026-07-12, neighbouring_value.py — gauntlet "
-                     "mode 5, quantified): the same fitting pattern (structural-"
-                     "menu prefactor × α^(n/2) × two rational bracket stages) "
-                     "fits RANDOM targets to a median ~2.5 ppm, with ~83% landing "
-                     "inside G's 22 ppm bar (full menu; ~24% even on the minimal "
-                     "{1,2,3,7,8,21} menu) — better than the published chain's "
-                     "actual ~5 ppm hit.  A ppm-scale landing is the EXPECTED "
-                     "outcome of the procedure for an arbitrary number; the "
-                     "look-elsewhere volume fully absorbs the coincidence.",
+# Adjudicated provenance per row, with the verdict's per-row ground.
+ADJUDICATIONS: dict[str, tuple[str, str]] = {
+    "eta_B": (POST_SELECTED,
+              f"{_VERDICT}: DERIVED refuted — kept-closest survivor of a "
+              "17-formula sweep (two pinned admissions); docstring's own "
+              "multiple-readings for 3 and 14 defeat forcing; mode 5: 54.9% "
+              "of random targets fit inside this row's 2σ bar.  Open caveat: "
+              "pin the primary sweep artifact by dated CLAIM.md appendix."),
+    "omega_b_c": (FITTED,
+                  f"{_VERDICT}: DERIVED refuted — the LO term alone was "
+                  "already compatible at 1.77σ (nothing forced a correction); "
+                  "the added 75α² term lands at z = 0.0056σ (≈0.4% luck), the "
+                  "fit-to-central-value signature; mode 5: 81.7%."),
+    "m_e_over_M_Pl": (MOTIVATED,
+                      f"{_VERDICT}: DERIVED refuted — Paper 17 verified "
+                      "verbatim (exponent counted, √α matched via the "
+                      "non-rigorous CS integral, 8/7 identified, NLO "
+                      "empirical); both exhibits reproduced.  The NNLO α² "
+                      "coefficient is FITTED by documentation (computed from "
+                      "CODATA, nearest named integer selected) — hence the "
+                      "CL-2 NLO order pin."),
+    "rho_lambda": (MOTIVATED,
+                   f"{_VERDICT}: MOTIVATED inherited via (m_e/M_Pl)⁴; the "
+                   "row-specific factors h_Cox = 6 and α¹⁶ are "
+                   "UNDERSPECIFIED (no derivation AND no selection history "
+                   "in pinned evidence; h = 6 is the unique menu integer "
+                   "inside the bar) — treated as contested-upheld until "
+                   "discharged by dated amendment; mode 5 at this row's 3% "
+                   "bar: 100.0%."),
 }
 
 
@@ -246,7 +253,9 @@ class SurfaceRow:
     predicted: float    # computed FROM THE LIBRARY — never hand-typed
     witness: Witness
     provenance: str     # self-declared value provenance (explicit — no defaults here)
-    disputed: str = ""  # pinned external-audit dispute (see DISPUTES)
+    disputed: str = ""  # open external-audit dispute; "" after adjudication
+    #                     (the four 2026-07-12 disputes are adjudicated — see
+    #                     ADJUDICATIONS, whose grounds ride on `note`)
     note: str = ""
     discharge: str = "" # for deferred-bridge rows: the killable test that closes them
 
@@ -258,10 +267,13 @@ ORDER_PINS: dict[str, str] = {
     "sin2_theta_W": "LO",
     "cabibbo_lambda": "exact",
     "eta_B": "exact",
-    "m_e_over_M_Pl": "NNLO",      # library-current; the L4(a) audit saw NLO — the
-    #                               dispute on this row includes the order question.
-    "omega_b_c": "NLO",           # 25α + 75α² — the NLO term is the disputed one.
-    "rho_lambda": "NNLO",         # inherits m_e/M_Pl's bracket via (m_e/M_Pl)⁴.
+    "m_e_over_M_Pl": "NLO",       # PINNED by the Auditor (CL-2, 2026-07-12):
+    #                               the L4(a)-audited form; NNLO retired from
+    #                               claim status (coefficient computed from the
+    #                               CODATA target — documented target-selection).
+    "omega_b_c": "NLO",           # 25α + 75α² — the NLO term adjudicated FITTED.
+    "rho_lambda": "NLO",          # follows the CL-2 pin via (m_e/M_Pl)⁴
+    #                               (lambda_cc.py call site updated to match).
     "v_over_m_e": "NLO",          # (25/α²)(1 + 25α/(4√3)).
     "sin2_theta_13": "LO",
     "sin2_theta_12": "LO",
@@ -320,7 +332,7 @@ def surface_rows() -> list[SurfaceRow]:
         "sin2_theta_W": "(2 + α)/9",
         "cabibbo_lambda": "√(7α)",
         "eta_B": "3α⁴/14",
-        "m_e_over_M_Pl": "(8/7)·α^(21/2)·(1 + α/7 + (21/8)α²)",
+        "m_e_over_M_Pl": "(8/7)·(1 + α/7)·α^(21/2)",
     }
     sections = {
         "inv_alpha": "couplings", "sin2_theta_W": "couplings",
@@ -328,27 +340,31 @@ def surface_rows() -> list[SurfaceRow]:
         "m_e_over_M_Pl": "couplings",
     }
     for key in forms:
+        prov, ground = ADJUDICATIONS.get(key, (DERIVED, ""))
         rows.append(SurfaceRow(
             key=key, section=sections[key], form=forms[key],
             order=ORDER_PINS[key], predicted=pred[key],
-            witness=WITNESSES[key], provenance=DERIVED,
-            disputed=DISPUTES.get(key, ""),
-            note="predict.py O10 standalone rung"))
+            witness=WITNESSES[key], provenance=prov,
+            note=ground or "predict.py O10 standalone rung"))
 
     # --- cosmology beyond predict.py ---
     rows.append(SurfaceRow(
         key="omega_b_c", section="cosmology", form="25α + 75α²",
         order=ORDER_PINS["omega_b_c"], predicted=omega_b_c(),
-        witness=WITNESSES["omega_b_c"], provenance=DERIVED,
-        disputed=DISPUTES["omega_b_c"]))
+        witness=WITNESSES["omega_b_c"],
+        provenance=ADJUDICATIONS["omega_b_c"][0],
+        note=ADJUDICATIONS["omega_b_c"][1]))
     rows.append(SurfaceRow(
         key="rho_lambda", section="cosmology",
         form="(m_e/M_Pl)⁴·α¹⁶·h_Cox",
         order=ORDER_PINS["rho_lambda"], predicted=lambda_cc(),
-        witness=WITNESSES["rho_lambda"], provenance=DERIVED,
-        disputed="inherits the m_e_over_M_Pl dispute via (m_e/M_Pl)⁴ — "
-                 "adjudication propagates",
-        note="h_Cox provenance to the Auditor brief (prereg rider R2)"))
+        witness=WITNESSES["rho_lambda"],
+        provenance=ADJUDICATIONS["rho_lambda"][0],
+        note=ADJUDICATIONS["rho_lambda"][1],
+        discharge="dated amendment pinning either a forcing derivation of "
+                  "h_Cox = 6 and the α¹⁶ exponent, or the honest dated "
+                  "history of their selection (verdict discharge for the "
+                  "UNDERSPECIFIED sub-factors)"))
 
     # --- electroweak scale ratio ---
     rows.append(SurfaceRow(
@@ -519,6 +535,17 @@ def build_surface_dag() -> DerivationDAG:
              discharge="a forcing chain that pins (p,q,m,n_q) from charge/isospin/"
                        "baryon predicates WITHOUT mass input — then the mass is a "
                        "genuine prediction")
+    # Wiring gap closed per the Auditor verdict (rho_lambda adjudication): the
+    # row-specific factors had no anti-edge.  h_Cox = 6 is the unique menu
+    # integer landing inside the bar and every integer 1–8 carries an available
+    # Lie-theory name, so the Planck match must not retro-justify either factor.
+    g.forbid("wit:rho_lambda", "sym:rho_lambda",
+             reason="Planck ρ_Λ match ⇏ h_Cox = 6 or the α¹⁶ exponent "
+                    "(UNDERSPECIFIED per the verdict; mode 5 hits 100% of "
+                    "random targets at this row's 3% bar)",
+             discharge="pin a forcing derivation of h_Cox and 16 = 2·dim(𝕆), or "
+                       "the honest dated history of their selection (dated "
+                       "amendment; verdict discharge)")
     return g
 
 

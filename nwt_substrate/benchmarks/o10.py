@@ -764,7 +764,10 @@ def build_constants_dag() -> DerivationDAG:
         "sin2_theta_W":   ("(2+α)/9",            ["α", "int:2", "int:9"]),
         "cabibbo_lambda": ("√(7α)",              ["α", "N_VERTICES_K7"]),
         "eta_B":          ("3α⁴/14",             ["α", "int:3", "int:14"]),
-        "m_e_over_M_Pl":  ("(8/7)·α^(21/2)·NNLO", ["α", "8/7", "N_EDGES_K7"]),
+        "m_e_over_M_Pl":  ("(8/7)·(1+α/7)·α^(21/2)", ["α", "8/7", "N_EDGES_K7"]),
+        # ^ NLO per the Auditor CL-2 order pin (2026-07-12): the NNLO α² term
+        #   is retired from claim status (coefficient computed from the CODATA
+        #   target — Paper 17's own documentation).
     }
     for key, (form, parents) in specs.items():
         sym, out, wit = f"sym:{key}", key, f"wit:{key}"

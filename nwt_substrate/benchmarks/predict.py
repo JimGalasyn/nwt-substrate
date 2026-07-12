@@ -43,7 +43,6 @@ from ..isa.constants import (
     N_EDGES_K7,
     N_VERTICES_K7,
     NLO_VERTEX_COEFFICIENT,
-    NNLO_BRACKET_COEFFICIENT,
     SPINOR_VECTOR_RATIO,
 )
 
@@ -52,15 +51,25 @@ def predictions() -> dict[str, float]:
     """Dimensionless substrate predictions — pure functions of the structure.
 
     No argument, no measured input, no scale: a standalone derivation.
+
+    ORDER PIN (Auditor verdict `2026-07-12-constants-provenance-disputes`,
+    CL-2): the frozen m_e/M_Pl claim is the NLO form (8/7)(1+α/7)·α^(21/2) —
+    the externally audited L4(a) form.  The NNLO α² term is RETIRED from
+    claim status: Paper 17 documents its coefficient as computed from the
+    CODATA target before the "structural" integer 21/8 was selected
+    (target-selection), and substrate-pure it buys nothing (−65 ppm NLO vs
+    +75 ppm NNLO on the ratio, both ~6σ dead against the 11.5 ppm witness
+    bar).  ``isa.NNLO_BRACKET_COEFFICIENT`` remains as code; it may never be
+    cited as the claim, and no post-freeze order change can revive it.
     """
     a = ALPHA_SUBSTRATE                                  # 1/(25π√3 + 1)
-    nnlo_bracket = 1.0 + NLO_VERTEX_COEFFICIENT * a + NNLO_BRACKET_COEFFICIENT * a * a
+    nlo_bracket = 1.0 + NLO_VERTEX_COEFFICIENT * a
     return {
         "inv_alpha":      1.0 / a,                       # 25π√3 + 1
         "sin2_theta_W":   (2.0 + a) / 9.0,               # (2 + α)/9
         "cabibbo_lambda": math.sqrt(N_VERTICES_K7 * a),  # √(7α)
         "eta_B":          3.0 * a ** 4 / 14.0,           # baryon asymmetry 3α⁴/14
-        "m_e_over_M_Pl":  SPINOR_VECTOR_RATIO * a ** (N_EDGES_K7 / 2.0) * nnlo_bracket,
+        "m_e_over_M_Pl":  SPINOR_VECTOR_RATIO * a ** (N_EDGES_K7 / 2.0) * nlo_bracket,
     }
 
 

@@ -208,7 +208,19 @@ DISPUTES: dict[str, str] = {
     "m_e_over_M_Pl": f"contested={MOTIVATED} per {_L4A} (exponent 21 counted, "
                      "√α-per-edge matched via the non-rigorous CS integral, 8/7 "
                      "identified, NLO empirical); the NNLO bracket postdates that "
-                     "audit — Auditor to adjudicate the ORDER pin too",
+                     "audit — Auditor to adjudicate the ORDER pin too.  "
+                     "EVIDENCE (2026-07-12, this repo): gravity/coupling.py "
+                     "defaults its chain to alpha=ALPHA_QED — the MEASURED CODATA "
+                     "α, not the substrate α — which is where the headline 'G at "
+                     "11 ppm, inside CODATA's 22 ppm bar' came from.  Exponent "
+                     "leverage (G ∝ α²¹) amplifies the substrate α's 7.6 ppm miss "
+                     "to ~160 ppm in G; computed substrate-pure (predict.py) the "
+                     "chain misses G by ~150 ppm ≈ 7σ OUTSIDE the bar.  The "
+                     "'within the error bar' impression was manufactured by "
+                     "feeding the measured constant into its own prediction — the "
+                     "reverse-smuggle the O10 quarantine forbids (same genus as "
+                     "the v0.3.1 sin²θ_W bug).  Contrast: substrate_gf.py "
+                     "(v_over_m_e) imports ALPHA_SUBSTRATE and is clean.",
 }
 
 

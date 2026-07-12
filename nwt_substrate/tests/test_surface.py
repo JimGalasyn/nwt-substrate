@@ -114,6 +114,31 @@ def test_disputes_present_and_suspending():
     assert "omega_b_c" in audit["suspended_outputs"]
 
 
+def test_alpha_qed_leakage_pinned_in_dispute():
+    """The measured-α leakage evidence stays in the m_e_over_M_Pl dispute
+    record until the Auditor adjudicates: gravity/coupling.py defaults its
+    chain to alpha=ALPHA_QED (the measured CODATA value), which is where the
+    'G at 11 ppm' headline came from — substrate-pure the chain misses G by
+    ~150 ppm ≈ 7σ.  Dropping this evidence is a dispute-record edit, which is
+    forbidden short of adjudication."""
+    from nwt_substrate.benchmarks.surface import DISPUTES
+    record = DISPUTES["m_e_over_M_Pl"]
+    assert "ALPHA_QED" in record
+    assert "reverse-smuggle" in record
+    # and the leakage itself is real: the coupling chain's default arg is the
+    # measured α, not the substrate α.
+    import inspect
+    from nwt_substrate.gravity import coupling
+    from nwt_substrate.gravity.constants import ALPHA_QED
+    from nwt_substrate.isa.constants import ALPHA_SUBSTRATE
+    sig = inspect.signature(coupling.m_e_over_M_Pl_NNLO)
+    default = sig.parameters["alpha"].default
+    assert default == ALPHA_QED and default != ALPHA_SUBSTRATE, (
+        "coupling.py's default α changed — if it now uses the substrate α, "
+        "this is an adjudication-relevant fix: update the dispute record "
+        "(dated) rather than deleting this test")
+
+
 def test_mass_rows_post_selected():
     """Mass-ratio rows carry POST_SELECTED (the compendium's own 2026-04-30
     correction note is the in-repo evidence) — they may never quietly become

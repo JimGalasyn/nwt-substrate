@@ -1,5 +1,51 @@
 # nwt-substrate
 
+> ## ⛔ DEPRECATED — July 2026
+>
+> **This library's physical claims did not survive precision audit; the NWT
+> program is retired and this package is deprecated.** The library remains
+> installable and its tests pass — but no claim it computes should be cited
+> as a confirmed prediction. The audit that established this is *part of
+> this repository* and is the honest reason to read it:
+>
+> - **`benchmarks/surface.py`** — every dimensionless claim scored against
+>   its experiment's own 1σ (not a percent tolerance): **31 of 36 rows are
+>   excluded as exact claims** (α = 1/(25π√3+1) by ~50,000σ; the walk-formula
+>   m_p/m_e by ~3.6×10⁶σ). The entire surviving compatible-and-clean set is
+>   {Cabibbo λ, sin²θ₁₃} — both against loosely measured targets.
+> - **`benchmarks/neighbouring_value.py`** — the look-elsewhere volume,
+>   measured: the same integer-menu fitting pattern lands inside Newton's-G's
+>   ±22 ppm error bar for **~83% of random targets**. A ppm-scale match
+>   carries no information beyond the menu.
+> - **`docs/BENCHMARK_TRIAGE_2026-07-12.md`** — all 38 benchmarks classified:
+>   18 menu-fitted, 13 standard textbook results with the substrate inert,
+>   3 self-comparisons that cannot fail, 3 driven by measured inputs, 1
+>   untested forward claim.
+> - **Corrections to previously published claims:** the "G within the ±22 ppm
+>   error bar (−11 ppm)" figure was computed with the *measured* CODATA α as
+>   input (`gravity/coupling.py` defaults to `ALPHA_QED`); substrate-pure the
+>   chain is ~7σ *outside* the bar. The "no row-specific tuning" claim is
+>   contradicted by the per-particle walk integers and per-state coefficients
+>   in this library's own source.
+> - **Independent adjudication:** a memory-blind Auditor refuted the DERIVED
+>   provenance of all four contested headline constants (η_B → post-selected,
+>   Ω_b/Ω_c → fitted, m_e/M_Pl → motivated, ρ_Λ → motivated/underspecified)
+>   and pinned the m_e/M_Pl claim at NLO — the NNLO coefficient is documented
+>   target-selection (verdict `2026-07-12-constants-provenance-disputes`).
+>
+> **What remains useful:** the audit instruments themselves are
+> domain-general — the O10 provenance-linted derivation DAG (`benchmarks/
+> o10.py`), σ-based claim scoring, the dispute/adjudication layer, and the
+> neighbouring-value look-elsewhere test apply to any closed-form-fits-
+> constants program, of which there is a century-long lineage and (in the
+> AI-assisted era) a growing population. The library is preserved unmodified
+> below the audit layer as the case-study specimen.
+>
+> Full retrospective and retirement record:
+> [null-worldtube](https://github.com/JimGalasyn/null-worldtube).
+> Everything below this notice is the historical README, preserved as the
+> record; read its claims through the audit above.
+
 [![tests](https://github.com/JimGalasyn/nwt-substrate/actions/workflows/test.yml/badge.svg)](https://github.com/JimGalasyn/nwt-substrate/actions/workflows/test.yml)
 [![benchmarks](https://github.com/JimGalasyn/nwt-substrate/actions/workflows/benchmarks.yml/badge.svg)](https://github.com/JimGalasyn/nwt-substrate/actions/workflows/benchmarks.yml)
 [![codecov](https://codecov.io/gh/JimGalasyn/nwt-substrate/branch/main/graph/badge.svg)](https://codecov.io/gh/JimGalasyn/nwt-substrate)

@@ -1,6 +1,18 @@
 """
 nwt_substrate — substrate-algebraic computation for Null Worldtube Theory.
 
+.. deprecated:: July 2026
+    The NWT program is retired: its physical claims did not survive
+    precision audit (31/36 dimensionless claims excluded at experimental σ;
+    the fitting pattern matches ~83% of RANDOM targets inside Newton's-G's
+    error bar; provenance of the headline constants adjudicated
+    post-selected/fitted/motivated by a memory-blind Auditor).  The library
+    is preserved unmodified as the audited case-study specimen.  Read the
+    README deprecation notice, ``benchmarks/surface.py``,
+    ``benchmarks/neighbouring_value.py`` and
+    ``docs/BENCHMARK_TRIAGE_2026-07-12.md`` before citing any value it
+    computes.  A ``DeprecationWarning`` is emitted on import.
+
 Provides Particle, walk-phase scattering/decay, mass formula, Hopf-linked
 exotic predictions, K_7 graph state, and (eventually) Qiskit interface.
 
@@ -31,6 +43,17 @@ Structure:
     nwt_substrate.benchmarks   — substrate vs traditional speed/accuracy
     nwt_substrate.qiskit       — quantum-hardware interface (TODO)
 """
+
+import warnings as _warnings
+
+_warnings.warn(
+    "nwt-substrate is DEPRECATED (July 2026): the NWT program is retired — "
+    "its physical claims did not survive precision audit. No value this "
+    "library computes should be cited as a confirmed prediction. See the "
+    "README deprecation notice and docs/BENCHMARK_TRIAGE_2026-07-12.md.",
+    DeprecationWarning,
+    stacklevel=2,
+)
 
 from .particles.particle import Particle
 from .particles.factory import particle, list_particles

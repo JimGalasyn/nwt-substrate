@@ -1,5 +1,18 @@
 # `nwt_substrate.benchmarks`
 
+> **⛔ DEPRECATED (July 2026) — read the triage first.** This suite's framing
+> ("genuinely predictive — not fitted, not numerology") did not survive its
+> own audit. A failure-mode classification of all 38 benchmarks lives at
+> [`docs/BENCHMARK_TRIAGE_2026-07-12.md`](../../docs/BENCHMARK_TRIAGE_2026-07-12.md):
+> 18 menu-fitted, 13 standard textbook results with the substrate inert,
+> 3 self-comparisons that cannot fail, 3 driven by measured inputs, 1
+> untested forward claim. The benchmark code and its accuracy strings below
+> are preserved unmodified as the record; the modules that supersede this
+> suite's scoring are [`surface.py`](surface.py) (σ-based verdicts,
+> adjudicated provenance) and [`neighbouring_value.py`](neighbouring_value.py)
+> (the measured look-elsewhere volume). See the repository README's
+> deprecation notice for the full accounting and the Auditor verdict.
+
 [![benchmarks](https://github.com/JimGalasyn/nwt-substrate/actions/workflows/benchmarks.yml/badge.svg)](https://github.com/JimGalasyn/nwt-substrate/actions/workflows/benchmarks.yml)
 
 Substrate algebra vs traditional methods: speed and accuracy comparison

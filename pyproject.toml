@@ -8,7 +8,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "nwt-substrate"
 dynamic = ["version"]
-description = "Substrate-algebraic computation library for Null Worldtube Theory."
+description = "DEPRECATED — substrate-algebraic library for the retired Null Worldtube Theory program; preserved with its precision audit (see README)."
 readme = "README.md"
 requires-python = ">=3.10"
 license = { file = "LICENSE" }
@@ -20,7 +20,7 @@ keywords = [
     "knot-theory", "octonions", "null-worldtube", "substrate-monism",
 ]
 classifiers = [
-    "Development Status :: 4 - Beta",
+    "Development Status :: 7 - Inactive",
     "Intended Audience :: Science/Research",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",

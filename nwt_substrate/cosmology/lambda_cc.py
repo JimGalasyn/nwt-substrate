@@ -50,8 +50,12 @@ __all__ = [
 #: α-exponent of the Stage-7 vacuum-energy scale.
 LAMBDA_EXPONENT: int = 2 * DIM_OCTONION   # = 16 = 2 · dim(octonion)
 
-#: m_e/M_Pl from the K₇ Wilson amplitude (Paper 17, NNLO) — m_e derived from M_Pl.
-M_E_OVER_M_PL: float = k7_wilson_amplitude(ALPHA_SUBSTRATE, order="NNLO")
+#: m_e/M_Pl from the K₇ Wilson amplitude — m_e derived from M_Pl.
+#: ORDER = NLO per the Auditor verdict 2026-07-12-constants-provenance-disputes
+#: CL-2 (the NNLO term is retired from claim status: its coefficient was
+#: computed from the CODATA target, Paper 17).  Effect here: prediction
+#: −0.74% → −0.80%, z 0.25σ → 0.27σ against the 3% Planck bar.
+M_E_OVER_M_PL: float = k7_wilson_amplitude(ALPHA_SUBSTRATE, order="NLO")
 
 #: Substrate prediction ρ_Λ/M_Pl⁴ = (m_e/M_Pl)⁴ · α¹⁶ · h_Cox.
 RHO_LAMBDA_PRED: float = (

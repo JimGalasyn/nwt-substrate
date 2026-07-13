@@ -42,6 +42,9 @@
 > below the audit layer as the case-study specimen.
 >
 > Full retrospective and retirement record:
+> **[Retirement Retrospective](https://doi.org/10.5281/zenodo.21339662)**
+> (Zenodo, DOI [10.5281/zenodo.21339662](https://doi.org/10.5281/zenodo.21339662))
+> — source and code in
 > [null-worldtube](https://github.com/JimGalasyn/null-worldtube).
 > Everything below this notice is the historical README, preserved as the
 > record; read its claims through the audit above.
